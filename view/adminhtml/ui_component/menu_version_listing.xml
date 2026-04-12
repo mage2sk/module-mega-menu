@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">menu_version_listing.menu_version_listing_data_source</item>
+        </item>
+    </argument>
+
+    <settings>
+        <spinner>menu_version_columns</spinner>
+        <deps>
+            <dep>menu_version_listing.menu_version_listing_data_source</dep>
+        </deps>
+    </settings>
+
+    <!-- Data Source -->
+    <dataSource name="menu_version_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <filterUrlParams>
+                <param name="menu_id">*</param>
+            </filterUrlParams>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">version_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>Panth_MegaMenu::menu</aclResource>
+        <dataProvider class="Panth\MegaMenu\Ui\DataProvider\MenuVersionDataProvider" name="menu_version_listing_data_source">
+            <settings>
+                <requestFieldName>menu_id</requestFieldName>
+                <primaryFieldName>version_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+
+    <!-- Listing Toolbar -->
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+
+        <filterSearch name="fulltext">
+            <settings>
+                <placeholder translate="true">Search by version comment or admin username</placeholder>
+            </settings>
+        </filterSearch>
+
+        <filters name="listing_filters">
+            <settings>
+                <templates>
+                    <filters>
+                        <select>
+                            <param name="template" xsi:type="string">ui/grid/filters/elements/ui-select</param>
+                            <param name="component" xsi:type="string">Magento_Ui/js/form/element/ui-select</param>
+                        </select>
+                    </filters>
+                </templates>
+            </settings>
+
+            <filterRange name="created_at">
+                <settings>
+                    <label translate="true">Created Date</label>
+                    <dataScope>created_at</dataScope>
+                </settings>
+            </filterRange>
+
+            <filterInput name="created_by">
+                <settings>
+                    <label translate="true">Created By</label>
+                    <dataScope>created_by</dataScope>
+                </settings>
+            </filterInput>
+
+            <filterSelect name="is_active" provider="${ $.parentName }">
+                <settings>
+                    <caption translate="true">Select...</caption>
+                    <options class="Magento\Config\Model\Config\Source\Yesno"/>
+                    <label translate="true">Menu Status (at version)</label>
+                    <dataScope>is_active</dataScope>
+                </settings>
+            </filterSelect>
+        </filters>
+
+        <massaction name="listing_massaction" component="Magento_Ui/js/grid/tree-massactions">
+            <action name="delete">
+                <settings>
+                    <confirm>
+                        <message translate="true">Are you sure you want to delete the selected version(s)?</message>
+                        <title translate="true">Delete Versions</title>
+                    </confirm>
+                    <url path="panth_menu/version/massDelete"/>
+                    <type>delete</type>
+                    <label translate="true">Delete</label>
+                </settings>
+            </action>
+            <action name="compare">
+                <settings>
+                    <type>compare</type>
+                    <label translate="true">Compare Selected</label>
+                    <url path="panth_menu/version/compare"/>
+                </settings>
+            </action>
+        </massaction>
+
+        <paging name="listing_paging">
+            <settings>
+                <options>
+                    <option name="20" xsi:type="array">
+                        <item name="value" xsi:type="number">20</item>
+                        <item name="label" xsi:type="string">20</item>
+                    </option>
+                    <option name="50" xsi:type="array">
+                        <item name="value" xsi:type="number">50</item>
+                        <item name="label" xsi:type="string">50</item>
+                    </option>
+                    <option name="100" xsi:type="array">
+                        <item name="value" xsi:type="number">100</item>
+                        <item name="label" xsi:type="string">100</item>
+                    </option>
+                </options>
+                <pageSize>20</pageSize>
+            </settings>
+        </paging>
+    </listingToolbar>
+
+    <!-- Grid Columns -->
+    <columns name="menu_version_columns">
+        <!-- Selection Column -->
+        <selectionsColumn name="ids">
+            <settings>
+                <indexField>version_id</indexField>
+            </settings>
+        </selectionsColumn>
+
+        <!-- Version Number -->
+        <column name="version_number">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Version</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+
+        <!-- Menu Title (at that version) -->
+        <column name="title">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Menu Title</label>
+            </settings>
+        </column>
+
+        <!-- Created At -->
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created At</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+
+        <!-- Created By (Admin Username) -->
+        <column name="created_by">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Created By</label>
+            </settings>
+        </column>
+
+        <!-- Version Comment (Truncated Preview) -->
+        <column name="version_comment" class="Panth\MegaMenu\Ui\Component\Listing\Column\TruncatedText">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Comment</label>
+            </settings>
+        </column>
+
+        <!-- Is Active (Menu status at that version) -->
+        <column name="is_active" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <options class="Magento\Config\Model\Config\Source\Yesno"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Status</label>
+            </settings>
+        </column>
+
+        <!-- Item Count (at that version) -->
+        <column name="item_count">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Items</label>
+            </settings>
+        </column>
+
+        <!-- Actions Column -->
+        <actionsColumn name="actions" class="Panth\MegaMenu\Ui\Component\Listing\Column\VersionActions">
+            <settings>
+                <indexField>version_id</indexField>
+                <resizeEnabled>false</resizeEnabled>
+                <resizeDefaultWidth>107</resizeDefaultWidth>
+            </settings>
+        </actionsColumn>
+    </columns>
+</listing>

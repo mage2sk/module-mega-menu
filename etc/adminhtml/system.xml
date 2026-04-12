@@ -1,0 +1,312 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * System Configuration for MegaMenu
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="panth" translate="label" sortOrder="200">
+            <label>🚀 Panth Extensions</label>
+        </tab>
+
+        <section id="panth_megamenu" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>MegaMenu</label>
+            <tab>panth</tab>
+            <resource>Panth_MegaMenu::config</resource>
+
+            <!-- General Settings -->
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable MegaMenu</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Enable the custom MegaMenu. When disabled, the default Magento navigation is used. Default: <strong>Yes</strong>]]></comment>
+                    <backend_model>Panth\MegaMenu\Model\Config\Backend\Enabled</backend_model>
+                </field>
+
+                <field id="menu_identifier" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Menu Identifier</label>
+                    <comment><![CDATA[The identifier for the menu to display (e.g., "mainmenu"). Default: <strong>mainmenu</strong>]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="mobile_breakpoint" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Mobile Breakpoint (px)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Screen width in pixels at which the mobile menu activates. Default: <strong>1024</strong>]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="sticky_menu" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Sticky Menu</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Keep the menu fixed at the top of the viewport when scrolling. Configure sticky behavior in the Sticky Menu Settings group. Default: <strong>No</strong>]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <!-- Styling Settings -->
+            <group id="styling" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Styling Settings</label>
+                <comment><![CDATA[<div style="padding:10px 15px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;margin-bottom:10px;">
+                    <strong>Theme Colors:</strong> Menu colors (background, text, hover, dropdown, borders) are configured in
+                    <code>app/design/frontend/Starter/starter_child/web/tailwind/theme-config.json</code> under
+                    <code>header.menu</code>. Run <code>npm run build</code> after editing theme-config.json.
+                </div>]]></comment>
+
+                <field id="hover_effect" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Hover Effect</label>
+                    <source_model>Panth\MegaMenu\Model\Config\Source\HoverEffect</source_model>
+                    <comment><![CDATA[Visual effect applied to menu items on hover. Default: <strong>Underline</strong>]]></comment>
+                </field>
+
+                <field id="image_size" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Image Size</label>
+                    <comment><![CDATA[Image size preset for category images in dropdown (e.g., thumbnail, small, medium). Default: <strong>thumbnail</strong>]]></comment>
+                </field>
+
+                <field id="custom_css" translate="label comment" type="textarea" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Custom CSS</label>
+                    <comment><![CDATA[Add custom CSS rules for the MegaMenu. Do not include <code>&lt;style&gt;</code> tags. Leave empty for none.]]></comment>
+                </field>
+            </group>
+
+            <!-- Display Settings -->
+            <group id="display" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Display Settings</label>
+
+                <field id="animation_type" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Animation Type</label>
+                    <source_model>Panth\MegaMenu\Model\Config\Source\AnimationType</source_model>
+                    <comment><![CDATA[Animation used when opening/closing dropdown menus. Default: <strong>Fade</strong>]]></comment>
+                </field>
+
+                <field id="animation_duration" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Animation Duration (ms)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Duration of the dropdown animation in milliseconds. Default: <strong>200</strong>]]></comment>
+                </field>
+
+                <field id="hover_intent_delay" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Hover Intent Delay (ms)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Delay in milliseconds before dropdown opens on hover. Prevents accidental opens. Default: <strong>150</strong>]]></comment>
+                </field>
+
+                <field id="show_icons" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Icons</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Display category icons in menu items when available. Default: <strong>Yes</strong>]]></comment>
+                </field>
+
+                <field id="show_images" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Images</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Display category images in dropdown panels. Default: <strong>Yes</strong>]]></comment>
+                </field>
+
+                <field id="max_depth" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum Menu Depth</label>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                    <comment><![CDATA[Maximum nesting depth for menu categories. Default: <strong>5</strong>]]></comment>
+                </field>
+
+                <field id="columns" translate="label comment" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Columns</label>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                    <comment><![CDATA[Number of columns in the mega dropdown layout. Default: <strong>4</strong>]]></comment>
+                </field>
+
+                <field id="show_category_count" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Category Product Count</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Display the number of products next to each category name. Default: <strong>No</strong>]]></comment>
+                </field>
+
+                <field id="enable_custom_blocks" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Custom Blocks</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Allow embedding custom CMS blocks inside mega menu dropdowns. Default: <strong>Yes</strong>]]></comment>
+                </field>
+            </group>
+
+            <!-- Mobile Settings -->
+            <group id="mobile" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Mobile Settings</label>
+
+                <field id="mobile_enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Mobile Menu</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Enable the mobile-optimized off-canvas menu. Default: <strong>Yes</strong>]]></comment>
+                </field>
+
+                <field id="position" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Mobile Menu Position</label>
+                    <source_model>Panth\MegaMenu\Model\Config\Source\MobilePosition</source_model>
+                    <comment><![CDATA[Slide-in direction for the mobile menu panel. Default: <strong>Left</strong>]]></comment>
+                    <depends>
+                        <field id="mobile_enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="overlay_enabled" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Overlay</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Display a semi-transparent background overlay when the mobile menu is open. Default: <strong>Yes</strong>]]></comment>
+                    <depends>
+                        <field id="mobile_enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="accordion_enabled" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Accordion Style</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Use accordion-style expand/collapse for subcategories on mobile. Default: <strong>Yes</strong>]]></comment>
+                    <depends>
+                        <field id="mobile_enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="swipe_enabled" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Swipe Gestures</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Allow swipe gestures to open and close the mobile menu. Default: <strong>No</strong>]]></comment>
+                    <depends>
+                        <field id="mobile_enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="animation_speed" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Animation Speed (ms)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Mobile menu open/close animation speed in milliseconds. Default: <strong>300</strong>]]></comment>
+                    <depends>
+                        <field id="mobile_enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="show_category_icons" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Category Icons</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Display category icons in the mobile menu. Default: <strong>Yes</strong>]]></comment>
+                    <depends>
+                        <field id="mobile_enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <!-- Sticky Menu Settings -->
+            <group id="sticky" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Sticky Menu Settings</label>
+                <comment><![CDATA[These settings apply only when <strong>Sticky Menu</strong> is enabled in General Settings.]]></comment>
+
+                <field id="offset" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sticky Offset (px)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Scroll distance in pixels before the sticky menu activates. Default: <strong>100</strong>]]></comment>
+                    <depends>
+                        <field id="panth_megamenu/general/sticky_menu">1</field>
+                    </depends>
+                </field>
+
+                <field id="hide_on_scroll_down" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Hide on Scroll Down</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Hide the sticky menu when the user scrolls downward. Default: <strong>No</strong>]]></comment>
+                    <depends>
+                        <field id="panth_megamenu/general/sticky_menu">1</field>
+                    </depends>
+                </field>
+
+                <field id="show_on_scroll_up" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show on Scroll Up</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Reveal the sticky menu when the user scrolls upward. Default: <strong>Yes</strong>]]></comment>
+                    <depends>
+                        <field id="panth_megamenu/general/sticky_menu">1</field>
+                    </depends>
+                </field>
+
+                <field id="show_shadow" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Shadow</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Display a drop shadow beneath the sticky menu for visual depth. Default: <strong>Yes</strong>]]></comment>
+                    <depends>
+                        <field id="panth_megamenu/general/sticky_menu">1</field>
+                    </depends>
+                </field>
+
+                <field id="compact_mode" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Compact Mode</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Use a reduced-height compact layout when the menu is sticky. Default: <strong>No</strong>]]></comment>
+                    <depends>
+                        <field id="panth_megamenu/general/sticky_menu">1</field>
+                    </depends>
+                </field>
+
+                <field id="animation_speed" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Animation Speed (ms)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Sticky menu show/hide animation speed in milliseconds. Default: <strong>300</strong>]]></comment>
+                    <depends>
+                        <field id="panth_megamenu/general/sticky_menu">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <!-- Performance Settings -->
+            <group id="performance" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Performance Settings</label>
+
+                <field id="cache_enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Menu Cache</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Cache rendered menu HTML for improved performance. Default: <strong>Yes</strong>]]></comment>
+                </field>
+
+                <field id="cache_lifetime" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Cache Lifetime (seconds)</label>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                    <comment><![CDATA[Duration in seconds before the menu cache expires. Default: <strong>3600</strong> (1 hour)]]></comment>
+                    <depends>
+                        <field id="cache_enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="lazy_load" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Lazy Load Dropdowns</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Load dropdown content on demand rather than on page load. Improves initial page speed. Default: <strong>No</strong>]]></comment>
+                </field>
+            </group>
+
+            <!-- Advanced Settings -->
+            <group id="advanced" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Advanced Settings</label>
+
+                <field id="enable_debug" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Debug Mode</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Enable debug logging for MegaMenu troubleshooting. <strong>For development only</strong> — disable in production. Default: <strong>No</strong>]]></comment>
+                </field>
+
+                <field id="custom_js" translate="label comment" type="textarea" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Custom JavaScript</label>
+                    <comment><![CDATA[Add custom JavaScript for the MegaMenu. Do not include <code>&lt;script&gt;</code> tags. Leave empty for none.]]></comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

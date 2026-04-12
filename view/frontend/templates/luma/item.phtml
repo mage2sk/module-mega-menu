@@ -1,0 +1,258 @@
+<?php
+/**
+ * Panth MegaMenu - Clean Luma Item Template
+ *
+ * Renders a single menu item with icon, image, badge, link, and children.
+ * Supports standard dropdowns, mega dropdowns (grid columns), and CMS blocks.
+ * Recursive rendering for nested children.
+ *
+ * @var \Panth\MegaMenu\Block\MenuItem $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$item = $block->getData('item');
+$level = (int) $block->getData('level');
+$index = (int) $block->getData('index');
+$menuViewModel = $block->getData('menu_view_model');
+$isMobile = (bool) $block->getData('is_mobile');
+
+if (!$item || !$menuViewModel->isItemVisible($item)) {
+    return;
+}
+
+// --- Helpers ---
+$val = function ($key, $default = null) use ($item) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    $method = 'get' . str_replace('_', '', ucwords($key, '_'));
+    return method_exists($item, $method) ? $item->$method() : $default;
+};
+
+// --- Item properties ---
+$itemId      = $val('item_id') ?: $val('temp_id');
+$title       = $escaper->escapeHtml($val('title', ''));
+$url         = $menuViewModel->getItemUrl($item);
+if (empty($url) || $url === 'undefined') { $url = '#'; }
+$target      = $menuViewModel->getLinkTarget($item);
+$rel         = $menuViewModel->getLinkRel($item);
+
+$children    = $val('children', []);
+$hasChildren = !empty($children);
+$itemType    = $val('item_type', 'link');
+$cssClass    = $val('css_class', '');
+$iconClass   = $val('icon', '') ?: $val('icon_class', '');
+$iconLibrary = $val('icon_library', 'fontawesome');
+$image       = $val('image', '');
+$imageWidth  = $val('image_width', '');
+$imageHeight = $val('image_height', '');
+
+$badgeText   = $val('badge_text', '');
+$badgeColor  = $val('badge_color', '');
+$subtitle    = $val('subtitle', '');
+$description = $val('description', '');
+
+$cmsBlockId  = $val('cms_block', '') ?: $val('cms_block_id', '');
+$columnCount = (int) ($val('column_count', 0) ?: $val('submenu_columns', 0));
+$megaWidth   = $val('mega_width', 'auto');
+$hoverEffect = $val('hover_effect', '');
+
+// Inline styles from ViewModel
+$inlineStyles = $menuViewModel->getItemInlineStyles($item);
+
+// --- CSS classes ---
+$liClasses = ['pmenu-item', 'pmenu-item-l' . $level];
+if ($hasChildren) {
+    $liClasses[] = 'pmenu-has-children';
+}
+if ($level === 0 && $hasChildren) {
+    $isMega = ($columnCount > 1 || $megaWidth === 'full');
+    $liClasses[] = $isMega ? 'pmenu-mega' : 'pmenu-standard';
+    if ($megaWidth) {
+        $liClasses[] = 'pmenu-width-' . $megaWidth;
+    }
+}
+if ($hoverEffect && $hoverEffect !== 'default') {
+    $liClasses[] = 'pmenu-hover-' . $hoverEffect;
+}
+if ($cssClass) {
+    $liClasses[] = $cssClass;
+}
+if ($image) {
+    $liClasses[] = 'pmenu-has-image';
+}
+if ($isMobile) {
+    $liClasses[] = 'pmenu-mobile-item';
+}
+
+// Dropdown ID for ARIA
+$dropdownId = 'pmenu-dd-' . $itemId . '-' . $level;
+
+// Should we show content block instead of a link?
+$showContent = ($level > 0) && in_array($itemType, ['custom_html', 'cms_block', 'widget']);
+$customContent = $val('custom_content', '') ?: $val('content', '');
+?>
+
+<li class="<?= $escaper->escapeHtmlAttr(implode(' ', $liClasses)) ?>"
+    role="menuitem"
+    data-item-id="<?= $escaper->escapeHtmlAttr((string) $itemId) ?>"
+    data-level="<?= (int) $level ?>"
+    <?php if ($inlineStyles): ?>style="<?= $escaper->escapeHtmlAttr($inlineStyles) ?>"<?php endif; ?>>
+
+<?php if ($showContent): ?>
+    <!-- Content block (custom HTML / CMS block) -->
+    <div class="pmenu-content pmenu-content-<?= $escaper->escapeHtmlAttr($itemType) ?>">
+        <?php if (!empty(trim((string) $customContent))): ?>
+            <?= /* @noEscape */ $customContent ?>
+        <?php endif; ?>
+        <?php if ($cmsBlockId): ?>
+            <?php
+            $cmsHtml = '';
+            try {
+                $cmsHtml = $block->getLayout()
+                    ->createBlock(\Magento\Cms\Block\Block::class)
+                    ->setBlockId($cmsBlockId)
+                    ->toHtml();
+            } catch (\Exception $e) { /* silently skip */ }
+            ?>
+            <?php if (!empty(trim(strip_tags($cmsHtml)))): ?>
+                <?= /* @noEscape */ $cmsHtml ?>
+            <?php endif; ?>
+            <?php /* end cms */ ?>
+        <?php endif; ?>
+    </div>
+
+<?php else: ?>
+    <!-- Link -->
+    <a href="<?= $escaper->escapeUrl($url) ?>"
+       class="pmenu-link pmenu-link-l<?= (int) $level ?>"
+       title="<?= $escaper->escapeHtmlAttr($title) ?>"
+       target="<?= $escaper->escapeHtmlAttr($target) ?>"
+       <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>
+       <?php if ($hasChildren): ?>
+       aria-haspopup="true"
+       aria-expanded="false"
+       aria-controls="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+       <?php endif; ?>>
+
+        <?php /* Icon */ ?>
+        <?php if ($iconClass): ?>
+            <?php if ($iconLibrary === 'material'): ?>
+                <span class="material-symbols-outlined pmenu-icon" aria-hidden="true"><?= $escaper->escapeHtml($iconClass) ?></span>
+            <?php elseif ($iconLibrary === 'emoji'): ?>
+                <span class="pmenu-icon pmenu-icon-emoji" aria-hidden="true"><?= $escaper->escapeHtml($iconClass) ?></span>
+            <?php else: ?>
+                <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?> pmenu-icon" aria-hidden="true"></i>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php /* Image */ ?>
+        <?php if ($image): ?>
+            <?php
+            $imgStyles = [];
+            if ($imageWidth)  { $imgStyles[] = 'width:' . $escaper->escapeHtmlAttr($imageWidth); }
+            if ($imageHeight) { $imgStyles[] = 'height:' . $escaper->escapeHtmlAttr($imageHeight); }
+            $imgStyleAttr = $imgStyles ? ' style="' . implode(';', $imgStyles) . '"' : '';
+            ?>
+            <img src="<?= $escaper->escapeUrl($image) ?>"
+                 alt="<?= $escaper->escapeHtmlAttr($title) ?>"
+                 class="pmenu-image"
+                 loading="lazy"
+                 <?= /* @noEscape */ $imgStyleAttr ?> />
+        <?php endif; ?>
+
+        <?php /* Title + badge + subtitle */ ?>
+        <span class="pmenu-text-wrap">
+            <span class="pmenu-text"><?= $escaper->escapeHtml($title) ?>
+                <?php if ($badgeText): ?>
+                    <span class="pmenu-badge"
+                          <?php if ($badgeColor): ?>style="background-color:<?= $escaper->escapeHtmlAttr($badgeColor) ?>"<?php endif; ?>
+                    ><?= $escaper->escapeHtml($badgeText) ?></span>
+                <?php endif; ?>
+            </span>
+            <?php if ($subtitle): ?>
+                <span class="pmenu-subtitle"><?= $escaper->escapeHtml($subtitle) ?></span>
+            <?php endif; ?>
+            <?php if ($description && $level > 0): ?>
+                <span class="pmenu-desc"><?= $escaper->escapeHtml($description) ?></span>
+            <?php endif; ?>
+        </span>
+
+        <?php /* Arrow indicator */ ?>
+        <?php if ($hasChildren): ?>
+            <span class="pmenu-arrow" aria-hidden="true">
+                <?php if ($level === 0 && !$isMobile): ?>
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <?php else: ?>
+                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <?php endif; ?>
+            </span>
+        <?php endif; ?>
+    </a>
+
+    <?php /* Mobile accordion toggle */ ?>
+    <?php if ($hasChildren && $isMobile): ?>
+        <button class="pmenu-accordion-toggle" aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle %1', $title)) ?>">
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+    <?php endif; ?>
+
+<?php endif; ?>
+
+<?php /* ========== CHILDREN DROPDOWN ========== */ ?>
+<?php if ($hasChildren): ?>
+    <?php
+    $isMegaDropdown = ($level === 0) && ($columnCount > 1 || $megaWidth === 'full');
+    $ddClasses = ['pmenu-dropdown', 'pmenu-dropdown-l' . $level];
+    if ($isMegaDropdown) {
+        $ddClasses[] = 'pmenu-dropdown-mega';
+        if ($columnCount > 1) {
+            $ddClasses[] = 'pmenu-cols-' . $columnCount;
+        }
+    }
+    if ($isMobile) {
+        $ddClasses[] = 'pmenu-accordion-panel';
+    }
+    ?>
+
+    <ul id="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+        class="<?= $escaper->escapeHtmlAttr(implode(' ', $ddClasses)) ?>"
+        role="menu"
+        aria-label="<?= $escaper->escapeHtmlAttr($title . ' ' . __('submenu')) ?>"
+        <?php if (!$isMobile): ?>style="display:none;"<?php endif; ?>>
+
+        <?php /* CMS block at top of dropdown */ ?>
+        <?php if ($cmsBlockId && $level === 0): ?>
+            <li class="pmenu-cms-block-wrapper" role="presentation">
+                <?php
+                $cmsHtml2 = '';
+                try {
+                    $cmsHtml2 = $block->getLayout()
+                        ->createBlock(\Magento\Cms\Block\Block::class)
+                        ->setBlockId($cmsBlockId)
+                        ->toHtml();
+                } catch (\Exception $e) { /* skip */ }
+                ?>
+                <?php if (!empty(trim(strip_tags($cmsHtml2)))): ?>
+                    <div class="pmenu-cms-block"><?= /* @noEscape */ $cmsHtml2 ?></div>
+                <?php endif; ?>
+            </li>
+        <?php endif; ?>
+
+        <?php foreach ($children as $childIndex => $child):
+            if (!$menuViewModel->isItemVisible($child)) { continue; }
+        ?>
+            <?= /* @noEscape */ $block->getLayout()
+                ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                ->setTemplate('Panth_MegaMenu::luma/item.phtml')
+                ->setData('item', $child)
+                ->setData('level', $level + 1)
+                ->setData('index', $childIndex)
+                ->setData('menu_view_model', $menuViewModel)
+                ->setData('is_mobile', $isMobile)
+                ->toHtml() ?>
+        <?php endforeach; ?>
+    </ul>
+<?php endif; ?>
+
+</li>

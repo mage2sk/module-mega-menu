@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Panth MegaMenu Adminhtml Dependency Injection Configuration
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Image Uploader for Menu Item Images -->
+    <virtualType name="Panth\MegaMenu\ItemImageUploader" type="Magento\Catalog\Model\ImageUploader">
+        <arguments>
+            <argument name="baseTmpPath" xsi:type="string">panth/megamenu/item/tmp</argument>
+            <argument name="basePath" xsi:type="string">panth/megamenu/item</argument>
+            <argument name="allowedExtensions" xsi:type="array">
+                <item name="jpg" xsi:type="string">jpg</item>
+                <item name="jpeg" xsi:type="string">jpeg</item>
+                <item name="gif" xsi:type="string">gif</item>
+                <item name="png" xsi:type="string">png</item>
+                <item name="svg" xsi:type="string">svg</item>
+                <item name="webp" xsi:type="string">webp</item>
+            </argument>
+            <argument name="allowedMimeTypes" xsi:type="array">
+                <item name="jpg" xsi:type="string">image/jpg</item>
+                <item name="jpeg" xsi:type="string">image/jpeg</item>
+                <item name="gif" xsi:type="string">image/gif</item>
+                <item name="png" xsi:type="string">image/png</item>
+                <item name="svg" xsi:type="string">image/svg+xml</item>
+                <item name="webp" xsi:type="string">image/webp</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Inject Image Uploader into Upload Controller -->
+    <type name="Panth\MegaMenu\Controller\Adminhtml\Item\Image\Upload">
+        <arguments>
+            <argument name="imageUploader" xsi:type="object">Panth\MegaMenu\ItemImageUploader</argument>
+        </arguments>
+    </type>
+
+    <!-- Inject Image Uploader into Save Controller -->
+    <type name="Panth\MegaMenu\Controller\Adminhtml\Item\Save">
+        <arguments>
+            <argument name="imageUploader" xsi:type="object">Panth\MegaMenu\ItemImageUploader</argument>
+        </arguments>
+    </type>
+</config>

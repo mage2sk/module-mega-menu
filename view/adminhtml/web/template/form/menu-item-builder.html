@@ -1,0 +1,550 @@
+<div class="admin__field admin__field-wide panth-menu-builder">
+    <!-- Header -->
+    <div class="admin__field-label">
+        <label><span data-bind="i18n: 'Menu Items Builder'"></span></label>
+    </div>
+
+    <div class="admin__field-control">
+        <!-- Toolbar -->
+        <div class="menu-toolbar" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap;">
+            <button type="button" class="action-default scalable primary" data-bind="click: addRootItem">
+                <span data-bind="i18n: 'Add Root Item'"></span>
+            </button>
+            <button type="button" class="action-default" data-bind="click: expandAll"><span data-bind="i18n: 'Expand All'"></span></button>
+            <button type="button" class="action-default" data-bind="click: collapseAll"><span data-bind="i18n: 'Collapse All'"></span></button>
+            <button type="button" class="action-default" data-bind="click: importAllCategories"><span data-bind="i18n: 'Import Categories'"></span></button>
+            <button type="button" class="action-default action-secondary" data-bind="click: loadDemoMenu"><span data-bind="i18n: 'Load Demo'"></span></button>
+            <button type="button" class="action-default action-delete" data-bind="click: clearAllItems"><span data-bind="i18n: 'Clear All'"></span></button>
+        </div>
+
+        <!-- Loading -->
+        <div data-bind="visible: isLoading()" style="display: none;">
+            <div class="admin__data-grid-loading-mask">
+                <div class="admin__data-grid-loader">
+                    <div class="spinner"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div data-bind="visible: !isLoading() &amp;&amp; items().length === 0" style="display: none; padding: 40px; text-align: center; background: #f9f9f9; border: 1px solid #e3e3e3; border-radius: 3px;">
+            <div style="color: #999; font-size: 16px; margin-bottom: 10px;">
+                <span data-bind="i18n: 'No menu items yet'"></span>
+            </div>
+            <div style="color: #666; font-size: 13px; margin-bottom: 20px;">
+                <span data-bind="i18n: 'Click Add Root Item to create your first menu item'"></span>
+            </div>
+            <div>
+                <button type="button" class="action-default scalable" data-bind="click: importAllCategories">
+                    <span data-bind="i18n: 'Import Categories'"></span>
+                </button>
+                <button type="button" class="action-default action-secondary scalable" data-bind="click: loadDemoMenu" style="margin-left: 10px;">
+                    <span data-bind="i18n: 'Load Demo Menu'"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu Tree -->
+        <div class="menu-tree-wrapper" data-bind="visible: items().length > 0" style="display: none;">
+            <!-- Column Headers -->
+            <div class="menu-grid-header">
+                <span class="col-drag"></span>
+                <span class="col-toggle"></span>
+                <span class="col-title" data-bind="i18n: 'Title'"></span>
+                <span class="col-url" data-bind="i18n: 'URL'"></span>
+                <span class="col-status" data-bind="i18n: 'Status'"></span>
+                <span class="col-actions" data-bind="i18n: 'Actions'"></span>
+            </div>
+
+            <!-- Root Level Items -->
+            <ul class="menu-items-list menu-level-0" data-bind="foreach: getRootItems()">
+                <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 0 }, css: { 'is-inactive': !is_active }">
+                    <div class="menu-grid-row">
+                        <span class="col-drag">
+                            <span class="drag-handle">≡</span>
+                        </span>
+                        <span class="col-toggle">
+                            <!-- Always show toggle button, let visible binding control visibility -->
+                            <button type="button" class="tree-toggle" data-bind="
+                                visible: $parent.getChildItems(item_id).length > 0,
+                                click: $parent.toggleExpand.bind($parent, item_id)
+                            " style="display: inline-block;">
+                                <span data-bind="text: $parent.isExpanded(item_id) ? '−' : '+'"></span>
+                            </button>
+                        </span>
+                        <span class="col-title">
+                            <span class="item-title" data-bind="text: title, click: $parent.editItem.bind($parent, item_id)"></span>
+                            <!-- ko if: $parent.hasChildren(item_id) -->
+                            <span class="item-count" data-bind="text: '(' + $parent.getChildItems(item_id).length + ')'"></span>
+                            <!-- /ko -->
+                        </span>
+                        <span class="col-url" data-bind="text: url"></span>
+                        <span class="col-status">
+                            <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                        </span>
+                        <span class="col-actions">
+                            <button type="button" class="action-default action-sm" data-bind="click: $parent.toggleItemActive.bind($parent, item_id)">
+                                <span data-bind="text: is_active ? 'Disable' : 'Enable'"></span>
+                            </button>
+                            <button type="button" class="action-default action-sm" data-bind="click: $parent.addItem.bind($parent, item_id)">
+                                <span>Add Child</span>
+                            </button>
+                            <button type="button" class="action-default action-sm" data-bind="click: $parent.duplicateItem.bind($parent, item_id)">
+                                <span>Duplicate</span>
+                            </button>
+                            <button type="button" class="action-default action-sm" data-bind="click: $parent.editItem.bind($parent, item_id)">
+                                <span>Edit</span>
+                            </button>
+                            <button type="button" class="action-default action-delete action-sm" data-bind="click: $parent.deleteItem.bind($parent, item_id)">
+                                <span>Delete</span>
+                            </button>
+                        </span>
+                    </div>
+
+                    <!-- Level 1 Children -->
+                    <!-- Keep empty containers visible, hide only when has children and collapsed -->
+                    <ul class="menu-items-list menu-children" data-bind="css: { 'empty-drop-zone': $parent.getChildItems(item_id).length === 0 }, visible: $parent.getChildItems(item_id).length === 0 ? true : $parent.isExpanded(item_id)">
+                        <li class="sortable-placeholder-hack" style="display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important;"></li>
+                        <!-- ko foreach: $parent.getChildItems(item_id) -->
+                        <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 1 }, css: { 'is-inactive': !is_active }">
+                            <div class="menu-grid-row">
+                                <span class="col-drag"><span class="drag-handle">≡</span></span>
+                                <span class="col-toggle">
+                                    <button type="button" class="tree-toggle" data-bind="
+                                        visible: $parents[1].getChildItems(item_id).length > 0,
+                                        click: $parents[1].toggleExpand.bind($parents[1], item_id)
+                                    " style="display: inline-block;">
+                                        <span data-bind="text: $parents[1].isExpanded(item_id) ? '−' : '+'"></span>
+                                    </button>
+                                </span>
+                                <span class="col-title">
+                                    <span class="item-title" data-bind="text: title, click: $parents[1].editItem.bind($parents[1], item_id)"></span>
+                                    <!-- ko if: $parents[1].hasChildren(item_id) -->
+                                    <span class="item-count" data-bind="text: '(' + $parents[1].getChildItems(item_id).length + ')'"></span>
+                                    <!-- /ko -->
+                                </span>
+                                <span class="col-url" data-bind="text: url"></span>
+                                <span class="col-status">
+                                    <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                                </span>
+                                <span class="col-actions">
+                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[1].toggleItemActive.bind($parents[1], item_id)"><span data-bind="text: is_active ? 'Disable' : 'Enable'"></span></button>
+                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[1].addItem.bind($parents[1], item_id)"><span>Add Child</span></button>
+                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[1].duplicateItem.bind($parents[1], item_id)"><span>Duplicate</span></button>
+                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[1].editItem.bind($parents[1], item_id)"><span>Edit</span></button>
+                                    <button type="button" class="action-default action-delete action-sm" data-bind="click: $parents[1].deleteItem.bind($parents[1], item_id)"><span>Delete</span></button>
+                                </span>
+                            </div>
+
+                            <!-- Level 2 Children -->
+                            <ul class="menu-items-list menu-children" data-bind="css: { 'empty-drop-zone': $parents[1].getChildItems(item_id).length === 0 }, visible: $parents[1].getChildItems(item_id).length === 0 ? true : $parents[1].isExpanded(item_id)">
+                                <li class="sortable-placeholder-hack" style="display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important;"></li>
+                                <!-- ko foreach: $parents[1].getChildItems(item_id) -->
+                                <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 2 }, css: { 'is-inactive': !is_active }">
+                                    <div class="menu-grid-row">
+                                        <span class="col-drag"><span class="drag-handle">≡</span></span>
+                                        <span class="col-toggle">
+                                            <button type="button" class="tree-toggle" data-bind="
+                                                visible: $parents[2].getChildItems(item_id).length > 0,
+                                                click: $parents[2].toggleExpand.bind($parents[2], item_id)
+                                            " style="display: inline-block;">
+                                                <span data-bind="text: $parents[2].isExpanded(item_id) ? '−' : '+'"></span>
+                                            </button>
+                                        </span>
+                                        <span class="col-title">
+                                            <span class="item-title" data-bind="text: title, click: $parents[2].editItem.bind($parents[2], item_id)"></span>
+                                            <!-- ko if: $parents[2].hasChildren(item_id) -->
+                                            <span class="item-count" data-bind="text: '(' + $parents[2].getChildItems(item_id).length + ')'"></span>
+                                            <!-- /ko -->
+                                        </span>
+                                        <span class="col-url" data-bind="text: url"></span>
+                                        <span class="col-status">
+                                            <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                                        </span>
+                                        <span class="col-actions">
+                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[2].toggleItemActive.bind($parents[2], item_id)"><span data-bind="text: is_active ? 'Disable' : 'Enable'"></span></button>
+                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[2].addItem.bind($parents[2], item_id)"><span>Add Child</span></button>
+                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[2].duplicateItem.bind($parents[2], item_id)"><span>Duplicate</span></button>
+                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[2].editItem.bind($parents[2], item_id)"><span>Edit</span></button>
+                                            <button type="button" class="action-default action-delete action-sm" data-bind="click: $parents[2].deleteItem.bind($parents[2], item_id)"><span>Delete</span></button>
+                                        </span>
+                                    </div>
+
+                                    <!-- Level 3 Children -->
+                                    <ul class="menu-items-list menu-children" data-bind="css: { 'empty-drop-zone': $parents[2].getChildItems(item_id).length === 0 }, visible: $parents[2].getChildItems(item_id).length === 0 ? true : $parents[2].isExpanded(item_id)">
+                                        <li class="sortable-placeholder-hack" style="display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important;"></li>
+                                        <!-- ko foreach: $parents[2].getChildItems(item_id) -->
+                                        <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 3 }, css: { 'is-inactive': !is_active }">
+                                            <div class="menu-grid-row">
+                                                <span class="col-drag"><span class="drag-handle">≡</span></span>
+                                                <span class="col-toggle">
+                                                    <button type="button" class="tree-toggle" data-bind="
+                                                        visible: $parents[3].getChildItems(item_id).length > 0,
+                                                        click: $parents[3].toggleExpand.bind($parents[3], item_id)
+                                                    " style="display: inline-block;">
+                                                        <span data-bind="text: $parents[3].isExpanded(item_id) ? '−' : '+'"></span>
+                                                    </button>
+                                                </span>
+                                                <span class="col-title">
+                                                    <span class="item-title" data-bind="text: title, click: $parents[3].editItem.bind($parents[3], item_id)"></span>
+                                                    <!-- ko if: $parents[3].hasChildren(item_id) -->
+                                                    <span class="item-count" data-bind="text: '(' + $parents[3].getChildItems(item_id).length + ')'"></span>
+                                                    <!-- /ko -->
+                                                </span>
+                                                <span class="col-url" data-bind="text: url"></span>
+                                                <span class="col-status">
+                                                    <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                                                </span>
+                                                <span class="col-actions">
+                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[3].toggleItemActive.bind($parents[3], item_id)"><span data-bind="text: is_active ? 'Disable' : 'Enable'"></span></button>
+                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[3].addItem.bind($parents[3], item_id)"><span>Add Child</span></button>
+                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[3].duplicateItem.bind($parents[3], item_id)"><span>Duplicate</span></button>
+                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[3].editItem.bind($parents[3], item_id)"><span>Edit</span></button>
+                                                    <button type="button" class="action-default action-delete action-sm" data-bind="click: $parents[3].deleteItem.bind($parents[3], item_id)"><span>Delete</span></button>
+                                                </span>
+                                            </div>
+
+                                            <!-- Level 4 Children -->
+                                            <ul class="menu-items-list menu-children" data-bind="css: { 'empty-drop-zone': $parents[3].getChildItems(item_id).length === 0 }, visible: $parents[3].getChildItems(item_id).length === 0 ? true : $parents[3].isExpanded(item_id)">
+                                                <li class="sortable-placeholder-hack" style="display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important;"></li>
+                                                <!-- ko foreach: $parents[3].getChildItems(item_id) -->
+                                                <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 4 }, css: { 'is-inactive': !is_active }">
+                                                    <div class="menu-grid-row">
+                                                        <span class="col-drag"><span class="drag-handle">≡</span></span>
+                                                        <span class="col-toggle">
+                                                            <button type="button" class="tree-toggle" data-bind="
+                                                                visible: $parents[4].getChildItems(item_id).length > 0,
+                                                                click: $parents[4].toggleExpand.bind($parents[4], item_id)
+                                                            " style="display: inline-block;">
+                                                                <span data-bind="text: $parents[4].isExpanded(item_id) ? '−' : '+'"></span>
+                                                            </button>
+                                                        </span>
+                                                        <span class="col-title">
+                                                            <span class="item-title" data-bind="text: title, click: $parents[4].editItem.bind($parents[4], item_id)"></span>
+                                                            <!-- ko if: $parents[4].hasChildren(item_id) -->
+                                                            <span class="item-count" data-bind="text: '(' + $parents[4].getChildItems(item_id).length + ')'"></span>
+                                                            <!-- /ko -->
+                                                        </span>
+                                                        <span class="col-url" data-bind="text: url"></span>
+                                                        <span class="col-status">
+                                                            <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                                                        </span>
+                                                        <span class="col-actions">
+                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[4].toggleItemActive.bind($parents[4], item_id)"><span data-bind="text: is_active ? 'Disable' : 'Enable'"></span></button>
+                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[4].addItem.bind($parents[4], item_id)"><span>Add Child</span></button>
+                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[4].duplicateItem.bind($parents[4], item_id)"><span>Duplicate</span></button>
+                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[4].editItem.bind($parents[4], item_id)"><span>Edit</span></button>
+                                                            <button type="button" class="action-default action-delete action-sm" data-bind="click: $parents[4].deleteItem.bind($parents[4], item_id)"><span>Delete</span></button>
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- Level 5 Children -->
+                                                    <ul class="menu-items-list menu-children" data-bind="css: { 'empty-drop-zone': $parents[4].getChildItems(item_id).length === 0 }, visible: $parents[4].getChildItems(item_id).length === 0 ? true : $parents[4].isExpanded(item_id)">
+                                                        <li class="sortable-placeholder-hack" style="display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important;"></li>
+                                                        <!-- ko foreach: $parents[4].getChildItems(item_id) -->
+                                                        <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 5 }, css: { 'is-inactive': !is_active }">
+                                                            <div class="menu-grid-row">
+                                                                <span class="col-drag"><span class="drag-handle">≡</span></span>
+                                                                <span class="col-toggle">
+                                                                    <button type="button" class="tree-toggle" data-bind="
+                                                                        visible: $parents[5].getChildItems(item_id).length > 0,
+                                                                        click: $parents[5].toggleExpand.bind($parents[5], item_id)
+                                                                    " style="display: inline-block;">
+                                                                        <span data-bind="text: $parents[5].isExpanded(item_id) ? '−' : '+'"></span>
+                                                                    </button>
+                                                                </span>
+                                                                <span class="col-title">
+                                                                    <span class="item-title" data-bind="text: title, click: $parents[5].editItem.bind($parents[5], item_id)"></span>
+                                                                    <!-- ko if: $parents[5].hasChildren(item_id) -->
+                                                                    <span class="item-count" data-bind="text: '(' + $parents[5].getChildItems(item_id).length + ')'"></span>
+                                                                    <!-- /ko -->
+                                                                </span>
+                                                                <span class="col-url" data-bind="text: url"></span>
+                                                                <span class="col-status">
+                                                                    <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                                                                </span>
+                                                                <span class="col-actions">
+                                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[5].toggleItemActive.bind($parents[5], item_id)"><span data-bind="text: is_active ? 'Disable' : 'Enable'"></span></button>
+                                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[5].addItem.bind($parents[5], item_id)"><span>Add Child</span></button>
+                                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[5].duplicateItem.bind($parents[5], item_id)"><span>Duplicate</span></button>
+                                                                    <button type="button" class="action-default action-sm" data-bind="click: $parents[5].editItem.bind($parents[5], item_id)"><span>Edit</span></button>
+                                                                    <button type="button" class="action-default action-delete action-sm" data-bind="click: $parents[5].deleteItem.bind($parents[5], item_id)"><span>Delete</span></button>
+                                                                </span>
+                                                            </div>
+
+                                                            <!-- Level 6 Children -->
+                                                            <ul class="menu-items-list menu-children" data-bind="css: { 'empty-drop-zone': $parents[5].getChildItems(item_id).length === 0 }, visible: $parents[5].getChildItems(item_id).length === 0 ? true : $parents[5].isExpanded(item_id)">
+                                                                <li class="sortable-placeholder-hack" style="display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important;"></li>
+                                                                <!-- ko foreach: $parents[5].getChildItems(item_id) -->
+                                                                <li class="menu-item" data-bind="attr: { 'data-item-id': item_id, 'data-level': level || 6 }, css: { 'is-inactive': !is_active }">
+                                                                    <div class="menu-grid-row">
+                                                                        <span class="col-drag"><span class="drag-handle">≡</span></span>
+                                                                        <span class="col-toggle">
+                                                                            <button type="button" class="tree-toggle" data-bind="
+                                                                                visible: $parents[6].getChildItems(item_id).length > 0,
+                                                                                click: $parents[6].toggleExpand.bind($parents[6], item_id)
+                                                                            " style="display: inline-block;">
+                                                                                <span data-bind="text: $parents[6].isExpanded(item_id) ? '−' : '+'"></span>
+                                                                            </button>
+                                                                        </span>
+                                                                        <span class="col-title">
+                                                                            <span class="item-title" data-bind="text: title, click: $parents[6].editItem.bind($parents[6], item_id)"></span>
+                                                                            <!-- ko if: $parents[6].hasChildren(item_id) -->
+                                                                            <span class="item-count" data-bind="text: '(' + $parents[6].getChildItems(item_id).length + ')'"></span>
+                                                                            <!-- /ko -->
+                                                                        </span>
+                                                                        <span class="col-url" data-bind="text: url"></span>
+                                                                        <span class="col-status">
+                                                                            <span class="status-badge" data-bind="text: is_active ? 'Active' : 'Inactive', css: { 'badge-active': is_active, 'badge-inactive': !is_active }"></span>
+                                                                        </span>
+                                                                        <span class="col-actions">
+                                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[6].toggleItemActive.bind($parents[6], item_id)"><span data-bind="text: is_active ? 'Disable' : 'Enable'"></span></button>
+                                                                            <!-- No Add Child at level 6 - this is the deepest level -->
+                                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[6].duplicateItem.bind($parents[6], item_id)"><span>Duplicate</span></button>
+                                                                            <button type="button" class="action-default action-sm" data-bind="click: $parents[6].editItem.bind($parents[6], item_id)"><span>Edit</span></button>
+                                                                            <button type="button" class="action-default action-delete action-sm" data-bind="click: $parents[6].deleteItem.bind($parents[6], item_id)"><span>Delete</span></button>
+                                                                        </span>
+                                                                    </div>
+
+                                                                </li>
+                                                                <!-- /ko -->
+                                                            </ul>
+                                                        </li>
+                                                        <!-- /ko -->
+                                                    </ul>
+                                                </li>
+                                                <!-- /ko -->
+                                            </ul>
+                                        </li>
+                                        <!-- /ko -->
+                                    </ul>
+                                </li>
+                                <!-- /ko -->
+                            </ul>
+                        </li>
+                        <!-- /ko -->
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Menu Builder Styles */
+.panth-menu-builder {
+    margin: 20px 0;
+}
+
+.menu-tree-wrapper {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 3px;
+    padding: 15px;
+}
+
+/* Grid System - Headers and Rows */
+.menu-grid-header,
+.menu-grid-row {
+    display: grid;
+    grid-template-columns: 30px 30px minmax(200px, 1fr) 250px 80px 520px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+}
+
+.menu-grid-header {
+    background: #f5f5f5;
+    border-bottom: 2px solid #ccc;
+    font-weight: 600;
+    font-size: 12px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.menu-grid-row {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.menu-grid-row:hover {
+    background: #f5f8fa;
+}
+
+/* Column Alignment */
+.col-drag { text-align: center; }
+.col-toggle { text-align: center; }
+.col-status { text-align: center; }
+.col-actions {
+    text-align: right;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+/* Lists */
+.menu-items-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.menu-children {
+    margin-left: 40px;
+    margin-top: 2px;
+}
+
+.menu-item {
+    margin-bottom: 2px;
+}
+
+/* Drag Handle */
+.drag-handle {
+    cursor: move;
+    color: #ccc;
+    font-size: 18px;
+    user-select: none;
+    display: inline-block;
+    padding: 5px;
+}
+
+.drag-handle:hover {
+    color: #666;
+}
+
+/* Toggle Button */
+.tree-toggle {
+    background: #fff;
+    border: 1px solid #ccc;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    line-height: 22px;
+    border-radius: 3px;
+}
+
+.tree-toggle:hover {
+    background: #f0f0f0;
+    color: #1979c3;
+    border-color: #1979c3;
+}
+
+/* Title */
+.item-title {
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.item-title:hover {
+    color: #1979c3;
+    background: rgba(25, 121, 195, 0.08);
+}
+
+.item-count {
+    color: #999;
+    font-size: 11px;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 5px;
+}
+
+/* URL */
+.col-url {
+    color: #999;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status Badge */
+.status-badge {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Action Buttons */
+.action-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Sortable States */
+.ui-sortable-helper {
+    opacity: 0.8;
+}
+
+.ui-sortable-helper .menu-grid-row {
+    background: #e8f4fd;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.ui-sortable-placeholder {
+    background: #fff9e6 !important;
+    border: 2px dashed #ffa500 !important;
+    min-height: 45px;
+    visibility: visible !important;
+}
+
+.ui-sortable-placeholder * {
+    visibility: hidden;
+}
+
+/* Responsive */
+@media (max-width: 1600px) {
+    .menu-grid-header,
+    .menu-grid-row {
+        grid-template-columns: 30px 30px minmax(150px, 1fr) 200px 70px 480px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .menu-grid-header,
+    .menu-grid-row {
+        grid-template-columns: 30px 30px minmax(120px, 1fr) 180px 60px 450px;
+    }
+
+    .action-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .menu-grid-header,
+    .menu-grid-row {
+        grid-template-columns: 30px 30px minmax(100px, 1fr) 150px 60px 420px;
+    }
+
+    .action-sm {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+}
+</style>

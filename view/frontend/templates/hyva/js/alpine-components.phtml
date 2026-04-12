@@ -1,0 +1,61 @@
+<?php
+/**
+ * Alpine.js Components Initialization for Hyva Theme
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ */
+?>
+<script>
+document.addEventListener('alpine:init', () => {
+    // MegaMenu Alpine.js Component
+    Alpine.data('megaMenu', () => ({
+        openDropdown: null,
+        mobileMenuOpen: false,
+        activeItem: null,
+
+        init() {
+            // Close dropdown on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.megamenu-item')) {
+                    this.openDropdown = null;
+                }
+            });
+
+            // Close mobile menu on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.mobileMenuOpen = false;
+                    this.openDropdown = null;
+                }
+            });
+        },
+
+        toggleDropdown(itemId) {
+            this.openDropdown = this.openDropdown === itemId ? null : itemId;
+        },
+
+        closeDropdown() {
+            this.openDropdown = null;
+        },
+
+        isOpen(itemId) {
+            return this.openDropdown === itemId;
+        },
+
+        toggleMobileMenu() {
+            this.mobileMenuOpen = !this.mobileMenuOpen;
+            if (!this.mobileMenuOpen) {
+                this.openDropdown = null;
+            }
+        },
+
+        openMobileSubmenu(itemId) {
+            this.activeItem = this.activeItem === itemId ? null : itemId;
+        },
+
+        isMobileSubmenuOpen(itemId) {
+            return this.activeItem === itemId;
+        }
+    }));
+});
+</script>

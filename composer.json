@@ -1,0 +1,54 @@
+{
+    "name": "mage2kishan/module-mega-menu",
+    "description": "Advanced mega menu for Magento 2 — works on Hyva and Luma. Drag-and-drop tree builder, multi-column dropdowns, image and icon support per item, custom CMS block injection per column, mobile drawer with smooth animations, store-view scoped, FPC-aware caching, role-based access. Modern Tailwind + Alpine UI on Hyva, vanilla JS on Luma.",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": "proprietary",
+    "keywords": [
+        "magento2",
+        "magento2-module",
+        "mega-menu",
+        "menu",
+        "navigation",
+        "navbar",
+        "header",
+        "hyva",
+        "luma",
+        "drag-and-drop"
+    ],
+    "homepage": "https://kishansavaliya.com",
+    "support": {
+        "email": "kishansavaliyakb@gmail.com",
+        "source": "https://kishansavaliya.com"
+    },
+    "authors": [
+        {
+            "name": "Kishan Savaliya",
+            "email": "kishansavaliyakb@gmail.com",
+            "homepage": "https://kishansavaliya.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0",
+        "mage2kishan/module-core": "^1.0",
+        "magento/framework": "^103.0",
+        "magento/module-backend": "^102.0",
+        "magento/module-store": "^101.1",
+        "magento/module-cms": "^104.0",
+        "magento/module-catalog": "^104.0",
+        "magento/module-config": "^101.2",
+        "magento/module-ui": "^101.2"
+    },
+    "suggest": {
+        "hyva-themes/magento2-default-theme": "Optimal integration with Hyva — Tailwind + Alpine.js, no jQuery"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Panth\\MegaMenu\\": ""
+        }
+    }
+}

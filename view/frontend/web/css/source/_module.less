@@ -1,0 +1,185 @@
+/**
+ * Panth MegaMenu — Luma LESS entry point
+ * ONLY menu-related styles. Header/top-bar/breadcrumbs are in Panth_ThemeCustomizer.
+ */
+
+& when (@media-common = true) {
+
+    @import "megamenu-all";
+
+    // =============================================
+    // Header flex layout for menu positioning
+    // =============================================
+    .page-header .header.content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    // Menu takes center (order 2)
+    .page-header .header.content .pmenu-nav {
+        flex: 1;
+        order: 2;
+        display: flex;
+        justify-content: center;
+    }
+
+    // Menu bar — transparent inline
+    .pmenu-bar {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .pmenu-items {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .pmenu-item {
+        position: relative;
+    }
+
+    // Level 0 links — matches Hyva
+    .pmenu-link,
+    .pmenu-link:visited {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 16px 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color 0.2s;
+        font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+    }
+
+    .pmenu-link:hover {
+        color: #0D9488;
+        text-decoration: none;
+    }
+
+    // Dropdown rules
+    .pmenu-nav .pmenu-item > .pmenu-dropdown {
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .pmenu-nav .pmenu-item.is-open > .pmenu-dropdown {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: none;
+    }
+
+    // Column header — teal left-border accent
+    .pmenu-col-header {
+        font-size: 14px;
+        font-weight: 700;
+        color: #0D9488;
+        margin-bottom: 12px;
+        padding: 0 0 0 12px;
+        border-bottom: none;
+        border-left: 3px solid #0D9488;
+    }
+
+    .pmenu-col-header a,
+    .pmenu-col-header a:visited {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    // Sub items (Level 2)
+    .pmenu-sub-link,
+    .pmenu-sub-link:visited {
+        font-size: 14px;
+        color: #374151;
+        text-decoration: none;
+    }
+
+    .pmenu-sub-link:hover {
+        color: #0D9488;
+    }
+
+    // Deep items (Level 3+)
+    .pmenu-deep-link,
+    .pmenu-deep-link:visited {
+        font-size: 14px;
+        color: #4b5563;
+        text-decoration: none;
+    }
+
+    .pmenu-deep-link:hover {
+        color: #0D9488;
+    }
+
+    // Simple dropdown links
+    .pmenu-simple-link,
+    .pmenu-simple-link:visited {
+        font-size: 14px;
+        color: #374151;
+        text-decoration: none;
+    }
+
+    .pmenu-simple-link:hover {
+        color: #0D9488;
+        background: #f0fdfa;
+    }
+
+    // Mobile links
+    .pmenu-mobile-link,
+    .pmenu-mobile-link:visited {
+        color: #1f2937;
+        text-decoration: none;
+    }
+
+    .pmenu-mobile-link:hover {
+        color: #0D9488;
+    }
+
+    // Badge styling
+    .pmenu-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 4px;
+        margin-left: 6px;
+    }
+
+    // Mobile hamburger hidden on desktop
+    .pmenu-hamburger {
+        display: none;
+    }
+}
+
+// Mobile
+@media screen and (max-width: 767px) {
+    .page-header .header.content .pmenu-nav .pmenu-bar {
+        display: none;
+    }
+    .pmenu-hamburger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .nav-toggle {
+        display: none !important;
+    }
+    .page-header .header.content .pmenu-nav {
+        order: 1;
+        flex: 0;
+        justify-content: flex-start;
+    }
+}

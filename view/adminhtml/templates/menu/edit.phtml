@@ -1,0 +1,2669 @@
+<?php
+$menuData = json_decode($block->getMenuData(), true);
+$itemsData = json_decode($block->getMenuItemsData(), true);
+$isNew = empty($menuData['menu_id']);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Icon Libraries - All Local (No CDN) -->
+<link rel="stylesheet" href="<?= $block->escapeUrl($block->getViewFileUrl('Panth_MegaMenu::css/fontawesome/all.min.css')) ?>">
+<link rel="stylesheet" href="<?= $block->escapeUrl($block->getViewFileUrl('Panth_MegaMenu::css/lineicons/lineicons.css')) ?>">
+<link rel="stylesheet" href="<?= $block->escapeUrl($block->getViewFileUrl('Panth_MegaMenu::css/material-icons/material-icons.css')) ?>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* { font-family: 'Inter', sans-serif; }
+
+/* Improved Typography */
+body { font-size: 15px; line-height: 1.6; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+label { font-size: 14px; }
+input, select, textarea { font-size: 14px; }
+button { font-size: 14px; }
+.text-xs { font-size: 12px; }
+.text-sm { font-size: 13px; }
+.text-base { font-size: 15px; }
+.text-lg { font-size: 16px; }
+.text-xl { font-size: 18px; }
+.text-2xl { font-size: 20px; }
+.text-3xl { font-size: 24px; }
+.text-4xl { font-size: 28px; }
+.drop-indicator { @apply border-4 border-dashed border-green-500 bg-green-50 dark:bg-green-900/30 scale-105; }
+.drop-invalid { @apply border-4 border-dashed border-red-500 bg-red-50 dark:bg-red-900/30; }
+.dragging { @apply opacity-40 scale-95; }
+.drag-ghost { @apply fixed pointer-events-none z-50 opacity-80 rotate-3; }
+
+/* Hover Effect Previews */
+.hover-fade:hover { opacity: 0.7; transition: opacity 0.3s; }
+.hover-slide:hover { transform: translateY(-4px); transition: transform 0.3s; }
+.hover-zoom:hover { transform: scale(1.05); transition: transform 0.3s; }
+.hover-underline:hover { text-decoration: underline; text-underline-offset: 4px; }
+.hover-glow:hover { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); transition: box-shadow 0.3s; }
+
+/* Material Icons Fix */
+.material-symbols-outlined { font-family: 'Material Symbols Outlined'; }
+
+/* Tooltip Styles */
+.tooltip-container { position: relative; display: inline-block; }
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  z-index: 1000;
+  background-color: #1f2937;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  width: 280px;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  margin-top: 5px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  transition: opacity 0.3s, visibility 0.3s;
+  pointer-events: none;
+}
+.tooltip-text::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #1f2937;
+}
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+</style>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      animation: {
+        'slide-in': 'slideIn 0.3s ease-out',
+        'bounce-in': 'bounceIn 0.5s ease-out',
+      },
+      keyframes: {
+        slideIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        bounceIn: {
+          '0%': { opacity: '0', transform: 'scale(0.3)' },
+          '50%': { transform: 'scale(1.05)' },
+          '100%': { opacity: '1', transform: 'scale(1)' }
+        }
+      }
+    }
+  }
+}
+function openMegaMenuHelp() {
+    var m = document.getElementById('megamenu-help-modal');
+    if (m) { m.style.display = 'flex'; return; }
+    m = document.createElement('div');
+    m.id = 'megamenu-help-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
+    m.onclick = function(e) { if (e.target === m) m.style.display = 'none'; };
+    var c = document.createElement('div');
+    c.style.cssText = 'background:#fff;border-radius:12px;max-width:680px;width:95%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+    var s = 'style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:13px"';
+    var sc = 'style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b"';
+    var h = 'style="font-size:13px;font-weight:600;color:#334155;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #e2e8f0"';
+    c.innerHTML = '<div style="position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #eee;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center">'
+    + '<b style="font-size:15px">📖 MegaMenu CSS Reference</b>'
+    + '<button onclick="document.getElementById(\'megamenu-help-modal\').style.display=\'none\'" style="border:none;background:#f1f5f9;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px">&times;</button></div>'
+    + '<div style="padding:16px 20px">'
+    + '<div style="background:#eff6ff;padding:10px 14px;border-radius:6px;margin-bottom:14px;font-size:12px;border-left:3px solid #4F46E5"><b>Scoping:</b> <code style="background:#dbeafe;padding:1px 4px;border-radius:2px;font-size:11px">#panth-megamenu-{id} .selector { }</code></div>'
+    + '<h3 ' + h + '>Container</h3><table style="width:100%;border-collapse:collapse">'
+    + '<tr><td ' + s + '><code>.panth-mega-panel</code></td><td ' + sc + '>Mega dropdown</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-mega-item</code></td><td ' + sc + '>Top-level mega item</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-col-header</code></td><td ' + sc + '>Column header</td></tr>'
+    + '<tr><td ' + s + '><code>nav > ul > li > a</code></td><td ' + sc + '>Top-level link</td></tr></table>'
+    + '<h3 ' + h + '>Hover Effects</h3><table style="width:100%;border-collapse:collapse">'
+    + '<tr><td ' + s + '><code>.panth-hover-underline</code></td><td ' + sc + '>Animated underline</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-hover-fade</code></td><td ' + sc + '>Opacity fade</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-hover-highlight</code></td><td ' + sc + '>Background highlight</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-hover-slide</code></td><td ' + sc + '>Slide up</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-hover-glow</code></td><td ' + sc + '>Text glow</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-hover-grow</code></td><td ' + sc + '>Scale grow</td></tr></table>'
+    + '<h3 ' + h + '>Layout</h3><table style="width:100%;border-collapse:collapse">'
+    + '<tr><td ' + s + '><code>.grid-cols-2</code> to <code>.grid-cols-5</code></td><td ' + sc + '>Column grids</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-badge</code></td><td ' + sc + '>Item badge (NEW, SALE, HOT)</td></tr>'
+    + '<tr><td ' + s + '><code>.panth-cms-block</code></td><td ' + sc + '>CMS block area</td></tr></table>'
+    + '<h3 ' + h + '>Mobile</h3><table style="width:100%;border-collapse:collapse">'
+    + '<tr><td ' + s + '><code>[x-data="megaMenuDesktop()"]</code></td><td ' + sc + '>Desktop nav</td></tr>'
+    + '<tr><td ' + s + '><code>[x-data="megaMenuMobile()"]</code></td><td ' + sc + '>Mobile drawer</td></tr>'
+    + '<tr><td ' + s + '><code>[x-data="megaMenuMegaPanel()"]</code></td><td ' + sc + '>Deep accordion</td></tr></table>'
+    + '<h3 ' + h + '>CSS Variables (theme-config.json)</h3><table style="width:100%;border-collapse:collapse">'
+    + '<tr><td ' + s + '><code>--menu-text</code> / <code>--menu-text-hover</code></td><td ' + sc + '>Text colors</td></tr>'
+    + '<tr><td ' + s + '><code>--menu-dropdown-bg</code></td><td ' + sc + '>Dropdown background</td></tr>'
+    + '<tr><td ' + s + '><code>--menu-level1-bg</code> / <code>--menu-level2-bg</code></td><td ' + sc + '>Panel backgrounds</td></tr>'
+    + '<tr><td ' + s + '><code>--menu-mobile-bg</code></td><td ' + sc + '>Mobile drawer bg</td></tr></table>'
+    + '</div>';
+    m.appendChild(c);
+    document.body.appendChild(m);
+}
+</script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+
+<!-- Form Key -->
+<?= $block->getBlockHtml('formkey') ?>
+<input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>" />
+
+<!-- Header -->
+<div class="bg-blue-600 text-white shadow-lg sticky top-0 z-40">
+  <div class="mx-auto px-6 py-6">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <h1 class="text-3xl font-bold mb-2"><?= $isNew ? '✨ Create New Menu' : '✏️ Edit Menu' ?></h1>
+        <p class="text-white/95">Build beautiful navigation menus with drag & drop</p>
+      </div>
+      <div class="flex gap-3">
+        <button id="previewBtn" onclick="saveAndPreview()"
+                class="px-6 py-3 bg-blue-700 hover:bg-blue-800 rounded-lg font-semibold transition-all duration-200">
+          <span id="previewBtnTxt">👁️ Preview</span>
+        </button>
+        <button onclick="location.href='<?= $block->escapeUrl($block->getListUrl()) ?>'"
+                class="px-6 py-3 bg-blue-700 hover:bg-blue-800 rounded-lg font-semibold transition-all duration-200">
+          ← Back
+        </button>
+        <button id="saveContinueBtn" onclick="saveAndContinue()"
+                class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200">
+          <span id="saveContinueTxt">💾 Save & Continue</span>
+        </button>
+        <button id="saveBtn" onclick="save()"
+                class="px-8 py-3 bg-white text-blue-600 hover:bg-gray-100 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200">
+          <span id="saveTxt">💾 Save Menu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="mx-auto px-6 py-8">
+  <div class="grid lg:grid-cols-4 gap-6">
+
+    <!-- Settings Panel -->
+    <div class="lg:col-span-1 space-y-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 sticky top-32">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+          <span class="text-2xl">⚙️</span> Menu Settings
+        </h2>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Title <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="title" value="<?= $block->escapeHtmlAttr($menuData['title'] ?? '') ?>"
+                   placeholder="Main Navigation" oninput="genId()"
+                   class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Identifier <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="identifier" value="<?= $block->escapeHtmlAttr($menuData['identifier'] ?? '') ?>"
+                   placeholder="main_navigation"
+                   class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-base font-semibold transition-all">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Lowercase, numbers, underscores only</p>
+          </div>
+
+          <div class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <input type="checkbox" id="active" <?= ($menuData['is_active'] ?? 1) ? 'checked' : '' ?>
+                   class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <label for="active" class="font-semibold text-gray-900 dark:text-white cursor-pointer select-none">
+              Active Menu
+            </label>
+          </div>
+
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">CSS Class</label>
+            <input type="text" id="css" value="<?= $block->escapeHtmlAttr($menuData['css_class'] ?? '') ?>"
+                   placeholder="custom-menu-class"
+                   class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Sort Order</label>
+            <input type="number" id="sort" value="<?= $block->escapeHtmlAttr($menuData['sort_order'] ?? '0') ?>"
+                   min="0"
+                   class="w-full px-4 py-3 text-base font-semibold border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+            <textarea id="desc" rows="3" placeholder="Internal notes about this menu..."
+                      class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all resize-none"><?= $block->escapeHtml($menuData['description'] ?? '') ?></textarea>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Custom CSS</label>
+            </div>
+            <textarea id="customcss" rows="4" placeholder=".my-menu { color: #333; }"
+                      class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm leading-relaxed transition-all resize-none"><?= $block->escapeHtml($menuData['custom_css'] ?? '') ?></textarea>
+            <p class="text-xs text-gray-500 mt-1">Do not include style tags.</p>
+            <div class="mt-3">
+              <button type="button" onclick="openMegaMenuHelp()"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md hover:bg-indigo-100 text-xs font-medium transition-colors">
+                <span>📖</span> How it works
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu Items Panel -->
+    <div class="lg:col-span-3">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="text-2xl">📋</span> Menu Items
+              </h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                💡 <strong>Drag</strong> to reorder • <strong>Hold over item for 300ms</strong> to nest as child • Blue line shows drop position
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <button onclick="importCategories()"
+                      class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200">
+                📥 Import Categories
+              </button>
+              <button onclick="addItem()"
+                      class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200">
+                ➕ Add Item
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="items" class="p-6 space-y-3 max-h-[800px] overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Panel (Hidden by default) -->
+<div id="previewPanel" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[1400px] max-w-[90vw] h-[700px] flex flex-col">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-3">
+      <h3 class="text-2xl font-bold text-gray-900 dark:text-white">👁️ Menu Preview</h3>
+      <div class="flex gap-3 flex-wrap items-center">
+        <button onclick="setPreviewMode('desktop')" class="px-4 py-2 bg-indigo-500 text-white rounded-lg font-semibold">🖥️ Desktop</button>
+        <button onclick="setPreviewMode('tablet')" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold">📱 Tablet</button>
+        <button onclick="setPreviewMode('mobile')" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold">📱 Mobile</button>
+        <div id="mobileLayoutSelector" class="hidden flex gap-2 items-center ml-2 pl-2 border-l-2 border-gray-300">
+          <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Layout:</span>
+          <button onclick="setMobileLayout('accordion')" id="btnAccordion" class="px-3 py-1 bg-indigo-500 text-white rounded-lg text-sm font-semibold">Accordion</button>
+          <button onclick="setMobileLayout('slide')" id="btnSlide" class="px-3 py-1 bg-gray-500 text-white rounded-lg text-sm font-semibold">Slide</button>
+        </div>
+        <button onclick="togglePreview()" class="px-4 py-2 bg-red-500 text-white rounded-lg font-bold">✕</button>
+      </div>
+    </div>
+    <div class="p-6 flex-1 overflow-auto">
+      <div id="previewContent" class="preview-desktop" data-mobile-layout="accordion"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Category/Page/Block Picker Modal -->
+<div id="pickerModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <h3 id="pickerTitle" class="text-2xl font-bold text-gray-900 dark:text-white">Select Item</h3>
+      <button onclick="closePicker()"
+              class="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 font-bold text-xl transition-all">
+        ✕
+      </button>
+    </div>
+    <div class="p-6 flex-1 overflow-hidden flex flex-col">
+      <input type="text" id="pickerSearch" placeholder="🔍 Search..." oninput="filterPicker()"
+             class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 dark:bg-gray-700 dark:text-white mb-4 transition-all">
+      <div id="pickerList" class="flex-1 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Alert/Confirm Modal -->
+<div id="alertModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full animate-bounce-in">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <h3 id="alertTitle" class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <span id="alertIcon" class="text-3xl"></span>
+        <span id="alertTitleText">Alert</span>
+      </h3>
+    </div>
+    <div class="p-6">
+      <p id="alertMessage" class="text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed"></p>
+    </div>
+    <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+      <button id="alertCancelBtn" onclick="closeAlert(false)"
+              class="hidden px-6 py-3 bg-gray-500/10 text-gray-700 dark:text-gray-300 hover:bg-gray-500/20 rounded-xl font-bold transition-all">
+        Cancel
+      </button>
+      <button id="alertOkBtn" onclick="closeAlert(true)"
+              class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all">
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Icon Picker Modal -->
+<div id="iconModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <h3 class="text-2xl font-bold text-gray-900 dark:text-white">🎨 Select Icon</h3>
+      <button onclick="closeIconPicker()"
+              class="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 font-bold text-xl transition-all">
+        ✕
+      </button>
+    </div>
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex gap-3 flex-wrap">
+        <button onclick="loadIcons('fontawesome')" class="px-4 py-2 bg-indigo-500 text-white rounded-lg font-semibold">Font Awesome</button>
+        <button onclick="loadIcons('lineicons')" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold">Line Icons</button>
+        <button onclick="loadIcons('material')" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold">Material</button>
+        <button onclick="loadIcons('emoji')" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold">Emoji</button>
+      </div>
+    </div>
+    <div class="p-6 flex-1 overflow-hidden flex flex-col">
+      <input type="text" id="iconSearch" placeholder="🔍 Search icons..." oninput="filterIcons()"
+             class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 dark:bg-gray-700 dark:text-white mb-4 transition-all">
+      <div id="iconList" class="flex-1 overflow-y-auto grid grid-cols-6 gap-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var md = <?= /* @noEscape */ json_encode($menuData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+var items = <?= /* @noEscape */ json_encode($itemsData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
+// Expose items to preview JS (menu-preview.js reads window.menuBuilderData)
+window.menuBuilderData = { items: items };
+// Keep reference in sync — when items array is modified, update menuBuilderData
+var _origPush = Array.prototype.push;
+Object.defineProperty(window, 'menuBuilderData', {
+    get: function() { return { items: items }; },
+    configurable: true
+});
+
+var idGen = md.menu_id ? true : false;
+var dragEl = null;
+var dragIdx = -1;
+var dropTarget = null;
+var dragTimer = null;
+var pickerData = [];
+var pickerIdx = -1;
+var iconData = [];
+var iconIdx = -1;
+var iconLibrary = 'fontawesome';
+var importCategoriesUrl = '<?= $block->escapeJs($block->getUrl('panth_menu/menu/importcategories')) ?>';
+var getCategoriesUrl = '<?= $block->escapeJs($block->getUrl('panth_menu/menu/getcategories')) ?>';
+var getIconsUrl = '<?= $block->escapeJs($block->getUrl('panth_menu/menu/geticons')) ?>';
+var alertCallback = null;
+var collapsedItems = {}; // Track collapsed state by item ID (for children)
+var expandedItems = {}; // Track expanded state for individual item editing (all collapsed by default)
+
+// Initialize all items with children as collapsed by default
+function initializeCollapsedState() {
+  items.forEach(item => {
+    var itemId = item.temp_id || item.item_id;
+    // Check if this item has children
+    var hasKids = items.some(it => it.parent_id === itemId);
+    if (hasKids) {
+      collapsedItems[itemId] = true;
+    }
+  });
+}
+
+// Modal Alert/Confirm Functions
+function showAlert(message, icon = '⚠️', title = 'Alert') {
+  return new Promise((resolve) => {
+    document.getElementById('alertTitleText').textContent = title;
+    document.getElementById('alertIcon').textContent = icon;
+    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('alertCancelBtn').classList.add('hidden');
+    document.getElementById('alertOkBtn').textContent = 'OK';
+    document.getElementById('alertModal').classList.remove('hidden');
+    document.getElementById('alertModal').classList.add('flex');
+    alertCallback = resolve;
+  });
+}
+
+function showConfirm(message, icon = '❓', title = 'Confirm') {
+  return new Promise((resolve) => {
+    document.getElementById('alertTitleText').textContent = title;
+    document.getElementById('alertIcon').textContent = icon;
+    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('alertCancelBtn').classList.remove('hidden');
+    document.getElementById('alertOkBtn').textContent = 'Confirm';
+    document.getElementById('alertModal').classList.remove('hidden');
+    document.getElementById('alertModal').classList.add('flex');
+    alertCallback = resolve;
+  });
+}
+
+function closeAlert(result) {
+  document.getElementById('alertModal').classList.add('hidden');
+  document.getElementById('alertModal').classList.remove('flex');
+  if (alertCallback) {
+    alertCallback(result);
+    alertCallback = null;
+  }
+}
+
+// Item type tooltips
+var typeTooltips = {
+  category: '📁 Link to a product category. Can auto-import subcategories as children.',
+  cms_page: '📄 Link to a static CMS page like About Us, Contact, etc.',
+  link: '🔗 Simple link to any internal or external URL.',
+  custom: '⚙️ Advanced URLs with query parameters, anchors, or special routing (e.g., /products?filter=sale#top).',
+  cms_block: '📦 Display custom HTML content from a CMS block (child items only).',
+  custom_html: '✏️ Add custom HTML content directly (child items only).'
+};
+
+function render() {
+  var h = document.getElementById('items');
+  if (!items.length) {
+    h.innerHTML = `<div class="text-center py-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl">
+      <div class="text-6xl mb-4 animate-bounce">📋</div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No menu items yet</h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-4">Click "Add Item" or "Import Categories" to get started</p>
+    </div>`;
+    return;
+  }
+
+  // Build HTML considering collapsed state
+  var html = '';
+  items.forEach((it, i) => {
+    var itemId = it.temp_id || it.item_id;
+
+    // Check if any ancestor is collapsed
+    if (isAnyAncestorCollapsed(it)) {
+      return; // Skip rendering if any ancestor is collapsed
+    }
+
+    html += renderItem(it, i);
+  });
+
+  h.innerHTML = html;
+}
+
+function isAnyAncestorCollapsed(item) {
+  var currentParentId = item.parent_id;
+
+  while (currentParentId) {
+    if (collapsedItems[currentParentId]) {
+      return true;
+    }
+
+    // Find the parent item
+    var parentItem = items.find(it => (it.temp_id || it.item_id) === currentParentId);
+    if (!parentItem) break;
+
+    currentParentId = parentItem.parent_id;
+  }
+
+  return false;
+}
+
+function toggleCollapse(i) {
+  var item = items[i];
+  var itemId = item.temp_id || item.item_id;
+
+  if (collapsedItems[itemId]) {
+    delete collapsedItems[itemId];
+  } else {
+    collapsedItems[itemId] = true;
+  }
+
+  render();
+}
+
+function toggleExpand(i) {
+  var item = items[i];
+  var itemId = item.temp_id || item.item_id;
+
+  if (expandedItems[itemId]) {
+    delete expandedItems[itemId];
+  } else {
+    expandedItems[itemId] = true;
+  }
+
+  render();
+}
+
+function hasChildren(itemId) {
+  return items.some(it => it.parent_id === itemId);
+}
+
+function renderItem(it, i) {
+  var levelClass = it.level > 0 ? `ml-${Math.min(it.level * 8, 48)}` : '';
+  var levelBadge = it.level > 0 ? `<span class="px-2 py-1 bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold">Level ${it.level}</span>` : '';
+  var activeClass = (it.show_on_frontend ?? 1) ? '' : 'opacity-60';
+  var iconPreview = it.icon ? renderIconPreview(it.icon, it.icon_library || 'fontawesome') : '';
+  var itemId = it.temp_id || it.item_id;
+  var hasKids = hasChildren(itemId);
+  var isCollapsed = collapsedItems[itemId];
+  var isExpanded = expandedItems[itemId];
+
+  // Dynamic fields based on item type
+  var typeFields = getTypeFields(it, i);
+
+  // Collapse/expand button for children
+  var collapseButton = hasKids ? `<button onclick="event.stopPropagation();toggleCollapse(${i})" title="${isCollapsed ? 'Expand' : 'Collapse'} children"
+          class="text-lg cursor-pointer select-none mt-2 w-10 h-10 flex items-center justify-center rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-all transform ${isCollapsed ? '' : 'rotate-90'}" style="transition: transform 0.3s ease;">
+    ▶
+  </button>` : '<div class="w-10"></div>';
+
+  // If not expanded, show compressed view
+  if (!isExpanded) {
+    return `<div class="group ${activeClass} ${levelClass} bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-750 border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-4 transition-all duration-200 cursor-move animate-slide-in shadow-sm hover:shadow-md"
+                 draggable="true" data-i="${i}"
+                 ondragstart="dragStart(event,${i})" ondragover="dragOver(event,${i})"
+                 ondrop="drop(event,${i})" ondragend="dragEnd(event)" ondragleave="dragLeave(event)">
+
+      <div class="flex items-center gap-3">
+        ${collapseButton}
+        <div class="text-2xl cursor-grab active:cursor-grabbing select-none">☰</div>
+
+        <div class="flex-1 flex items-center gap-3">
+          ${iconPreview ? `<span class="text-xl">${iconPreview}</span>` : ''}
+          <div class="flex-1">
+            <div class="font-bold text-lg text-gray-900 dark:text-white">${it.title || 'Untitled'}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+              <span class="px-2 py-0.5 bg-blue-500/10 text-blue-600 rounded">${it.item_type}</span>
+              ${it.url ? `<span class="ml-2 text-xs">${it.url}</span>` : ''}
+            </div>
+          </div>
+          ${levelBadge}
+        </div>
+
+        <!-- Compact Action Buttons -->
+        <button onclick="event.stopPropagation();toggleExpand(${i})" title="Expand to edit"
+                class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 font-bold transition-all">
+          ✏️
+        </button>
+        ${it.item_type !== 'cms_block' && it.item_type !== 'custom_html' ? `<button onclick="addChild(${i})" title="Add Child"
+                class="w-10 h-10 rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 font-bold transition-all">
+          ➕
+        </button>` : ''}
+        <button onclick="toggle(${i})" title="Toggle Show on Frontend"
+                class="w-10 h-10 rounded-lg ${(it.show_on_frontend ?? 1) ? 'bg-green-500/10 text-green-600' : 'bg-gray-500/10 text-gray-600'} hover:bg-opacity-20 font-bold transition-all">
+          ${(it.show_on_frontend ?? 1) ? '👁️' : '🚫'}
+        </button>
+        <button onclick="del(${i})" title="Delete"
+                class="w-10 h-10 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 font-bold transition-all">
+          🗑️
+        </button>
+      </div>
+    </div>`;
+  }
+
+  // Expanded view - show all fields
+  return `<div class="group ${activeClass} ${levelClass} bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-750 border-2 border-indigo-400 dark:border-indigo-500 rounded-xl p-5 transition-all duration-200 cursor-move animate-slide-in shadow-md"
+               draggable="true" data-i="${i}"
+               ondragstart="dragStart(event,${i})" ondragover="dragOver(event,${i})"
+               ondrop="drop(event,${i})" ondragend="dragEnd(event)" ondragleave="dragLeave(event)">
+
+    <div class="flex items-start gap-3 mb-4">
+      ${collapseButton}
+      <div class="text-2xl cursor-grab active:cursor-grabbing select-none mt-2">☰</div>
+
+      <div class="flex-1 space-y-3">
+        <!-- Item Type Selector with Tooltip -->
+        <div class="flex items-center gap-2">
+          <select onchange="upd(${i},'item_type',this.value);render()"
+                  class="flex-1 px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+            ${renderTypeOptions(it.item_type, it.level)}
+          </select>
+          <div class="tooltip-container">
+            <button class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 font-bold text-xl">ℹ️</button>
+            <span class="tooltip-text">${getTooltipHtml(it.item_type)}</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Fields -->
+        ${typeFields}
+
+        <!-- Icon, Hover Effect, CSS Class Row -->
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="openIconPicker(${i})" class="px-4 py-3 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 rounded-lg font-semibold transition-all flex items-center justify-center gap-2">
+            ${iconPreview || '🎨'} Icon
+          </button>
+          <select onchange="upd(${i},'hover_effect',this.value)"
+                  class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+            <option value="fade"${it.hover_effect === 'fade' ? ' selected' : ''}>Fade</option>
+            <option value="slide"${it.hover_effect === 'slide' ? ' selected' : ''}>Slide</option>
+            <option value="zoom"${it.hover_effect === 'zoom' ? ' selected' : ''}>Zoom</option>
+            <option value="underline"${it.hover_effect === 'underline' ? ' selected' : ''}>Underline</option>
+            <option value="glow"${it.hover_effect === 'glow' ? ' selected' : ''}>Glow</option>
+            <option value="none"${it.hover_effect === 'none' ? ' selected' : ''}>None</option>
+          </select>
+          <input type="text" placeholder="CSS Class" value="${it.css_class || ''}"
+                 oninput="upd(${i},'css_class',this.value)"
+                 class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-mono">
+        </div>
+
+        <!-- Submenu Columns & Colors Row -->
+        <div class="grid ${it.level <= 1 ? 'grid-cols-3' : 'grid-cols-2'} gap-3">
+          ${it.level <= 1 ? `<select onchange="upd(${i},'submenu_columns',this.value)"
+                  class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+            <option value="1"${(it.submenu_columns ?? 1) == 1 ? ' selected' : ''}>1 Column</option>
+            <option value="2"${it.submenu_columns == 2 ? ' selected' : ''}>2 Columns</option>
+            <option value="3"${it.submenu_columns == 3 ? ' selected' : ''}>3 Columns</option>
+            <option value="4"${it.submenu_columns == 4 ? ' selected' : ''}>4 Columns</option>
+            <option value="5"${it.submenu_columns == 5 ? ' selected' : ''}>5 Columns</option>
+            <option value="6"${it.submenu_columns == 6 ? ' selected' : ''}>6 Columns</option>
+          </select>` : ''}
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">BG:</label>
+            <input type="color" value="${it.background_color || '#ffffff'}"
+                   onchange="upd(${i},'background_color',this.value)"
+                   class="w-full h-11 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">Text:</label>
+            <input type="color" value="${it.text_color || '#000000'}"
+                   onchange="upd(${i},'text_color',this.value)"
+                   class="w-full h-11 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+          </div>
+        </div>
+
+        <!-- Target & Show on Frontend -->
+        <div class="flex items-center gap-4 flex-wrap">
+          <select onchange="upd(${i},'target',this.value)"
+                  class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+            <option value="_self"${it.target === '_self' ? ' selected' : ''}>Same Window</option>
+            <option value="_blank"${it.target === '_blank' ? ' selected' : ''}>New Window</option>
+          </select>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="show_${i}" ${(it.show_on_frontend ?? 1) ? 'checked' : ''}
+                   onchange="upd(${i},'show_on_frontend',this.checked?1:0);upd(${i},'is_active',this.checked?1:0)"
+                   class="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+            <label for="show_${i}" class="font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">Show on Frontend</label>
+          </div>
+        </div>
+      </div>
+
+      ${levelBadge}
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col gap-2">
+        <button onclick="event.stopPropagation();toggleExpand(${i})" title="Collapse"
+                class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 font-bold transition-all">
+          ⬆️
+        </button>
+        ${it.item_type !== 'cms_block' && it.item_type !== 'custom_html' ? `<button onclick="addChild(${i})" title="Add Child"
+                class="w-10 h-10 rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 font-bold transition-all">
+          ➕
+        </button>` : ''}
+        <button onclick="toggle(${i})" title="Toggle Show on Frontend"
+                class="w-10 h-10 rounded-lg ${(it.show_on_frontend ?? 1) ? 'bg-green-500/10 text-green-600' : 'bg-gray-500/10 text-gray-600'} hover:bg-opacity-20 font-bold transition-all">
+          ${(it.show_on_frontend ?? 1) ? '👁️' : '🚫'}
+        </button>
+        <button onclick="del(${i})"
+                class="w-10 h-10 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 font-bold transition-all">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTypeOptions(currentType, level) {
+  var options = '';
+  var types = level > 0
+    ? ['category', 'cms_page', 'link', 'custom', 'cms_block', 'custom_html']
+    : ['category', 'cms_page', 'link', 'custom', 'cms_block'];
+
+  var labels = {
+    category: '📁 Category',
+    cms_page: '📄 CMS Page',
+    link: '🔗 Link',
+    custom: '⚙️ Custom URL',
+    cms_block: '📦 CMS Block (Dropdown)',
+    custom_html: '✏️ Custom HTML'
+  };
+
+  types.forEach(type => {
+    options += `<option value="${type}"${currentType === type ? ' selected' : ''}>${labels[type]}</option>`;
+  });
+
+  return options;
+}
+
+function getTypeFields(it, i) {
+  switch (it.item_type) {
+    case 'category':
+      return `<div class="grid grid-cols-2 gap-3">
+        <input type="text" placeholder="Category Name *" value="${it.title || ''}"
+               oninput="upd(${i},'title',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+        <button onclick="openPicker(${i},'category')" class="px-4 py-3 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 rounded-lg font-semibold transition-all">
+          🎯 Select Category
+        </button>
+      </div>
+      <input type="text" placeholder="URL" value="${it.url || ''}" readonly
+             class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white bg-gray-100">`;
+
+    case 'cms_page':
+      return `<div class="grid grid-cols-2 gap-3">
+        <input type="text" placeholder="Page Title *" value="${it.title || ''}"
+               oninput="upd(${i},'title',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+        <button onclick="openPicker(${i},'cms_page')" class="px-4 py-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-lg font-semibold transition-all">
+          📄 Select Page
+        </button>
+      </div>
+      <input type="text" placeholder="URL" value="${it.url || ''}" readonly
+             class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white bg-gray-100">`;
+
+    case 'link':
+      return `<div class="grid grid-cols-2 gap-3">
+        <input type="text" placeholder="Menu Title *" value="${it.title || ''}"
+               oninput="upd(${i},'title',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+        <input type="text" placeholder="URL *" value="${it.url || ''}"
+               oninput="upd(${i},'url',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white">
+      </div>`;
+
+    case 'custom':
+      return `<div class="grid grid-cols-2 gap-3">
+        <input type="text" placeholder="Menu Title *" value="${it.title || ''}"
+               oninput="upd(${i},'title',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+        <input type="text" placeholder="Custom URL * (e.g., /sale?discount=50#top)" value="${it.url || ''}"
+               oninput="upd(${i},'url',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white">
+      </div>`;
+
+    case 'cms_block':
+      return `<div class="grid grid-cols-2 gap-3">
+        <input type="text" placeholder="Block Title *" value="${it.title || ''}"
+               oninput="upd(${i},'title',this.value)"
+               class="px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+        <button onclick="openPicker(${i},'cms_block')" class="px-4 py-3 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 rounded-lg font-semibold transition-all">
+          📦 Select Block
+        </button>
+      </div>`;
+
+    case 'custom_html':
+      return `<div class="space-y-2">
+        <input type="text" placeholder="Title *" value="${it.title || ''}"
+               oninput="upd(${i},'title',this.value)"
+               class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-semibold">
+        <textarea placeholder="Custom HTML *" rows="4"
+                  oninput="upd(${i},'custom_html',this.value)"
+                  class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white font-mono resize-none">${it.custom_html || ''}</textarea>
+      </div>`;
+
+    default:
+      return '';
+  }
+}
+
+function renderIconPreview(icon, library) {
+  if (library === 'emoji') {
+    return `<span class="text-2xl">${icon}</span>`;
+  } else if (library === 'material') {
+    return `<span class="material-symbols-outlined">${icon}</span>`;
+  } else {
+    return `<i class="${icon}"></i>`;
+  }
+}
+
+function getTooltipHtml(type) {
+  return typeTooltips[type] || 'No description available';
+}
+
+function addItem() {
+  items.push({
+    item_id: null,
+    temp_id: 'new_' + Date.now(),
+    title: '',
+    url: '',
+    item_type: 'link',
+    target: '_self',
+    position: items.length,
+    level: 0,
+    is_active: 1,
+    show_on_frontend: 1,
+    parent_id: null,
+    css_class: '',
+    icon: '',
+    icon_library: 'fontawesome',
+    hover_effect: 'fade',
+    submenu_columns: 1,
+    background_color: '',
+    text_color: '',
+    category_id: null,
+    cms_page_id: null,
+    cms_block_id: null,
+    custom_html: ''
+  });
+  render();
+}
+
+async function addChild(parentIdx) {
+  var parent = items[parentIdx];
+
+  // Prevent adding children to CMS Block and Custom HTML items
+  if (parent.item_type === 'cms_block' || parent.item_type === 'custom_html') {
+    await showAlert('Cannot add child items to CMS Block or Custom HTML items.\n\nThese item types cannot have children.', '❌', 'Error');
+    return;
+  }
+
+  var newLevel = parent.level + 1;
+
+  if (newLevel > 5) {
+    await showAlert('Maximum nesting level (6) reached!', '❌', 'Error');
+    return;
+  }
+
+  var parentId = parent.temp_id || parent.item_id;
+
+  // Auto-expand parent if collapsed
+  if (collapsedItems[parentId]) {
+    delete collapsedItems[parentId];
+  }
+
+  // Find the last child of this parent (or the parent itself if no children)
+  var insertIdx = parentIdx + 1;
+  var parentIdToMatch = parentId;
+
+  // Find all descendants of this parent
+  for (var i = parentIdx + 1; i < items.length; i++) {
+    var currentItem = items[i];
+
+    // Check if this item is a descendant of the parent
+    var isDescendant = false;
+    var checkParent = currentItem.parent_id;
+
+    while (checkParent) {
+      if (checkParent === parentIdToMatch) {
+        isDescendant = true;
+        break;
+      }
+      var parentItem = items.find(it => (it.temp_id || it.item_id) === checkParent);
+      if (!parentItem) break;
+      checkParent = parentItem.parent_id;
+    }
+
+    if (isDescendant) {
+      insertIdx = i + 1;
+    } else {
+      // Stop when we hit a non-descendant
+      break;
+    }
+  }
+
+  // Create new child item
+  var newItem = {
+    item_id: null,
+    temp_id: 'new_' + Date.now(),
+    title: '',
+    url: '',
+    item_type: 'link',
+    target: '_self',
+    position: insertIdx,
+    level: newLevel,
+    is_active: 1,
+    show_on_frontend: 1,
+    parent_id: parentId,
+    css_class: '',
+    icon: '',
+    icon_library: 'fontawesome',
+    hover_effect: 'fade',
+    submenu_columns: 1,
+    background_color: '',
+    text_color: '',
+    category_id: null,
+    cms_page_id: null,
+    cms_block_id: null,
+    custom_html: ''
+  };
+
+  // Insert at the correct position (after parent and all its children)
+  items.splice(insertIdx, 0, newItem);
+
+  recalcPositions();
+  render();
+
+  // Auto-expand the new item for editing
+  setTimeout(() => {
+    var newItemIdx = items.findIndex(it => it.temp_id === newItem.temp_id);
+    if (newItemIdx !== -1) {
+      toggleExpand(newItemIdx);
+    }
+  }, 100);
+}
+
+function upd(i, f, v) { items[i][f] = v; }
+function toggle(i) {
+  var newValue = (items[i].show_on_frontend ?? 1) ? 0 : 1;
+  items[i].show_on_frontend = newValue;
+  items[i].is_active = newValue; // Keep is_active in sync
+  render();
+}
+function genId() {
+  if (!idGen) {
+    document.getElementById('identifier').value = document.getElementById('title').value
+      .toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  }
+}
+
+async function del(i) {
+  var delId = items[i].item_id || items[i].temp_id;
+
+  // Find all children recursively
+  var childrenToDelete = [];
+  var findChildren = (parentId) => {
+    items.forEach((it, idx) => {
+      var itId = it.temp_id || it.item_id;
+      if (it.parent_id === parentId) {
+        childrenToDelete.push(idx);
+        findChildren(itId);
+      }
+    });
+  };
+  findChildren(delId);
+
+  var message = 'Delete this item?';
+  if (childrenToDelete.length > 0) {
+    message += '\n\nThis will also delete ' + childrenToDelete.length + ' child item(s).';
+  }
+
+  var confirmed = await showConfirm(message, '⚠️', 'Confirm Delete');
+  if (!confirmed) return;
+
+  // Sort indices in descending order to delete from end first
+  childrenToDelete.sort((a, b) => b - a);
+
+  // Delete all children first
+  childrenToDelete.forEach(idx => {
+    items.splice(idx, 1);
+  });
+
+  // Find the new index of parent item after children deletion
+  var newParentIdx = items.findIndex(it => (it.item_id || it.temp_id) === delId);
+  if (newParentIdx !== -1) {
+    items.splice(newParentIdx, 1);
+  }
+
+  recalcPositions();
+  render();
+}
+
+function recalcPositions() { items.forEach((it, idx) => it.position = idx); }
+
+// DRAG AND DROP - IMPROVED VERSION
+var dropZone = null;
+var nestMode = false;
+
+function dragStart(e, idx) {
+  dragEl = e.target;
+  dragIdx = idx;
+
+  // Find the actual item container
+  while (dragEl && !dragEl.dataset.i) {
+    dragEl = dragEl.parentElement;
+  }
+
+  if (!dragEl) return;
+
+  dragEl.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', idx);
+
+  // Create drag image
+  var dragImage = dragEl.cloneNode(true);
+  dragImage.style.opacity = '0.8';
+  document.body.appendChild(dragImage);
+  dragImage.style.position = 'absolute';
+  dragImage.style.top = '-1000px';
+  e.dataTransfer.setDragImage(dragImage, 0, 0);
+  setTimeout(() => document.body.removeChild(dragImage), 0);
+}
+
+function dragEnd(e) {
+  if (dragEl) dragEl.classList.remove('dragging');
+  if (dropTarget) {
+    dropTarget.classList.remove('drop-indicator', 'drop-invalid');
+    dropTarget.style.borderTop = '';
+    dropTarget.style.borderBottom = '';
+  }
+
+  if (dragTimer) clearTimeout(dragTimer);
+
+  dragEl = null;
+  dragIdx = -1;
+  dropTarget = null;
+  dropZone = null;
+  nestMode = false;
+
+  // Remove all drop indicators
+  document.querySelectorAll('.drop-indicator, .drop-invalid').forEach(el => {
+    el.classList.remove('drop-indicator', 'drop-invalid');
+    el.style.borderTop = '';
+    el.style.borderBottom = '';
+  });
+}
+
+function dragLeave(e) {
+  var tgt = e.target;
+
+  // Find the item container
+  while (tgt && !tgt.dataset.i) {
+    tgt = tgt.parentElement;
+  }
+
+  if (tgt && tgt.dataset.i) {
+    tgt.classList.remove('drop-indicator', 'drop-invalid');
+    tgt.style.borderTop = '';
+    tgt.style.borderBottom = '';
+  }
+
+  if (dragTimer) {
+    clearTimeout(dragTimer);
+    dragTimer = null;
+  }
+
+  nestMode = false;
+}
+
+function dragOver(e, idx) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (dragIdx === -1 || dragIdx === idx) return;
+
+  // Find the target item container
+  var tgt = e.target;
+  while (tgt && !tgt.dataset.i) {
+    tgt = tgt.parentElement;
+  }
+
+  if (!tgt || !tgt.dataset.i) return;
+
+  // Check if we're dragging a parent onto its own child (prevent circular reference)
+  var draggedId = items[dragIdx].temp_id || items[dragIdx].item_id;
+  var targetItem = items[idx];
+  var isCircular = false;
+
+  // Check if target is a descendant of dragged item
+  var checkParent = targetItem.parent_id;
+  while (checkParent) {
+    if (checkParent === draggedId) {
+      isCircular = true;
+      break;
+    }
+    var parentItem = items.find(it => (it.temp_id || it.item_id) === checkParent);
+    if (!parentItem) break;
+    checkParent = parentItem.parent_id;
+  }
+
+  // Clear previous drop target
+  if (dropTarget && dropTarget !== tgt) {
+    dropTarget.classList.remove('drop-indicator', 'drop-invalid');
+    dropTarget.style.borderTop = '';
+    dropTarget.style.borderBottom = '';
+  }
+
+  dropTarget = tgt;
+
+  // Clear previous timer
+  if (dragTimer) clearTimeout(dragTimer);
+
+  // Determine drop position based on mouse Y position
+  var rect = tgt.getBoundingClientRect();
+  var mouseY = e.clientY;
+  var middleY = rect.top + (rect.height / 2);
+
+  // Immediate visual feedback for reorder
+  tgt.classList.remove('drop-indicator', 'drop-invalid');
+
+  if (mouseY < middleY) {
+    // Drop above
+    tgt.style.borderTop = '3px solid #3b82f6';
+    tgt.style.borderBottom = '';
+  } else {
+    // Drop below
+    tgt.style.borderBottom = '3px solid #3b82f6';
+    tgt.style.borderTop = '';
+  }
+
+  // Start timer for nesting (300ms hover)
+  dragTimer = setTimeout(() => {
+    tgt.style.borderTop = '';
+    tgt.style.borderBottom = '';
+
+    if (isCircular) {
+      tgt.classList.add('drop-invalid');
+      tgt.classList.remove('drop-indicator');
+      nestMode = false;
+      return;
+    }
+
+    // Prevent nesting into CMS Block or Custom HTML items
+    if (targetItem.item_type === 'cms_block' || targetItem.item_type === 'custom_html') {
+      tgt.classList.add('drop-invalid');
+      tgt.classList.remove('drop-indicator');
+      nestMode = false;
+      return;
+    }
+
+    var newLvl = items[idx].level + 1;
+
+    if (newLvl > 5) {
+      tgt.classList.add('drop-invalid');
+      tgt.classList.remove('drop-indicator');
+      nestMode = false;
+    } else {
+      tgt.classList.add('drop-indicator');
+      tgt.classList.remove('drop-invalid');
+      nestMode = true;
+    }
+  }, 300);
+}
+
+async function drop(e, idx) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (dragIdx === -1 || dragIdx === idx) {
+    dragEnd(e);
+    return;
+  }
+
+  if (dragTimer) {
+    clearTimeout(dragTimer);
+    dragTimer = null;
+  }
+
+  // Remove border indicators
+  if (dropTarget) {
+    dropTarget.style.borderTop = '';
+    dropTarget.style.borderBottom = '';
+  }
+
+  var isNestDrop = nestMode && dropTarget && dropTarget.classList.contains('drop-indicator');
+
+  if (isNestDrop) {
+    // NEST MODE: Make dragged item a child of target
+    var newLvl = items[idx].level + 1;
+
+    if (newLvl > 5) {
+      await showAlert('Cannot nest: Maximum 6 levels allowed', '❌', 'Error');
+      dragEnd(e);
+      render();
+      return;
+    }
+
+    // Check for circular reference
+    var draggedId = items[dragIdx].temp_id || items[dragIdx].item_id;
+    var targetItem = items[idx];
+    var isCircular = false;
+
+    var checkParent = targetItem.parent_id;
+    while (checkParent) {
+      if (checkParent === draggedId) {
+        isCircular = true;
+        break;
+      }
+      var parentItem = items.find(it => (it.temp_id || it.item_id) === checkParent);
+      if (!parentItem) break;
+      checkParent = parentItem.parent_id;
+    }
+
+    if (isCircular) {
+      await showAlert('Cannot nest: This would create a circular reference', '❌', 'Error');
+      dragEnd(e);
+      render();
+      return;
+    }
+
+    var draggedItem = items[dragIdx];
+    var targetId = items[idx].temp_id || items[idx].item_id;
+
+    draggedItem.parent_id = targetId;
+    draggedItem.level = newLvl;
+
+    // Update all children recursively
+    var childIds = [draggedItem.temp_id || draggedItem.item_id];
+    var updateChildren = (lvl) => {
+      items.forEach(it => {
+        if (childIds.includes(it.parent_id)) {
+          it.level = lvl + 1;
+          if (it.level > 5) {
+            it.level = 0;
+            it.parent_id = null;
+          } else {
+            childIds.push(it.temp_id || it.item_id);
+            updateChildren(lvl + 1);
+          }
+        }
+      });
+    };
+    updateChildren(newLvl);
+
+    recalcPositions();
+  } else {
+    // REORDER MODE: Move item to new position
+    // Determine drop position based on mouse position
+    var rect = dropTarget.getBoundingClientRect();
+    var mouseY = e.clientY;
+    var middleY = rect.top + (rect.height / 2);
+
+    var temp = items.splice(dragIdx, 1)[0];
+    var newIdx;
+
+    if (mouseY < middleY) {
+      // Drop above target
+      newIdx = idx;
+      if (dragIdx < idx) newIdx--;
+    } else {
+      // Drop below target
+      newIdx = idx;
+      if (dragIdx < idx) newIdx--;
+      newIdx++;
+    }
+
+    items.splice(newIdx, 0, temp);
+    // IMPORTANT: Maintain parent_id when reordering - don't change it
+    recalcPositions();
+  }
+
+  dragEnd(e);
+  render();
+}
+
+// CATEGORY IMPORT
+async function importCategories() {
+  var confirmed = await showConfirm('Import all active categories from Magento?\n\nThis will add categories to the menu while preserving existing items.', '📥', 'Import Categories');
+  if (!confirmed) return;
+
+  var maxLevel = prompt('Maximum category level to import (0 = all levels, 1 = only top level, etc.):', '0');
+  if (maxLevel === null) return;
+
+  fetch(importCategoriesUrl + '?max_level=' + maxLevel)
+    .then(r => r.json())
+    .then(async d => {
+      if (d.success) {
+        items = items.concat(d.items);
+        recalcPositions();
+        initializeCollapsedState();
+        render();
+        await showAlert('Successfully imported ' + d.count + ' categories!', '✅', 'Success');
+      } else {
+        await showAlert('Error: ' + (d.message || 'Failed to import categories'), '❌', 'Error');
+      }
+    })
+    .catch(async e => {
+      await showAlert('Error importing categories: ' + e.message, '❌', 'Error');
+    });
+}
+
+// PICKER MODAL
+function openPicker(idx, type) {
+  pickerIdx = idx;
+
+  var titles = {
+    category: '📁 Select Category',
+    cms_page: '📄 Select CMS Page',
+    cms_block: '📦 Select CMS Block'
+  };
+
+  document.getElementById('pickerTitle').textContent = titles[type] || 'Select Item';
+  document.getElementById('pickerSearch').value = '';
+  document.getElementById('pickerModal').classList.remove('hidden');
+  document.getElementById('pickerModal').classList.add('flex');
+  loadPickerData(type);
+}
+
+function closePicker() {
+  document.getElementById('pickerModal').classList.add('hidden');
+  document.getElementById('pickerModal').classList.remove('flex');
+  pickerData = [];
+  pickerIdx = -1;
+}
+
+function loadPickerData(type) {
+  var list = document.getElementById('pickerList');
+  list.innerHTML = '<div class="text-center py-20 text-gray-500">Loading...</div>';
+
+  fetch(getCategoriesUrl + '?type=' + type)
+    .then(r => r.json())
+    .then(async d => {
+      if (!d.success) {
+        await showAlert('Error loading data', '❌', 'Error');
+        closePicker();
+        return;
+      }
+
+      // Use hierarchical data if available
+      if (type === 'category' && d.data.hierarchical) {
+        pickerData = d.data.flat;
+        renderPickerTree(d.data.hierarchical);
+      } else {
+        pickerData = d.data;
+        renderPicker();
+      }
+    })
+    .catch(async e => {
+      await showAlert('Error loading data', '❌', 'Error');
+      closePicker();
+    });
+}
+
+function renderPicker(filter = '') {
+  var list = document.getElementById('pickerList');
+  var filtered = pickerData.filter(it => {
+    var name = it.name || it.title || '';
+    return name.toLowerCase().includes(filter.toLowerCase());
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="text-center py-20 text-gray-500">No items found</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(it => {
+    var title = it.name || it.title;
+    var url = it.url || '';
+    var indent = it.level ? 'ml-' + (it.level * 6) : '';
+    var badge = it.level !== undefined ? `<span class="px-2 py-1 bg-green-500/20 text-green-600 rounded-lg text-xs font-bold">L${it.level}</span>` : '';
+
+    return `<div onclick='selectPickerItem(${JSON.stringify(it).replace(/'/g, "\\'")})'
+                 class="${indent} p-4 bg-gray-50 dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 rounded-xl cursor-pointer transition-all">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <div class="font-bold text-gray-900 dark:text-white">${title}</div>
+          ${url ? `<div class="text-sm text-gray-600 dark:text-gray-400 mt-1">${url}</div>` : ''}
+        </div>
+        ${badge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPickerTree(tree, level = 0) {
+  var list = document.getElementById('pickerList');
+  var html = '';
+
+  tree.forEach(cat => {
+    var indent = level > 0 ? 'ml-' + (level * 6) : '';
+    var hasChildren = cat.children && cat.children.length > 0;
+    var expandIcon = hasChildren ? '📁' : '📄';
+
+    html += `<div class="${indent} mb-2">
+      <div onclick='selectPickerItem(${JSON.stringify(cat).replace(/'/g, "\\'")})'
+           class="p-4 bg-gray-50 dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 rounded-xl cursor-pointer transition-all">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span>${expandIcon}</span>
+            <span class="font-bold text-gray-900 dark:text-white">${cat.name}</span>
+          </div>
+          <span class="px-2 py-1 bg-green-500/20 text-green-600 rounded-lg text-xs font-bold">L${cat.level}</span>
+        </div>
+      </div>`;
+
+    if (hasChildren) {
+      html += '<div class="ml-6 mt-2">';
+      cat.children.forEach(child => {
+        html += renderPickerTreeItem(child, level + 1);
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  list.innerHTML = html;
+}
+
+function renderPickerTreeItem(cat, level) {
+  var indent = '';
+  var hasChildren = cat.children && cat.children.length > 0;
+  var expandIcon = hasChildren ? '📁' : '📄';
+
+  var html = `<div class="mb-2">
+    <div onclick='selectPickerItem(${JSON.stringify(cat).replace(/'/g, "\\'")})'
+         class="p-4 bg-gray-50 dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 rounded-xl cursor-pointer transition-all">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span>${expandIcon}</span>
+          <span class="font-bold text-gray-900 dark:text-white">${cat.name}</span>
+        </div>
+        <span class="px-2 py-1 bg-green-500/20 text-green-600 rounded-lg text-xs font-bold">L${cat.level}</span>
+      </div>
+    </div>`;
+
+  if (hasChildren) {
+    html += '<div class="ml-6 mt-2">';
+    cat.children.forEach(child => {
+      html += renderPickerTreeItem(child, level + 1);
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function filterPicker() {
+  renderPicker(document.getElementById('pickerSearch').value);
+}
+
+function selectPickerItem(item) {
+  var idx = pickerIdx;
+  items[idx].title = item.name || item.title || items[idx].title;
+  items[idx].url = item.url || items[idx].url;
+
+  if (item.id) {
+    if (items[idx].item_type === 'category') {
+      items[idx].category_id = item.id;
+    } else if (items[idx].item_type === 'cms_page') {
+      items[idx].cms_page_id = item.id;
+    } else if (items[idx].item_type === 'cms_block') {
+      items[idx].cms_block_id = item.id;
+    }
+  }
+
+  if (item.identifier && !items[idx].url) {
+    items[idx].url = '/' + item.identifier;
+  }
+
+  closePicker();
+  render();
+}
+
+// ICON PICKER
+function openIconPicker(idx) {
+  iconIdx = idx;
+  document.getElementById('iconModal').classList.remove('hidden');
+  document.getElementById('iconModal').classList.add('flex');
+  loadIcons('fontawesome');
+}
+
+function closeIconPicker() {
+  document.getElementById('iconModal').classList.add('hidden');
+  document.getElementById('iconModal').classList.remove('flex');
+  iconData = [];
+  iconIdx = -1;
+}
+
+function loadIcons(library) {
+  iconLibrary = library;
+  var list = document.getElementById('iconList');
+  list.innerHTML = '<div class="col-span-6 text-center py-20 text-gray-500">Loading...</div>';
+
+  fetch(getIconsUrl + '?library=' + library)
+    .then(r => r.json())
+    .then(async d => {
+      if (d.success) {
+        iconData = d.icons;
+        renderIcons();
+      } else {
+        await showAlert('Error loading icons', '❌', 'Error');
+        closeIconPicker();
+      }
+    })
+    .catch(async e => {
+      await showAlert('Error loading icons', '❌', 'Error');
+      closeIconPicker();
+    });
+}
+
+function renderIcons(filter = '') {
+  var list = document.getElementById('iconList');
+  var filtered = iconData.filter(it => {
+    var name = it.name || '';
+    return name.toLowerCase().includes(filter.toLowerCase());
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="col-span-6 text-center py-20 text-gray-500">No icons found</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(it => {
+    var iconHtml = '';
+    if (iconLibrary === 'emoji') {
+      iconHtml = `<span class="text-4xl">${it.emoji}</span>`;
+    } else if (iconLibrary === 'material') {
+      iconHtml = `<span class="material-symbols-outlined text-4xl">${it.text}</span>`;
+    } else {
+      iconHtml = `<i class="${it.class} text-4xl"></i>`;
+    }
+
+    var iconValue = iconLibrary === 'emoji' ? it.emoji : (iconLibrary === 'material' ? it.text : it.class);
+
+    return `<div onclick='selectIcon("${iconValue.replace(/'/g, "\\'")}")'
+                 class="p-4 bg-gray-50 dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-400 rounded-xl cursor-pointer transition-all flex flex-col items-center justify-center gap-2">
+      ${iconHtml}
+      <div class="text-xs text-gray-600 dark:text-gray-400 text-center">${it.name}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterIcons() {
+  renderIcons(document.getElementById('iconSearch').value);
+}
+
+function selectIcon(icon) {
+  items[iconIdx].icon = icon;
+  items[iconIdx].icon_library = iconLibrary;
+  closeIconPicker();
+  render();
+}
+
+// SAVE & PREVIEW - saves current form data via AJAX, then opens frontend preview in new tab
+async function saveAndPreview() {
+  var md = <?= /* @noEscape */ json_encode($menuData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+  var t = document.getElementById('title').value.trim();
+  var id = document.getElementById('identifier').value.trim();
+
+  console.log('[Preview] Starting saveAndPreview...');
+  console.log('[Preview] menu_id:', md.menu_id, 'title:', t, 'identifier:', id);
+  console.log('[Preview] items count:', items.length);
+
+  if (!t) { await showAlert('Please enter a menu title!', '❌', 'Error'); return; }
+  if (!id) { await showAlert('Please enter an identifier!', '❌', 'Error'); return; }
+
+  var btn = document.getElementById('previewBtn');
+  var txt = document.getElementById('previewBtnTxt');
+  btn.disabled = true;
+  txt.textContent = '⏳ Saving...';
+
+  try {
+    // Step 1: Save via FormData
+    var saveUrl = '<?= $block->escapeUrl($block->getSaveUrl()) ?>';
+    console.log('[Preview] Step 1: Saving to', saveUrl);
+
+    var formData = new FormData();
+    formData.append('form_key', document.querySelector('input[name="form_key"]').value);
+    formData.append('menu_id', md.menu_id || '');
+    formData.append('title', t);
+    formData.append('identifier', id);
+    formData.append('is_active', document.getElementById('active').checked ? '1' : '0');
+    formData.append('css_class', document.getElementById('css').value);
+    formData.append('sort_order', document.getElementById('sort').value);
+    formData.append('description', document.getElementById('desc').value);
+    formData.append('custom_css', document.getElementById('customcss').value);
+    formData.append('items_json', JSON.stringify(items));
+    formData.append('back', '1');
+
+    // Log FormData entries
+    for (var pair of formData.entries()) {
+      if (pair[0] === 'items_json') {
+        console.log('[Preview] FormData:', pair[0], '(length:', pair[1].length, ')');
+      } else {
+        console.log('[Preview] FormData:', pair[0], '=', pair[1]);
+      }
+    }
+
+    var saveResponse = await fetch(saveUrl, {
+      method: 'POST',
+      body: formData,
+      redirect: 'follow'
+    });
+
+    console.log('[Preview] Save response status:', saveResponse.status, saveResponse.statusText);
+    console.log('[Preview] Save response URL:', saveResponse.url);
+    console.log('[Preview] Save response ok:', saveResponse.ok);
+
+    // The save controller returns a redirect to the edit page (302->200)
+    // After fetch follows the redirect, we get a 200 HTML page
+    // Check if the final URL contains 'edit' (success) or error indicators
+    var saveBody = await saveResponse.text();
+    var saveSuccess = saveResponse.ok;
+    var hasError = saveBody.includes('error-msg') || saveBody.includes('Something went wrong');
+
+    console.log('[Preview] Save body length:', saveBody.length);
+    console.log('[Preview] Has error message:', hasError);
+    console.log('[Preview] Save considered successful:', saveSuccess && !hasError);
+
+    if (!saveSuccess || hasError) {
+      // Try to extract error message
+      var errorMatch = saveBody.match(/error-msg[^>]*>([^<]+)/);
+      var errorMsg = errorMatch ? errorMatch[1] : 'Unknown error';
+      console.error('[Preview] Save failed:', errorMsg);
+      await showAlert('Save failed: ' + errorMsg, '❌', 'Error');
+      btn.disabled = false;
+      txt.textContent = '👁️ Preview';
+      return;
+    }
+
+    console.log('[Preview] Step 1 DONE - Save successful');
+
+    var menuId = md.menu_id;
+    txt.textContent = '⏳ Opening preview...';
+
+    // Step 2: Just open the frontend URL directly (menu is saved, will load from DB)
+    // Skip the token mechanism for now — just open the regular preview page
+    var previewUrl = window.location.origin + '/panth_menu/preview/index?menu_id=' + encodeURIComponent(menuId);
+    console.log('[Preview] Step 2: Opening preview URL:', previewUrl);
+
+    window.open(previewUrl, '_blank');
+
+    console.log('[Preview] Preview opened successfully');
+    btn.disabled = false;
+    txt.textContent = '👁️ Preview';
+
+  } catch (e) {
+    await showAlert('Error: ' + e.message, '❌', 'Error');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    txt.textContent = '👁️ Preview';
+  }
+}
+
+// IN-PAGE PREVIEW (client-side preview panel)
+function togglePreview() {
+  var panel = document.getElementById('previewPanel');
+  if (panel.classList.contains('hidden')) {
+    panel.classList.remove('hidden');
+    panel.classList.add('flex');
+    renderPreview();
+  } else {
+    panel.classList.add('hidden');
+    panel.classList.remove('flex');
+  }
+}
+
+function setPreviewMode(mode) {
+  var content = document.getElementById('previewContent');
+  content.className = 'preview-' + mode;
+
+  // Show/hide mobile layout selector
+  var mobileLayoutSelector = document.getElementById('mobileLayoutSelector');
+  if (mode === 'mobile') {
+    mobileLayoutSelector.classList.remove('hidden');
+    mobileLayoutSelector.classList.add('flex');
+  } else {
+    mobileLayoutSelector.classList.add('hidden');
+    mobileLayoutSelector.classList.remove('flex');
+  }
+
+  // Update button states
+  document.querySelectorAll('#previewPanel button').forEach(btn => {
+    if (btn.textContent.includes('Desktop')) {
+      btn.className = mode === 'desktop' ? 'px-4 py-2 bg-indigo-500 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold';
+    } else if (btn.textContent.includes('Tablet')) {
+      btn.className = mode === 'tablet' ? 'px-4 py-2 bg-indigo-500 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold';
+    } else if (btn.textContent.includes('Mobile') && !btn.textContent.includes('Tablet')) {
+      btn.className = mode === 'mobile' ? 'px-4 py-2 bg-indigo-500 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold';
+    }
+  });
+
+  renderPreview();
+}
+
+function setMobileLayout(layout) {
+  var content = document.getElementById('previewContent');
+  content.setAttribute('data-mobile-layout', layout);
+
+  // Update layout button states
+  var btnAccordion = document.getElementById('btnAccordion');
+  var btnSlide = document.getElementById('btnSlide');
+
+  if (layout === 'accordion') {
+    btnAccordion.className = 'px-3 py-1 bg-indigo-500 text-white rounded-lg text-sm font-semibold';
+    btnSlide.className = 'px-3 py-1 bg-gray-500 text-white rounded-lg text-sm font-semibold';
+  } else {
+    btnAccordion.className = 'px-3 py-1 bg-gray-500 text-white rounded-lg text-sm font-semibold';
+    btnSlide.className = 'px-3 py-1 bg-indigo-500 text-white rounded-lg text-sm font-semibold';
+  }
+
+  renderPreview();
+}
+
+function renderPreview() {
+  var content = document.getElementById('previewContent');
+  var mode = content.className.replace('preview-', '');
+  var mobileLayout = content.getAttribute('data-mobile-layout') || 'accordion';
+
+  var html = '<style>';
+  html += '.preview-dropdown { opacity: 0; visibility: hidden; transform: translateY(-10px); transition: opacity 0.3s, visibility 0.3s, transform 0.3s; max-height: none; overflow: visible; z-index: 1000; position: absolute; left: 0; top: 100%; }';
+  html += '.preview-dropdown-nested { opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.3s, visibility 0.3s, transform 0.3s; max-height: none; overflow: visible; z-index: 1200; position: absolute; left: 100%; top: 0; margin-left: 0.5rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem; min-width: 220px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }';
+  html += '.group:hover > .preview-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }';
+  html += '.group:hover > .preview-dropdown-nested { opacity: 1; visibility: visible; transform: translateX(0); }';
+  html += '.preview-dropdown .group:hover > .preview-dropdown-nested { z-index: 1300; }';
+  html += '.hover-fade:hover { opacity: 0.7 !important; transition: opacity 0.3s; }';
+  html += '.hover-slide:hover { transform: translateY(-4px) !important; transition: transform 0.3s; }';
+  html += '.hover-zoom:hover { transform: scale(1.05) !important; transition: transform 0.3s; }';
+  html += '.hover-underline:hover { text-decoration: underline !important; text-underline-offset: 4px; }';
+  html += '.hover-glow:hover { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5) !important; transition: box-shadow 0.3s; }';
+
+  // Mobile accordion styles
+  if (mode === 'mobile' && mobileLayout === 'accordion') {
+    html += '.mobile-accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }';
+    html += '.mobile-accordion-content.active { max-height: 2000px; transition: max-height 0.5s ease-in; }';
+    html += '.mobile-accordion-btn { transition: transform 0.3s; }';
+    html += '.mobile-accordion-btn.active { transform: rotate(180deg); }';
+  }
+
+  // Mobile slide styles
+  if (mode === 'mobile' && mobileLayout === 'slide') {
+    html += '.mobile-slide-main { transition: transform 0.3s ease-in-out; }';
+    html += '.mobile-slide-main.slide-out { transform: translateX(-100%); }';
+    html += '.mobile-slide-submenu { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; transform: translateX(0); overflow-y: auto; }';
+    html += '.mobile-slide-submenu.slide-in { transform: translateX(-100%); }';
+  }
+
+  // Add responsive container styles
+  if (mode === 'desktop') {
+    html += '.megamenu-container { max-width: 100%; }';
+  } else if (mode === 'tablet') {
+    html += '.megamenu-container { max-width: 768px; margin: 0 auto; }';
+  } else if (mode === 'mobile') {
+    html += '.megamenu-container { max-width: 375px; margin: 0 auto; position: relative; overflow: hidden; }';
+  }
+
+  // Add custom CSS from menu settings
+  var customCss = document.getElementById('customcss').value;
+  if (customCss) {
+    html += customCss;
+  }
+
+  html += '</style>';
+
+  // Get menu CSS class from settings
+  var menuCssClass = document.getElementById('css').value || '';
+  html += '<div class="megamenu-container ' + menuCssClass + '">';
+
+  if (mode === 'mobile') {
+    if (mobileLayout === 'accordion') {
+      html += renderMobileAccordion();
+    } else {
+      html += renderMobileSlide();
+    }
+  } else {
+    html += renderDesktopTabletMenu(mode);
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+
+  // Attach event listeners for mobile accordion
+  if (mode === 'mobile' && mobileLayout === 'accordion') {
+    document.querySelectorAll('.mobile-accordion-toggle').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = this.getAttribute('data-target');
+        var contentEl = document.getElementById(target);
+        var btnIcon = this.querySelector('.mobile-accordion-btn');
+
+        if (contentEl.classList.contains('active')) {
+          contentEl.classList.remove('active');
+          btnIcon.classList.remove('active');
+        } else {
+          contentEl.classList.add('active');
+          btnIcon.classList.add('active');
+        }
+      });
+    });
+  }
+
+  // Attach event listeners for mobile slide
+  if (mode === 'mobile' && mobileLayout === 'slide') {
+    var slideStack = [];
+
+    document.querySelectorAll('.mobile-slide-open').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = this.getAttribute('data-target');
+        var submenu = document.getElementById(target);
+
+        slideStack.push(target);
+        submenu.classList.add('slide-in');
+        document.querySelector('.mobile-slide-main').classList.add('slide-out');
+      });
+    });
+
+    document.querySelectorAll('.mobile-slide-back').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (slideStack.length > 0) {
+          var target = slideStack.pop();
+          var submenu = document.getElementById(target);
+          submenu.classList.remove('slide-in');
+          if (slideStack.length === 0) {
+            document.querySelector('.mobile-slide-main').classList.remove('slide-out');
+          }
+        }
+      });
+    });
+  }
+}
+
+function renderDesktopTabletMenu(mode) {
+  var html = '<nav class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-4"><ul class="flex flex-wrap gap-4">';
+
+  items.filter(it => it.level === 0 && it.is_active).forEach(it => {
+    var hoverClass = 'hover-' + (it.hover_effect || 'fade');
+    var iconHtml = it.icon ? renderIconPreview(it.icon, it.icon_library) : '';
+    var bgColor = it.background_color || '';
+    var textColor = it.text_color || '';
+    var itemStyle = '';
+    if (bgColor) itemStyle += `background-color: ${bgColor}; `;
+    if (textColor) itemStyle += `color: ${textColor};`;
+
+    // Use span for CMS blocks without URL, a tag for items with URL
+    var hasUrl = it.url && it.url.trim() !== '';
+    var tagName = (it.item_type === 'cms_block' && !hasUrl) ? 'span' : 'a';
+    var hrefAttr = tagName === 'a' ? `href="${it.url || '#'}" target="${it.target || '_self'}"` : '';
+
+    html += `<li class="relative group">
+      <${tagName} ${hrefAttr} class="flex items-center gap-2 px-4 py-3 rounded-lg ${hoverClass} ${it.css_class || ''} font-semibold text-base cursor-pointer" style="${itemStyle}">
+        <span class="flex items-center gap-2">${iconHtml ? iconHtml + ' ' : ''}${it.title}</span>
+      </${tagName}>`;
+
+    var children = items.filter(child => child.parent_id === (it.temp_id || it.item_id) && child.is_active);
+    if (children.length > 0) {
+      var submenuCols = it.submenu_columns || 1;
+      var gridClass = submenuCols > 1 ? `grid grid-cols-${submenuCols} gap-4` : '';
+      var minWidth = submenuCols > 1 ? `min-w-[${Math.min(submenuCols * 250, 1200)}px]` : 'min-w-[250px]';
+
+      html += `<ul class="preview-dropdown absolute left-0 top-full mt-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-3 ${minWidth} border-2 border-gray-200 dark:border-gray-700 ${gridClass}">`;
+
+      // Show CMS block content first if it's a CMS block type
+      if (it.item_type === 'cms_block' && it.cms_block_id) {
+        html += `<li class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${it.cms_block_id})</div>
+          <div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>
+        </li>`;
+      }
+
+      html += renderPreviewChildren(children, mode, it);
+      html += '</ul>';
+    } else if (it.item_type === 'cms_block' && it.cms_block_id) {
+      // Show CMS block content in dropdown if no children
+      html += `<div class="preview-dropdown absolute left-0 top-full mt-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-4 min-w-[300px] max-w-[500px] border-2 border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${it.cms_block_id})</div>
+        <div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>
+      </div>`;
+    }
+
+    html += '</li>';
+  });
+
+  html += '</ul></nav>';
+  return html;
+}
+
+function renderMobileAccordion() {
+  var html = '<nav class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-2"><ul class="space-y-1">';
+  var itemId = 0;
+
+  items.filter(it => it.level === 0 && it.is_active).forEach(it => {
+    var iconHtml = it.icon ? renderIconPreview(it.icon, it.icon_library) : '';
+    var children = items.filter(child => child.parent_id === (it.temp_id || it.item_id) && child.is_active);
+    var hasChildren = children.length > 0;
+    var accordionId = 'accordion-' + itemId++;
+
+    var hoverClass = 'hover-' + (it.hover_effect || 'fade');
+    var bgColor = it.background_color || '';
+    var textColor = it.text_color || '';
+    var itemStyle = '';
+    if (bgColor) itemStyle += `background-color: ${bgColor}; `;
+    if (textColor) itemStyle += `color: ${textColor};`;
+
+    html += '<li class="border-b border-gray-200 dark:border-gray-700 last:border-0">';
+
+    if (hasChildren) {
+      html += `<a href="#" class="mobile-accordion-toggle flex items-center justify-between px-4 py-3 font-semibold text-base ${hoverClass} rounded-lg transition-all" data-target="${accordionId}" style="${itemStyle}">
+        <span class="flex items-center gap-2">${iconHtml ? iconHtml + ' ' : ''}${it.title}</span>
+        <span class="mobile-accordion-btn text-gray-400">▼</span>
+      </a>`;
+      html += `<div id="${accordionId}" class="mobile-accordion-content pl-4">`;
+
+      // Show CMS block content first if it's a CMS block type
+      if (it.item_type === 'cms_block' && it.cms_block_id) {
+        html += '<div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 px-4 py-2">';
+        html += `<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${it.cms_block_id})</div>`;
+        html += '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
+        html += '</div>';
+      }
+
+      html += renderMobileAccordionChildren(children, itemId);
+      html += '</div>';
+    } else {
+      // If it's a CMS block, treat it like it has children (show accordion)
+      if (it.item_type === 'cms_block' && it.cms_block_id) {
+        html += `<a href="#" class="mobile-accordion-toggle flex items-center justify-between px-4 py-3 font-semibold text-base ${hoverClass} rounded-lg transition-all" data-target="${accordionId}" style="${itemStyle}">
+          <span class="flex items-center gap-2">${iconHtml ? iconHtml + ' ' : ''}${it.title}</span>
+          <span class="mobile-accordion-btn text-gray-400">▼</span>
+        </a>`;
+        html += `<div id="${accordionId}" class="mobile-accordion-content pl-4">`;
+        html += '<div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 px-4 py-2">';
+        html += `<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${it.cms_block_id})</div>`;
+        html += '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
+        html += '</div>';
+        html += '</div>';
+      } else {
+        var hasUrl = it.url && it.url.trim() !== '';
+        var tagName = 'a';
+        var hrefAttr = `href="${it.url || '#'}" target="${it.target || '_self'}"`;
+
+        html += `<${tagName} ${hrefAttr} class="flex items-center justify-between px-4 py-3 font-semibold text-base ${hoverClass} rounded-lg transition-all" style="${itemStyle}">
+          <span class="flex items-center gap-2">${iconHtml ? iconHtml + ' ' : ''}${it.title}</span>
+        </${tagName}>`;
+      }
+    }
+
+    html += '</li>';
+  });
+
+  html += '</ul></nav>';
+  return html;
+}
+
+function renderMobileAccordionChildren(children) {
+  var html = '<ul class="py-2 space-y-1">';
+  var itemId = Date.now();
+
+  children.forEach(child => {
+    var childIcon = child.icon ? renderIconPreview(child.icon, child.icon_library) : '';
+    var grandchildren = items.filter(gc => gc.parent_id === (child.temp_id || child.item_id) && gc.is_active);
+    var hasGrandchildren = grandchildren.length > 0;
+    var accordionId = 'accordion-' + itemId++;
+
+    var hoverClass = 'hover-' + (child.hover_effect || 'fade');
+    var bgColor = child.background_color || '';
+    var textColor = child.text_color || '';
+    var itemStyle = '';
+    if (bgColor) itemStyle += `background-color: ${bgColor}; `;
+    if (textColor) itemStyle += `color: ${textColor};`;
+
+    html += '<li>';
+
+    if (hasGrandchildren) {
+      html += `<a href="#" class="mobile-accordion-toggle flex items-center justify-between px-4 py-2.5 text-base ${hoverClass} rounded-lg transition-all" data-target="${accordionId}" style="${itemStyle}">
+        <span class="flex items-center gap-2">${childIcon ? childIcon + ' ' : ''}${child.title}</span>
+        <span class="mobile-accordion-btn text-gray-400 text-sm">▼</span>
+      </a>`;
+      html += `<div id="${accordionId}" class="mobile-accordion-content pl-4">`;
+
+      // Show CMS block content first if it's a CMS block type
+      if (child.item_type === 'cms_block' && child.cms_block_id) {
+        html += '<div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 px-4 py-2">';
+        html += `<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${child.cms_block_id})</div>`;
+        html += '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
+        html += '</div>';
+      }
+
+      html += renderMobileAccordionChildren(grandchildren);
+      html += '</div>';
+    } else {
+      // If it's a CMS block, treat it like it has children (show accordion)
+      if (child.item_type === 'cms_block' && child.cms_block_id) {
+        html += `<a href="#" class="mobile-accordion-toggle flex items-center justify-between px-4 py-2.5 text-base ${hoverClass} rounded-lg transition-all" data-target="${accordionId}" style="${itemStyle}">
+          <span class="flex items-center gap-2">${childIcon ? childIcon + ' ' : ''}${child.title}</span>
+          <span class="mobile-accordion-btn text-gray-400 text-sm">▼</span>
+        </a>`;
+        html += `<div id="${accordionId}" class="mobile-accordion-content pl-4">`;
+        html += '<div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 px-4 py-2">';
+        html += `<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${child.cms_block_id})</div>`;
+        html += '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
+        html += '</div>';
+        html += '</div>';
+      } else {
+        var hasUrl = child.url && child.url.trim() !== '';
+        var tagName = 'a';
+        var hrefAttr = `href="${child.url || '#'}" target="${child.target || '_self'}"`;
+
+        html += `<${tagName} ${hrefAttr} class="flex items-center justify-between px-4 py-2.5 text-base ${hoverClass} rounded-lg transition-all" style="${itemStyle}">
+          <span class="flex items-center gap-2">${childIcon ? childIcon + ' ' : ''}${child.title}</span>
+        </${tagName}>`;
+      }
+    }
+
+    html += '</li>';
+  });
+
+  html += '</ul>';
+  return html;
+}
+
+function renderMobileSlide() {
+  var html = '<div class="relative bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden" style="height: 500px;">';
+
+  // Main menu
+  html += '<nav class="mobile-slide-main absolute inset-0 overflow-y-auto p-2">';
+  html += '<ul class="space-y-1">';
+
+  items.filter(it => it.level === 0 && it.is_active).forEach((it, idx) => {
+    var iconHtml = it.icon ? renderIconPreview(it.icon, it.icon_library) : '';
+    var children = items.filter(child => child.parent_id === (it.temp_id || it.item_id) && child.is_active);
+    var hasChildren = children.length > 0;
+    var slideId = 'slide-' + idx;
+
+    html += '<li class="border-b border-gray-200 dark:border-gray-700 last:border-0">';
+
+    // Treat items with children OR CMS blocks as having a slide submenu
+    if (hasChildren || (it.item_type === 'cms_block' && it.cms_block_id)) {
+      html += `<a href="#" class="mobile-slide-open flex items-center justify-between px-4 py-3 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all" data-target="${slideId}">
+        <span class="flex items-center gap-2">${iconHtml ? iconHtml + ' ' : ''}${it.title}</span>
+        <span class="text-gray-400">▶</span>
+      </a>`;
+    } else {
+      var hasUrl = it.url && it.url.trim() !== '';
+      var tagName = 'a';
+      var hrefAttr = `href="${it.url || '#'}" target="${it.target || '_self'}"`;
+
+      html += `<${tagName} ${hrefAttr} class="flex items-center justify-between px-4 py-3 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all">
+        <span class="flex items-center gap-2">${iconHtml ? iconHtml + ' ' : ''}${it.title}</span>
+      </${tagName}>`;
+    }
+
+    html += '</li>';
+  });
+
+  html += '</ul></nav>';
+
+  // Generate all submenus
+  items.filter(it => it.level === 0 && it.is_active).forEach((it, idx) => {
+    var children = items.filter(child => child.parent_id === (it.temp_id || it.item_id) && child.is_active);
+    var hasChildren = children.length > 0;
+    var hasCmsBlock = it.item_type === 'cms_block' && it.cms_block_id;
+    var slideId = 'slide-' + idx;
+
+    // Show submenu if it has children OR is a CMS block
+    if (hasChildren || hasCmsBlock) {
+      html += `<div id="${slideId}" class="mobile-slide-submenu bg-white dark:bg-gray-800 p-2">`;
+      html += `<div class="mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">`;
+      html += `<button class="mobile-slide-back flex items-center gap-2 px-4 py-2 text-indigo-600 dark:text-indigo-400 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all w-full">
+        <span>◀ Back</span>
+      </button>`;
+      html += `<div class="px-4 py-2 font-bold text-lg">${it.title}</div>`;
+
+      // Show CMS block content if it's a CMS block type
+      if (hasCmsBlock) {
+        html += '<div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 px-4 py-2">';
+        html += `<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${it.cms_block_id})</div>`;
+        html += '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      if (hasChildren) {
+        html += '<ul class="space-y-1">';
+        html += renderMobileSlideChildren(children, idx);
+        html += '</ul>';
+      }
+      html += '</div>';
+    }
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function renderMobileSlideChildren(children, parentIdx) {
+  var html = '';
+
+  children.forEach((child, idx) => {
+    var childIcon = child.icon ? renderIconPreview(child.icon, child.icon_library) : '';
+    var grandchildren = items.filter(gc => gc.parent_id === (child.temp_id || child.item_id) && gc.is_active);
+    var hasGrandchildren = grandchildren.length > 0;
+    var slideId = 'slide-' + parentIdx + '-' + idx;
+
+    html += '<li class="border-b border-gray-200 dark:border-gray-700 last:border-0">';
+
+    var hasCmsBlock = child.item_type === 'cms_block' && child.cms_block_id;
+
+    // Treat items with grandchildren OR CMS blocks as having a slide submenu
+    if (hasGrandchildren || hasCmsBlock) {
+      html += `<a href="#" class="mobile-slide-open flex items-center justify-between px-4 py-2.5 text-base hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all" data-target="${slideId}">
+        <span class="flex items-center gap-2">${childIcon ? childIcon + ' ' : ''}${child.title}</span>
+        <span class="text-gray-400">▶</span>
+      </a>`;
+    } else {
+      var hasUrl = child.url && child.url.trim() !== '';
+      var tagName = 'a';
+      var hrefAttr = `href="${child.url || '#'}" target="${child.target || '_self'}"`;
+
+      html += `<${tagName} ${hrefAttr} class="flex items-center justify-between px-4 py-2.5 text-base hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all">
+        <span class="flex items-center gap-2">${childIcon ? childIcon + ' ' : ''}${child.title}</span>
+      </${tagName}>`;
+    }
+
+    html += '</li>';
+
+    // Generate nested submenu
+    if (hasGrandchildren || hasCmsBlock) {
+      html += `<div id="${slideId}" class="mobile-slide-submenu bg-white dark:bg-gray-800 p-2">`;
+      html += `<div class="mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">`;
+      html += `<button class="mobile-slide-back flex items-center gap-2 px-4 py-2 text-indigo-600 dark:text-indigo-400 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all w-full">
+        <span>◀ Back</span>
+      </button>`;
+      html += `<div class="px-4 py-2 font-bold text-lg">${child.title}</div>`;
+
+      // Show CMS block content if it's a CMS block type
+      if (hasCmsBlock) {
+        html += '<div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 px-4 py-2">';
+        html += `<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${child.cms_block_id})</div>`;
+        html += '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      if (hasGrandchildren) {
+        html += '<ul class="space-y-1">';
+        html += renderMobileSlideChildren(grandchildren, slideId);
+        html += '</ul>';
+      }
+      html += '</div>';
+    }
+  });
+
+  return html;
+}
+
+function renderPreviewChildren(children, mode, parent) {
+  var html = '';
+  children.forEach(child => {
+    var childIcon = child.icon ? renderIconPreview(child.icon, child.icon_library) : '';
+    var grandchildren = items.filter(gc => gc.parent_id === (child.temp_id || child.item_id) && gc.is_active);
+    var hasGrandchildren = grandchildren.length > 0;
+
+    var hoverClass = 'hover-' + (child.hover_effect || 'fade');
+    var bgColor = child.background_color || '';
+    var textColor = child.text_color || '';
+    var itemStyle = '';
+    if (bgColor) itemStyle += `background-color: ${bgColor}; `;
+    if (textColor) itemStyle += `color: ${textColor};`;
+
+    // Use span for CMS blocks without URL, a tag for items with URL
+    var hasUrl = child.url && child.url.trim() !== '';
+    var tagName = (child.item_type === 'cms_block' && !hasUrl) ? 'span' : 'a';
+    var hrefAttr = tagName === 'a' ? `href="${child.url || '#'}" target="${child.target || '_self'}"` : '';
+
+    html += `<li class="relative ${hasGrandchildren || child.item_type === 'cms_block' ? 'group' : ''}">
+      <${tagName} ${hrefAttr} class="flex items-center justify-between px-4 py-2.5 rounded-lg ${hoverClass} transition-all text-base ${child.css_class || ''} cursor-pointer" style="${itemStyle}">
+        <span class="flex items-center gap-2">
+          ${childIcon ? childIcon + ' ' : ''}${child.title}
+        </span>
+        ${hasGrandchildren || child.item_type === 'cms_block' ? `<span class="text-gray-400">▶</span>` : ''}
+      </${tagName}>`;
+
+    if (hasGrandchildren) {
+      var submenuCols = child.submenu_columns || 1;
+      var gridClass = submenuCols > 1 ? `grid grid-cols-${submenuCols} gap-4` : '';
+      var minWidth = submenuCols > 1 ? `min-w-[${Math.min(submenuCols * 220, 1000)}px]` : 'min-w-[220px]';
+
+      html += `<ul class="preview-dropdown-nested absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-3 ${minWidth} border-2 border-gray-200 dark:border-gray-700 ${gridClass}">`;
+      html += renderPreviewChildren(grandchildren, mode, child);
+      html += '</ul>';
+    } else if (child.item_type === 'cms_block' && child.cms_block_id) {
+      // Show CMS block content placeholder in dropdown
+      html += `<div class="preview-dropdown-nested absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-4 min-w-[300px] max-w-[500px] border-2 border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ${child.cms_block_id})</div>
+        <div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>
+      </div>`;
+    }
+
+    html += '</li>';
+  });
+  return html;
+}
+
+// SAVE
+async function save() {
+  var t = document.getElementById('title').value.trim();
+  var id = document.getElementById('identifier').value.trim();
+
+  if (!t) {
+    await showAlert('Menu Title is required!', '❌', 'Error');
+    document.getElementById('title').focus();
+    return;
+  }
+
+  if (!id) {
+    await showAlert('Menu Identifier is required!', '❌', 'Error');
+    document.getElementById('identifier').focus();
+    return;
+  }
+
+  if (!/^[a-z0-9_]+$/.test(id)) {
+    await showAlert('Identifier must contain only lowercase letters, numbers, and underscores!', '❌', 'Error');
+    document.getElementById('identifier').focus();
+    return;
+  }
+
+  // Validate and clean up items
+  var hasErrors = false;
+  var invalidChildren = [];
+
+  // Remove children from CMS Block and Custom HTML items
+  items.forEach((it, i) => {
+    var itId = it.temp_id || it.item_id;
+
+    // Find if this item has a parent that's cms_block or custom_html
+    var parent = items.find(p => (p.temp_id || p.item_id) === it.parent_id);
+    if (parent && (parent.item_type === 'cms_block' || parent.item_type === 'custom_html')) {
+      invalidChildren.push(i);
+      it.parent_id = null;
+      it.level = 0;
+    }
+  });
+
+  if (invalidChildren.length > 0) {
+    await showAlert('Warning: ' + invalidChildren.length + ' item(s) were moved to top level because their parent was a CMS Block or Custom HTML item (which cannot have children).', '⚠️', 'Warning');
+  }
+
+  // Comprehensive validation for items
+  for (let i = 0; i < items.length; i++) {
+    var it = items[i];
+    var itemNum = i + 1;
+
+    // Title validation
+    if (!it.title || !it.title.trim()) {
+      await showAlert('Item #' + itemNum + ' is missing a title!\n\nPlease provide a title for this menu item.', '❌', 'Validation Error');
+      return;
+    }
+
+    // Title length validation
+    if (it.title.trim().length > 255) {
+      await showAlert('Item #' + itemNum + ' (' + it.title.substring(0, 50) + '...) has a title that is too long!\n\nMaximum 255 characters allowed.', '❌', 'Validation Error');
+      return;
+    }
+
+    // Item type validation
+    if (!it.item_type) {
+      await showAlert('Item #' + itemNum + ' (' + it.title + ') is missing an item type!\n\nPlease select a type (Category, CMS Page, Link, etc.).', '❌', 'Validation Error');
+      return;
+    }
+
+    // Type-specific validation
+    switch (it.item_type) {
+      case 'category':
+        if (!it.category_id) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Category type but no category is selected!\n\nPlease click "Select Category" to choose a category.', '❌', 'Validation Error');
+          return;
+        }
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is missing a URL!\n\nPlease select a category using the "Select Category" button.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'cms_page':
+        if (!it.cms_page_id) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a CMS Page type but no page is selected!\n\nPlease click "Select Page" to choose a CMS page.', '❌', 'Validation Error');
+          return;
+        }
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is missing a URL!\n\nPlease select a CMS page using the "Select Page" button.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'link':
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Link type but no URL is provided!\n\nPlease enter a URL for this link.', '❌', 'Validation Error');
+          return;
+        }
+        // URL format validation for links
+        var urlPattern = /^(https?:\/\/|\/|#)/i;
+        if (!urlPattern.test(it.url.trim())) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') has an invalid URL format!\n\nURL must start with http://, https://, / or #\n\nCurrent URL: ' + it.url, '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'custom':
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Custom URL type but no URL is provided!\n\nPlease enter a custom URL.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'cms_block':
+        if (!it.cms_block_id) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a CMS Block type but no block is selected!\n\nPlease click "Select Block" to choose a CMS block.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'custom_html':
+        if (!it.custom_html || !it.custom_html.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Custom HTML type but no HTML content is provided!\n\nPlease enter HTML content.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+    }
+
+    // Level validation
+    if (it.level < 0 || it.level > 5) {
+      await showAlert('Item #' + itemNum + ' (' + it.title + ') has an invalid level!\n\nLevel must be between 0 and 5. Current level: ' + it.level, '❌', 'Validation Error');
+      return;
+    }
+
+    // CSS class validation (if provided)
+    if (it.css_class && it.css_class.trim()) {
+      var cssPattern = /^[a-zA-Z0-9_\-\s]+$/;
+      if (!cssPattern.test(it.css_class.trim())) {
+        await showAlert('Item #' + itemNum + ' (' + it.title + ') has an invalid CSS class!\n\nCSS class can only contain letters, numbers, hyphens, underscores, and spaces.\n\nCurrent: ' + it.css_class, '❌', 'Validation Error');
+        return;
+      }
+    }
+  }
+
+  // Check for duplicate identifiers in items (temp_id vs item_id conflicts)
+  var usedIds = new Set();
+  for (let i = 0; i < items.length; i++) {
+    var itemId = items[i].temp_id || items[i].item_id;
+    if (usedIds.has(itemId)) {
+      await showAlert('Duplicate item ID detected!\n\nThis is a system error. Please refresh the page and try again.', '❌', 'System Error');
+      return;
+    }
+    usedIds.add(itemId);
+  }
+
+  // Validate parent-child relationships
+  for (let i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (it.parent_id) {
+      var parentExists = items.find(p => (p.temp_id || p.item_id) === it.parent_id);
+      if (!parentExists) {
+        await showAlert('Item #' + (i + 1) + ' (' + it.title + ') references a parent that does not exist!\n\nThis is a system error. The item will be moved to top level.', '⚠️', 'Warning');
+        it.parent_id = null;
+        it.level = 0;
+      }
+    }
+  }
+
+  var btn = document.getElementById('saveBtn');
+  var txt = document.getElementById('saveTxt');
+  btn.disabled = true;
+  btn.classList.add('opacity-50', 'cursor-not-allowed');
+  txt.textContent = '⏳ Saving...';
+
+  fetch('<?= $block->escapeUrl($block->getSaveUrl()) ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      menu: {
+        menu_id: md.menu_id || null,
+        title: t,
+        identifier: id,
+        is_active: document.getElementById('active').checked ? 1 : 0,
+        css_class: document.getElementById('css').value,
+        sort_order: document.getElementById('sort').value,
+        description: document.getElementById('desc').value,
+        custom_css: document.getElementById('customcss').value
+      },
+      items: items,
+      form_key: document.querySelector('input[name="form_key"]').value
+    })
+  })
+  .then(r => r.json())
+  .then(async d => {
+    if (d.success) {
+      location.href = '<?= $block->escapeUrl($block->getListUrl()) ?>';
+    } else {
+      await showAlert('Error: ' + (d.message || 'Failed to save menu'), '❌', 'Error');
+      btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      txt.textContent = '💾 Save Menu';
+    }
+  })
+  .catch(async e => {
+    await showAlert('Error saving menu: ' + e.message, '❌', 'Error');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    txt.textContent = '💾 Save Menu';
+  });
+}
+
+async function saveAndContinue() {
+  var md = <?= /* @noEscape */ json_encode($menuData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+  var t = document.getElementById('title').value.trim();
+  var id = document.getElementById('identifier').value.trim();
+
+  // Same validations as save()
+  if (!t) {
+    await showAlert('Please enter a menu title!', '❌', 'Validation Error');
+    return;
+  }
+
+  if (!id) {
+    await showAlert('Please enter a menu identifier!', '❌', 'Validation Error');
+    return;
+  }
+
+  var idPattern = /^[a-z0-9_]+$/;
+  if (!idPattern.test(id)) {
+    await showAlert('Menu identifier can only contain lowercase letters, numbers, and underscores!\n\nCurrent: ' + id, '❌', 'Validation Error');
+    return;
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    var it = items[i];
+    var itemNum = i + 1;
+
+    if (!it.title || !it.title.trim()) {
+      await showAlert('Item #' + itemNum + ' is missing a title!\n\nPlease provide a title for all menu items.', '❌', 'Validation Error');
+      return;
+    }
+
+    switch(it.item_type) {
+      case 'category':
+        if (!it.category_id) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Category type but no category is selected!\n\nPlease click "Select Category" to choose a category.', '❌', 'Validation Error');
+          return;
+        }
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is missing a URL!\n\nPlease select a category using the "Select Category" button.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'cms_page':
+        if (!it.cms_page_id) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a CMS Page type but no page is selected!\n\nPlease click "Select Page" to choose a CMS page.', '❌', 'Validation Error');
+          return;
+        }
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is missing a URL!\n\nPlease select a CMS page using the "Select Page" button.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'link':
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Link type but no URL is provided!\n\nPlease enter a URL for this link.', '❌', 'Validation Error');
+          return;
+        }
+        var urlPattern = /^(https?:\/\/|\/|#)/i;
+        if (!urlPattern.test(it.url.trim())) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') has an invalid URL format!\n\nURL must start with http://, https://, / or #\n\nCurrent URL: ' + it.url, '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'custom':
+        if (!it.url || !it.url.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Custom URL type but no URL is provided!\n\nPlease enter a custom URL.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'cms_block':
+        if (!it.cms_block_id) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a CMS Block type but no block is selected!\n\nPlease click "Select Block" to choose a CMS block.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+
+      case 'custom_html':
+        if (!it.custom_html || !it.custom_html.trim()) {
+          await showAlert('Item #' + itemNum + ' (' + it.title + ') is a Custom HTML type but no HTML content is provided!\n\nPlease enter HTML content.', '❌', 'Validation Error');
+          return;
+        }
+        break;
+    }
+
+    if (it.level < 0 || it.level > 5) {
+      await showAlert('Item #' + itemNum + ' (' + it.title + ') has an invalid level!\n\nLevel must be between 0 and 5. Current level: ' + it.level, '❌', 'Validation Error');
+      return;
+    }
+
+    if (it.css_class && it.css_class.trim()) {
+      var cssPattern = /^[a-zA-Z0-9_\-\s]+$/;
+      if (!cssPattern.test(it.css_class.trim())) {
+        await showAlert('Item #' + itemNum + ' (' + it.title + ') has an invalid CSS class!\n\nCSS class can only contain letters, numbers, hyphens, underscores, and spaces.\n\nCurrent: ' + it.css_class, '❌', 'Validation Error');
+        return;
+      }
+    }
+  }
+
+  var usedIds = new Set();
+  for (let i = 0; i < items.length; i++) {
+    var itemId = items[i].temp_id || items[i].item_id;
+    if (usedIds.has(itemId)) {
+      await showAlert('Duplicate item ID detected!\n\nThis is a system error. Please refresh the page and try again.', '❌', 'System Error');
+      return;
+    }
+    usedIds.add(itemId);
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (it.parent_id) {
+      var parentExists = items.find(p => (p.temp_id || p.item_id) === it.parent_id);
+      if (!parentExists) {
+        await showAlert('Item #' + (i + 1) + ' (' + it.title + ') references a parent that does not exist!\n\nThis is a system error. The item will be moved to top level.', '⚠️', 'Warning');
+        it.parent_id = null;
+        it.level = 0;
+      }
+    }
+  }
+
+  var btn = document.getElementById('saveContinueBtn');
+  var txt = document.getElementById('saveContinueTxt');
+  btn.disabled = true;
+  btn.classList.add('opacity-50', 'cursor-not-allowed');
+  txt.textContent = '⏳ Saving...';
+
+  fetch('<?= $block->escapeUrl($block->getSaveUrl()) ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      menu: {
+        menu_id: md.menu_id || null,
+        title: t,
+        identifier: id,
+        is_active: document.getElementById('active').checked ? 1 : 0,
+        css_class: document.getElementById('css').value,
+        sort_order: document.getElementById('sort').value,
+        description: document.getElementById('desc').value,
+        custom_css: document.getElementById('customcss').value
+      },
+      items: items,
+      form_key: document.querySelector('input[name="form_key"]').value
+    })
+  })
+  .then(r => r.json())
+  .then(async d => {
+    if (d.success) {
+      // Update menu_id if this was a new menu
+      if (d.menu_id && !md.menu_id) {
+        md.menu_id = d.menu_id;
+      }
+      await showAlert('Menu saved successfully! ✓', '✅', 'Success');
+      btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      txt.textContent = '💾 Save & Continue';
+    } else {
+      await showAlert('Error: ' + (d.message || 'Failed to save menu'), '❌', 'Error');
+      btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      txt.textContent = '💾 Save & Continue';
+    }
+  })
+  .catch(async e => {
+    await showAlert('Error saving menu: ' + e.message, '❌', 'Error');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    txt.textContent = '💾 Save & Continue';
+  });
+}
+
+// Initialize
+initializeCollapsedState();
+render();
+
+// Preview handler — called by the admin Preview button (panthPreviewMenu)
+window.panthPreviewMenu = function() {
+    var baseUrl = window.location.origin + '/';
+    var ts = Date.now();
+    var previewUrl = baseUrl + 'panth_menu/preview/index?_t=' + ts;
+
+    // Collect all current form data
+    var formData = {
+        items_json: JSON.stringify(items),
+        css_class: document.getElementById('css') ? document.getElementById('css').value : '',
+        custom_css: document.getElementById('customcss') ? document.getElementById('customcss').value : '',
+        container_bg_color: '',
+        container_padding: '',
+        container_margin: '',
+        item_gap: '',
+        container_max_width: '',
+        container_border: '',
+        container_border_radius: '',
+        container_box_shadow: ''
+    };
+
+    // Try to read container styling fields from UI component
+    try {
+        var fields = document.querySelectorAll('[name="container_bg_color"],[name="container_padding"],[name="container_margin"],[name="item_gap"],[name="container_max_width"],[name="container_border"],[name="container_border_radius"],[name="container_box_shadow"]');
+        fields.forEach(function(f) { if (f.name && f.value) formData[f.name] = f.value; });
+    } catch(e) {}
+
+    console.log('[Preview] Posting', Object.keys(formData).length, 'fields, items:', items.length);
+
+    // Create hidden form and POST to iframe or new tab
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = previewUrl;
+    form.target = 'megamenu_preview_' + ts;
+    form.style.display = 'none';
+
+    for (var key in formData) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = formData[key];
+        form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(function() { form.remove(); }, 1000);
+};
+
+</script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<?php
+/**
+ * @var \Panth\MegaMenu\Block\Adminhtml\Menu\CustomIndex $block
+ */
+$menus = json_decode($block->getMenusJson(), true);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+* { font-family: 'Inter', sans-serif; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-down { animation: slideDown 0.3s ease-out; }
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+</head>
+<body class="bg-slate-50">
+
+<!-- Form Key -->
+<?= $block->getBlockHtml('formkey') ?>
+<input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>" />
+
+<!-- Page Header -->
+<div class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold text-slate-900">MegaMenu Manager</h1>
+        <p class="text-slate-600 mt-2 text-lg">Manage your navigation menus</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="openImportModal()"
+                class="inline-flex items-center px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all text-base">
+          <i class="fas fa-file-import mr-2 text-lg"></i> Import
+        </button>
+        <button onclick="location.href='<?= $block->escapeUrl($block->getNewUrl()) ?>'"
+                class="inline-flex items-center px-6 py-3.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-sm hover:shadow-md transition-all text-base">
+          <i class="fas fa-plus mr-2 text-lg"></i> Create Menu
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <?php if (empty($menus)): ?>
+  <!-- Empty State -->
+  <div class="bg-white rounded-xl border-2 border-dashed border-slate-300 p-16 text-center">
+    <div class="max-w-md mx-auto">
+      <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-bars text-5xl text-slate-400"></i>
+      </div>
+      <h3 class="text-3xl font-bold text-slate-900 mb-4">No menus found</h3>
+      <p class="text-slate-600 mb-8 text-lg">Get started by creating your first navigation menu.</p>
+      <button onclick="location.href='<?= $block->escapeUrl($block->getNewUrl()) ?>'"
+              class="inline-flex items-center px-7 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-sm hover:shadow-md transition-all text-lg">
+        <i class="fas fa-plus mr-2 text-xl"></i> Create Your First Menu
+      </button>
+    </div>
+  </div>
+  <?php else: ?>
+
+  <!-- Menus Table -->
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-6 py-5 text-left text-sm font-semibold text-slate-700 uppercase tracking-wider">Menu</th>
+          <th class="px-6 py-5 text-left text-sm font-semibold text-slate-700 uppercase tracking-wider">Identifier</th>
+          <th class="px-6 py-5 text-left text-sm font-semibold text-slate-700 uppercase tracking-wider">Items</th>
+          <th class="px-6 py-5 text-left text-sm font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-5 text-left text-sm font-semibold text-slate-700 uppercase tracking-wider">Created</th>
+          <th class="px-6 py-5 text-right text-sm font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200">
+        <?php foreach ($menus as $menu): ?>
+        <tr class="hover:bg-slate-50 transition-colors">
+          <!-- Menu Title & ID -->
+          <td class="px-6 py-5 whitespace-nowrap">
+            <div class="flex items-center">
+              <div>
+                <div class="text-base font-semibold text-slate-900">
+                  <?= $block->escapeHtml($menu['title']) ?>
+                </div>
+                <div class="text-sm text-slate-500 mt-1">ID: <?= (int) $menu['menu_id'] ?></div>
+              </div>
+            </div>
+          </td>
+
+          <!-- Identifier -->
+          <td class="px-6 py-5 whitespace-nowrap">
+            <code class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded text-sm font-mono">
+              <?= $block->escapeHtml($menu['identifier']) ?>
+            </code>
+          </td>
+
+          <!-- Item Count -->
+          <td class="px-6 py-5 whitespace-nowrap">
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              <i class="fas fa-layer-group mr-2"></i>
+              <?= (int)$menu['item_count'] ?>
+            </span>
+          </td>
+
+          <!-- Status -->
+          <td class="px-6 py-5 whitespace-nowrap">
+            <?php if ($menu['is_active']): ?>
+              <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-2"></i> Active
+              </span>
+            <?php else: ?>
+              <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-700">
+                <i class="fas fa-times-circle mr-2"></i> Inactive
+              </span>
+            <?php endif; ?>
+          </td>
+
+          <!-- Created Date -->
+          <td class="px-6 py-5 whitespace-nowrap text-base text-slate-600">
+            <?= $block->escapeHtml(date('M d, Y', strtotime($menu['created_at']))) ?>
+          </td>
+
+          <!-- Actions -->
+          <td class="px-6 py-5 whitespace-nowrap text-right text-base font-medium">
+            <div class="flex items-center justify-end gap-2">
+              <!-- Edit -->
+              <button onclick="location.href='<?= $block->escapeUrl($block->getEditUrl()) ?>?menu_id=<?= (int) $menu['menu_id'] ?>'"
+                      class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-base"
+                      title="Edit Menu">
+                <i class="fas fa-edit text-lg"></i>
+              </button>
+
+              <!-- Toggle Status -->
+              <button onclick="toggleMenu(<?= (int) $menu['menu_id'] ?>, <?= $menu['is_active'] ? 'false' : 'true' /* @noEscape */ ?>)"
+                      class="inline-flex items-center px-4 py-2.5 <?= $menu['is_active'] ? 'bg-slate-600' : 'bg-green-600' /* @noEscape */ ?> text-white rounded-md hover:opacity-90 transition-opacity text-base"
+                      title="<?= $menu['is_active'] ? 'Disable' : 'Enable' /* @noEscape */ ?>">
+                <i class="fas fa-<?= $menu['is_active'] ? 'pause' : 'play' /* @noEscape */ ?> text-lg"></i>
+              </button>
+
+              <!-- More Actions Dropdown -->
+              <div class="relative inline-block text-left">
+                <button onclick="toggleDropdown(<?= (int) $menu['menu_id'] ?>)"
+                        class="inline-flex items-center px-4 py-2.5 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors text-base"
+                        title="More Actions">
+                  <i class="fas fa-ellipsis-v text-lg"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="dropdown-<?= (int) $menu['menu_id'] ?>" class="hidden absolute right-0 mt-2 w-52 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                  <div class="py-1">
+                    <button onclick="duplicateMenu(<?= (int) $menu['menu_id'] ?>, '<?= $block->escapeJs($menu['title']) ?>')"
+                            class="w-full text-left px-5 py-3 text-base text-slate-700 hover:bg-slate-100 flex items-center">
+                      <i class="fas fa-copy w-5 mr-3 text-lg"></i> Duplicate
+                    </button>
+                    <button onclick="exportMenu(<?= (int) $menu['menu_id'] ?>, '<?= $block->escapeJs($menu['identifier']) ?>')"
+                            class="w-full text-left px-5 py-3 text-base text-slate-700 hover:bg-slate-100 flex items-center">
+                      <i class="fas fa-download w-5 mr-3 text-lg"></i> Export
+                    </button>
+                    <div class="border-t border-slate-200"></div>
+                    <button onclick="deleteMenu(<?= (int) $menu['menu_id'] ?>, '<?= $block->escapeJs($menu['title']) ?>')"
+                            class="w-full text-left px-5 py-3 text-base text-red-600 hover:bg-red-50 flex items-center">
+                      <i class="fas fa-trash w-5 mr-3 text-lg"></i> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
+</div>
+
+<!-- Import Modal -->
+<div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full animate-slide-down">
+    <!-- Modal Header -->
+    <div class="px-8 py-6 border-b border-slate-200">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-slate-900">Import Menu</h2>
+        <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-8 space-y-6">
+      <!-- File Upload -->
+      <div class="border-2 border-dashed border-slate-300 rounded-lg p-10 text-center hover:border-blue-400 transition-colors">
+        <i class="fas fa-file-upload text-5xl text-slate-400 mb-6"></i>
+        <input type="file" id="importFile" accept=".json" class="hidden" onchange="handleFileSelect(event)">
+        <button onclick="document.getElementById('importFile').click()"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-base font-semibold">
+          Choose JSON File
+        </button>
+        <p class="text-base text-slate-500 mt-3">or drag and drop</p>
+        <p id="fileName" class="text-base text-slate-700 mt-3 font-medium"></p>
+      </div>
+
+      <!-- Import Options -->
+      <div class="space-y-4">
+        <label class="block text-base font-semibold text-slate-700">Import Action</label>
+        <div class="grid grid-cols-2 gap-4">
+          <label class="flex items-center p-5 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
+            <input type="radio" name="importAction" value="create" checked class="mr-3 w-5 h-5">
+            <div class="text-base">
+              <div class="font-semibold text-slate-900">Create New</div>
+              <div class="text-slate-500">Create as new menu</div>
+            </div>
+          </label>
+          <label class="flex items-center p-5 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
+            <input type="radio" name="importAction" value="replace" class="mr-3 w-5 h-5" onchange="toggleMenuSelector()">
+            <div class="text-base">
+              <div class="font-semibold text-slate-900">Replace</div>
+              <div class="text-slate-500">Replace existing</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Menu Selector -->
+        <div id="menuSelector" class="hidden">
+          <label class="block text-base font-semibold text-slate-700 mb-3">Select Menu to Replace</label>
+          <select id="replaceMenuId" class="w-full px-4 py-3 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
+            <option value="">-- Choose Menu --</option>
+            <?php foreach ($menus as $menu): ?>
+            <option value="<?= (int) $menu['menu_id'] ?>"><?= $block->escapeHtml($menu['title']) ?> (ID: <?= (int) $menu['menu_id'] ?>)</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-8 py-6 bg-slate-50 rounded-b-xl flex gap-3 justify-end">
+      <button onclick="closeImportModal()"
+              class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-base font-semibold">
+        Cancel
+      </button>
+      <button onclick="performImport()"
+              class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-base font-semibold">
+        Import Menu
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+var formKey = document.querySelector('input[name="form_key"]').value;
+
+// Toggle Dropdown
+function toggleDropdown(id) {
+  const dropdown = document.getElementById('dropdown-' + id);
+  const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+
+  allDropdowns.forEach(d => {
+    if (d !== dropdown) d.classList.add('hidden');
+  });
+
+  dropdown.classList.toggle('hidden');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('[onclick^="toggleDropdown"]') && !e.target.closest('[id^="dropdown-"]')) {
+    document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+  }
+});
+
+// Delete Menu
+function deleteMenu(id, title) {
+  if (!confirm('Delete "' + title + '"?\n\nThis will permanently delete all menu items.')) return;
+
+  fetch('<?= $block->escapeUrl($block->getDeleteUrl()) ?>?ajax=1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'menu_id=' + id + '&form_key=' + formKey
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      showNotification('Menu deleted successfully', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showNotification(d.message || 'Failed to delete menu', 'error');
+    }
+  });
+}
+
+// Toggle Menu
+function toggleMenu(id, enable) {
+  fetch('<?= $block->escapeUrl($block->getToggleUrl()) ?>?ajax=1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'menu_id=' + id + '&is_active=' + (enable ? '1' : '0') + '&form_key=' + formKey
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      showNotification('Menu ' + (enable ? 'enabled' : 'disabled'), 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showNotification(d.message || 'Failed to toggle menu', 'error');
+    }
+  });
+}
+
+// Duplicate Menu
+function duplicateMenu(id, title) {
+  var newTitle = prompt('Enter name for duplicated menu:', title + ' (Copy)');
+  if (!newTitle) return;
+
+  fetch('<?= $block->escapeUrl($block->getDuplicateUrl()) ?>?ajax=1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'menu_id=' + id + '&new_title=' + encodeURIComponent(newTitle) + '&form_key=' + formKey
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      showNotification('Menu duplicated successfully', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showNotification(d.message || 'Failed to duplicate menu', 'error');
+    }
+  });
+}
+
+// Export Menu
+function exportMenu(id, identifier) {
+  fetch('<?= $block->escapeUrl($block->getExportUrl()) ?>?ajax=1&menu_id=' + id + '&form_key=' + formKey)
+  .then(r => r.json())
+  .then(d => {
+    if (d.success && d.data) {
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(d.data, null, 2));
+      var downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "menu_" + identifier + "_" + Date.now() + ".json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification('Menu exported successfully', 'success');
+    } else {
+      showNotification(d.message || 'Failed to export menu', 'error');
+    }
+  });
+}
+
+// Show Notification
+function showNotification(message, type) {
+  var bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+  var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+  var notification = document.createElement('div');
+  notification.className = 'fixed top-4 right-4 ' + bgColor + ' text-white px-5 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3 animate-slide-down';
+  notification.innerHTML = '<i class="fas ' + icon + '"></i><span>' + message + '</span>';
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateY(-20px)';
+    notification.style.transition = 'all 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Import Modal
+var importFileData = null;
+
+function openImportModal() {
+  document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.add('hidden');
+  document.getElementById('importFile').value = '';
+  document.getElementById('fileName').textContent = '';
+  importFileData = null;
+}
+
+function toggleMenuSelector() {
+  var action = document.querySelector('input[name="importAction"]:checked').value;
+  document.getElementById('menuSelector').classList.toggle('hidden', action !== 'replace');
+}
+
+function handleFileSelect(event) {
+  var file = event.target.files[0];
+  if (!file || !file.name.endsWith('.json')) {
+    showNotification('Please select a JSON file', 'error');
+    return;
+  }
+
+  document.getElementById('fileName').textContent = '✓ ' + file.name;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      importFileData = JSON.parse(e.target.result);
+      showNotification('File loaded successfully', 'success');
+    } catch (error) {
+      showNotification('Invalid JSON file', 'error');
+      importFileData = null;
+    }
+  };
+  reader.readAsText(file);
+}
+
+function performImport() {
+  if (!importFileData) {
+    showNotification('Please select a file first', 'error');
+    return;
+  }
+
+  var action = document.querySelector('input[name="importAction"]:checked').value;
+  var replaceMenuId = action === 'replace' ? document.getElementById('replaceMenuId').value : null;
+
+  if (action === 'replace' && !replaceMenuId) {
+    showNotification('Please select a menu to replace', 'error');
+    return;
+  }
+
+  var formData = new FormData();
+  formData.append('menu_data', JSON.stringify(importFileData));
+  formData.append('action', action);
+  formData.append('replace_menu_id', replaceMenuId || '');
+  formData.append('form_key', formKey);
+
+  fetch('<?= $block->escapeUrl($block->getImportUrl()) ?>?ajax=1', {
+    method: 'POST',
+    body: formData
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      showNotification('Menu imported successfully', 'success');
+      closeImportModal();
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showNotification(d.message || 'Failed to import menu', 'error');
+    }
+  });
+}
+</script>
+</body>
+</html>

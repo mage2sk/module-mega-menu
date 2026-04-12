@@ -1,0 +1,180 @@
+{
+    "panth_megamenu_menu": {
+        "column": {
+            "menu_id": true,
+            "title": true,
+            "identifier": true,
+            "menu_type": true,
+            "is_active": true,
+            "css_class": true,
+            "sort_order": true,
+            "created_at": true,
+            "updated_at": true,
+            "description": true,
+            "custom_css": true,
+            "mobile_layout": true,
+            "items_json": true,
+            "container_bg_color": true,
+            "container_padding": true,
+            "container_margin": true,
+            "item_gap": true,
+            "container_max_width": true,
+            "container_border": true,
+            "container_border_radius": true,
+            "container_box_shadow": true
+        },
+        "index": {
+            "PANTH_MEGAMENU_MENU_IS_ACTIVE": true,
+            "PANTH_MEGAMENU_MENU_MENU_TYPE": true,
+            "PANTH_MEGAMENU_MENU_SORT_ORDER": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PANTH_MEGAMENU_MENU_IDENTIFIER": true
+        }
+    },
+    "panth_megamenu_item": {
+        "column": {
+            "item_id": true,
+            "menu_id": true,
+            "parent_id": true,
+            "level": true,
+            "path": true,
+            "position": true,
+            "item_type": true,
+            "title": true,
+            "url": true,
+            "target": true,
+            "css_class": true,
+            "icon": true,
+            "image": true,
+            "content": true,
+            "category_id": true,
+            "cms_page_id": true,
+            "product_id": true,
+            "widget_code": true,
+            "is_active": true,
+            "columns": true,
+            "show_children": true,
+            "open_in_new_tab": true,
+            "created_at": true,
+            "updated_at": true,
+            "icon_library": true,
+            "custom_html": true,
+            "cms_block_id": true,
+            "hover_effect": true,
+            "child_type": true,
+            "tooltip_text": true,
+            "show_on_frontend": true,
+            "submenu_columns": true,
+            "background_color": true,
+            "text_color": true
+        },
+        "index": {
+            "PANTH_MEGAMENU_ITEM_MENU_ID": true,
+            "PANTH_MEGAMENU_ITEM_PARENT_ID": true,
+            "PANTH_MEGAMENU_ITEM_LEVEL": true,
+            "PANTH_MEGAMENU_ITEM_PATH": true,
+            "PANTH_MEGAMENU_ITEM_POSITION": true,
+            "PANTH_MEGAMENU_ITEM_ITEM_TYPE": true,
+            "PANTH_MEGAMENU_ITEM_IS_ACTIVE": true,
+            "PANTH_MEGAMENU_ITEM_CATEGORY_ID": true,
+            "PANTH_MEGAMENU_ITEM_CMS_PAGE_ID": true,
+            "PANTH_MEGAMENU_ITEM_PRODUCT_ID": true,
+            "PANTH_MEGAMENU_ITEM_MENU_ID_PARENT_ID_POSITION": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PANTH_MEGAMENU_ITEM_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID": true,
+            "PANTH_MEGAMENU_ITEM_PARENT_ID_PANTH_MEGAMENU_ITEM_ITEM_ID": true,
+            "PANTH_MEGAMENU_ITEM_CTGR_ID_CAT_CTGR_ENTT_ENTT_ID": true,
+            "PANTH_MEGAMENU_ITEM_CMS_PAGE_ID_CMS_PAGE_PAGE_ID": true,
+            "PANTH_MEGAMENU_ITEM_PRODUCT_ID_CATALOG_PRODUCT_ENTITY_ENTITY_ID": true
+        }
+    },
+    "panth_megamenu_store": {
+        "column": {
+            "menu_id": true,
+            "store_id": true
+        },
+        "index": {
+            "PANTH_MEGAMENU_STORE_STORE_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PANTH_MEGAMENU_STORE_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID": true,
+            "PANTH_MEGAMENU_STORE_STORE_ID_STORE_STORE_ID": true
+        }
+    },
+    "panth_megamenu_customer_group": {
+        "column": {
+            "menu_id": true,
+            "customer_group_id": true
+        },
+        "index": {
+            "PANTH_MEGAMENU_CUSTOMER_GROUP_CUSTOMER_GROUP_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PANTH_MEGAMENU_CSTR_GROUP_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID": true,
+            "PANTH_MEGAMENU_CSTR_GROUP_CSTR_GROUP_ID_CSTR_GROUP_CSTR_GROUP_ID": true
+        }
+    },
+    "panth_megamenu_cache": {
+        "column": {
+            "cache_id": true,
+            "menu_id": true,
+            "store_id": true,
+            "customer_group_id": true,
+            "cache_data": true,
+            "cache_time": true
+        },
+        "index": {
+            "PANTH_MEGAMENU_CACHE_MENU_ID": true,
+            "PANTH_MEGAMENU_CACHE_STORE_ID": true,
+            "PANTH_MEGAMENU_CACHE_CUSTOMER_GROUP_ID": true,
+            "PANTH_MEGAMENU_CACHE_CACHE_TIME": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PANTH_MEGAMENU_CACHE_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID": true,
+            "PANTH_MEGAMENU_CACHE_STORE_ID_STORE_STORE_ID": true,
+            "PANTH_MEGAMENU_CACHE_CSTR_GROUP_ID_CSTR_GROUP_CSTR_GROUP_ID": true,
+            "PANTH_MEGAMENU_CACHE_MENU_ID_STORE_ID_CUSTOMER_GROUP_ID": true
+        }
+    },
+    "panth_megamenu_menu_version": {
+        "column": {
+            "version_id": true,
+            "menu_id": true,
+            "version_number": true,
+            "title": true,
+            "identifier": true,
+            "items_json": true,
+            "css_class": true,
+            "custom_css": true,
+            "container_bg_color": true,
+            "container_padding": true,
+            "container_margin": true,
+            "container_max_width": true,
+            "container_border": true,
+            "container_border_radius": true,
+            "container_box_shadow": true,
+            "item_gap": true,
+            "is_active": true,
+            "store_ids": true,
+            "created_at": true,
+            "created_by": true,
+            "version_comment": true
+        },
+        "index": {
+            "PANTH_MEGAMENU_VERSION_MENU_ID": true,
+            "PANTH_MEGAMENU_VERSION_CREATED_AT": true,
+            "PANTH_MEGAMENU_VERSION_MENU_VERSION": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PANTH_MEGAMENU_VERSION_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID": true
+        }
+    }
+}

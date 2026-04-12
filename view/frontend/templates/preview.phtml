@@ -1,0 +1,180 @@
+<?php
+/**
+ * Preview template - renders menu HTML directly from POST data
+ *
+ * @var \Panth\MegaMenu\Block\Preview $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Get menu data from POST (not database)
+$menuTree = $block->getCurrentMenuTree();
+$menu = $block->getCurrentMenu();
+
+// Get custom CSS from menu settings
+$customCss = $menu ? $menu->getCustomCss() : '';
+$menuCssClass = $menu ? $menu->getCssClass() : '';
+
+// Get all Menu Container Styling settings from POST
+$containerBgColor = $menu ? $menu->getContainerBgColor() : '';
+$containerPadding = $menu ? $menu->getContainerPadding() : '';
+$containerMargin = $menu ? $menu->getContainerMargin() : '';
+$itemGap = $menu ? $menu->getItemGap() : '';
+$containerMaxWidth = $menu ? $menu->getContainerMaxWidth() : '';
+$containerBorder = $menu ? $menu->getContainerBorder() : '';
+$containerBorderRadius = $menu ? $menu->getContainerBorderRadius() : '';
+$containerBoxShadow = $menu ? $menu->getContainerBoxShadow() : '';
+
+// Build inline styles for navigation
+$navStyles = [];
+if ($containerBgColor) {
+    $navStyles[] = 'background-color: ' . $containerBgColor;
+}
+if ($containerPadding) {
+    $navStyles[] = 'padding: ' . $containerPadding;
+}
+if ($containerMargin) {
+    $navStyles[] = 'margin: ' . $containerMargin;
+}
+if ($containerBorder) {
+    $navStyles[] = 'border: ' . $containerBorder;
+}
+if ($containerBorderRadius) {
+    $navStyles[] = 'border-radius: ' . $containerBorderRadius;
+}
+if ($containerBoxShadow) {
+    $navStyles[] = 'box-shadow: ' . $containerBoxShadow;
+}
+
+$navStyleAttr = !empty($navStyles) ? 'style="' . implode('; ', $navStyles) . '"' : '';
+
+/**
+ * Recursive function to render menu item and its children
+ */
+function renderMenuItem($item, $level = 0, $escaper) {
+    $itemId = $item['item_id'] ?? '';
+    $title = $item['title'] ?? '';
+    $url = $item['url'] ?? '#';
+    $itemType = $item['item_type'] ?? 'link';
+    $cssClasses = $item['css_classes'] ?? '';
+    $icon = $item['icon'] ?? '';
+    $iconPosition = $item['icon_position'] ?? 'left';
+    $isActive = $item['is_active'] ?? true;
+    $children = $item['children'] ?? [];
+    $hasChildren = !empty($children);
+
+    if (!$isActive) {
+        return '';
+    }
+
+    $liClasses = ['pmenu-item', 'level' . $level];
+    if ($hasChildren) {
+        $liClasses[] = 'parent';
+    }
+    if ($cssClasses) {
+        $liClasses[] = $cssClasses;
+    }
+
+    $html = '<li class="' . $escaper->escapeHtmlAttr(implode(' ', $liClasses)) . '">';
+
+    if ($itemType === 'category' || $itemType === 'link') {
+        $html .= '<a href="' . $escaper->escapeUrl($url) . '" class="pmenu-link">';
+
+        if ($icon && $iconPosition === 'left') {
+            $html .= '<i class="' . $escaper->escapeHtmlAttr($icon) . '"></i> ';
+        }
+
+        $html .= '<span>' . $escaper->escapeHtml($title) . '</span>';
+
+        if ($icon && $iconPosition === 'right') {
+            $html .= ' <i class="' . $escaper->escapeHtmlAttr($icon) . '"></i>';
+        }
+
+        if ($hasChildren) {
+            $html .= ' <span class="pmenu-arrow"></span>';
+        }
+
+        $html .= '</a>';
+    } else {
+        // Custom content or other types
+        $html .= '<span class="pmenu-label">' . $escaper->escapeHtml($title) . '</span>';
+    }
+
+    // Render children
+    if ($hasChildren) {
+        $html .= '<ul class="pmenu-submenu level' . ($level + 1) . '">';
+        foreach ($children as $child) {
+            $html .= renderMenuItem($child, $level + 1, $escaper);
+        }
+        $html .= '</ul>';
+    }
+
+    $html .= '</li>';
+
+    return $html;
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Preview</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .preview-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #1979c3;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 100000;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-badge">LIVE PREVIEW - FROM POST DATA</div>
+
+    <?php if (empty($menuTree)): ?>
+        <div style="padding: 40px; text-align: center; color: #999;">
+            <p>No menu items to preview</p>
+        </div>
+    <?php else: ?>
+        <!-- Panth MegaMenu - Navigation Structure -->
+        <nav class="navigation pmenu-wrapper <?= $escaper->escapeHtmlAttr($menuCssClass) ?>"
+             id="panth-megamenu-preview"
+             role="navigation"
+             <?= /* @noEscape */ $navStyleAttr ?>>
+            <ul class="pmenu-main">
+                <?php foreach ($menuTree as $item): ?>
+                    <?= /* @noEscape */ renderMenuItem($item, 0, $escaper) ?>
+                <?php endforeach; ?>
+            </ul>
+        </nav>
+
+        <!-- Custom CSS from admin menu settings -->
+        <?php if ($customCss): ?>
+        <style type="text/css">
+        <?= /* @noEscape */ $customCss ?>
+        </style>
+        <?php endif; ?>
+
+        <!-- MegaMenu Enhancement Script -->
+        <script type="text/x-magento-init">
+        {
+            "#panth-megamenu-preview": {
+                "Panth_MegaMenu/js/megamenu": {}
+            }
+        }
+        </script>
+    <?php endif; ?>
+</body>
+</html>

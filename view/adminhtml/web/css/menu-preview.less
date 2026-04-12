@@ -1,0 +1,281 @@
+/**
+ * Mega Menu Preview Modal Styles
+ */
+
+/* Modal Container */
+.megamenu-preview-modal {
+    width: 90vw;
+    max-width: none !important;
+    height: 90vh;
+}
+
+.megamenu-preview-modal .modal-inner-wrap {
+    width: 100%;
+    height: 100%;
+    max-height: 90vh;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+}
+
+.megamenu-preview-modal .modal-content {
+    height: calc(100% - 60px);
+    padding: 0;
+    overflow: hidden !important;
+}
+
+/* Remove scrollbars from modal */
+.megamenu-preview-modal .modal-inner-wrap {
+    overflow: hidden !important;
+}
+
+.megamenu-preview-modal .modal-footer {
+    border-top: 1px solid #e3e3e3;
+    padding: 15px 20px;
+}
+
+/* Device Selector Toolbar */
+.preview-device-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 15px 20px;
+    background: #f8f8f8;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.preview-device-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #fff;
+    border: 2px solid #d1d1d1;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.preview-device-btn:hover {
+    border-color: #999;
+    color: #333;
+}
+
+.preview-device-btn.active {
+    background: #1979c3;
+    border-color: #1979c3;
+    color: #fff;
+}
+
+.preview-device-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.preview-refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    background: #fff;
+    border: 2px solid #d1d1d1;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: auto;
+}
+
+.preview-refresh-btn:hover {
+    border-color: #1979c3;
+    background: #f0f7fc;
+}
+
+.preview-refresh-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: #666;
+}
+
+.preview-refresh-btn:hover svg {
+    stroke: #1979c3;
+}
+
+/* Preview Iframe Wrapper */
+.preview-iframe-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 72px);
+    min-height: 600px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+    overflow: hidden !important;
+}
+
+#megamenu-preview-iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 800px;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Device-specific iframe sizes */
+.preview-iframe-wrapper.device-desktop #megamenu-preview-iframe {
+    width: 100%;
+    max-width: 1920px;
+    height: 100%;
+    min-height: 900px;
+}
+
+.preview-iframe-wrapper.device-tablet #megamenu-preview-iframe {
+    width: 768px;
+    max-width: 100%;
+    height: 1024px;
+    min-height: 1024px;
+}
+
+.preview-iframe-wrapper.device-mobile #megamenu-preview-iframe {
+    width: 375px;
+    max-width: 100%;
+    height: 812px;
+    min-height: 812px;
+}
+
+/* Loading State - Magento Admin Style */
+.preview-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+}
+
+.preview-spinner {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    position: relative;
+}
+
+.preview-spinner:before,
+.preview-spinner:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #eb5202;
+    animation: preview-spin 1.2s linear infinite;
+}
+
+.preview-spinner:after {
+    border-top-color: #1979c3;
+    animation-duration: 0.8s;
+    animation-direction: reverse;
+}
+
+@keyframes preview-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.preview-loading p {
+    margin: 0;
+    font-size: 16px;
+    color: #303030;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .megamenu-preview-modal {
+        width: 95vw;
+        height: 95vh;
+    }
+
+    .preview-device-selector {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 12px 15px;
+    }
+
+    .preview-device-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .preview-device-btn span {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .preview-iframe-wrapper.device-tablet #megamenu-preview-iframe,
+    .preview-iframe-wrapper.device-mobile #megamenu-preview-iframe {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/* Preview Info Badge */
+.preview-info-badge {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: rgba(25, 121, 195, 0.95);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+/* Empty State in Preview */
+.preview-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.preview-empty-state svg {
+    margin: 0 auto 20px;
+    opacity: 0.3;
+}
+
+.preview-empty-state h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+    color: #666;
+}
+
+.preview-empty-state p {
+    margin: 0;
+    font-size: 14px;
+}

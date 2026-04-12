@@ -1,0 +1,119 @@
+<?php
+/**
+ * Menu Preview — defines panthPreviewMenu() and panthFlushAndPreview()
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ */
+$baseUrl = rtrim($block->getBaseUrl(), '/') . '/';
+$flushUrl = $block->getUrl('panth_menu/menu/flushCache');
+?>
+<script type="text/javascript">
+    /**
+     * Collect current unsaved menu data and POST to preview page
+     */
+    function _collectAndPreview() {
+        var itemsJson = '[]';
+
+        // Try hidden input
+        var hiddenInput = document.querySelector('input[name="items_json"], textarea[name="items_json"]');
+        if (hiddenInput && hiddenInput.value && hiddenInput.value.length > 2) {
+            itemsJson = hiddenInput.value;
+        }
+
+        // Try global items array
+        if (itemsJson === '[]' && typeof window.items !== 'undefined' && Array.isArray(window.items)) {
+            itemsJson = JSON.stringify(window.items);
+        }
+
+        // Try menuBuilderData
+        if (itemsJson === '[]' && window.menuBuilderData && window.menuBuilderData.items) {
+            itemsJson = JSON.stringify(window.menuBuilderData.items);
+        }
+
+        // Try KO registry (async — fallback)
+        if (itemsJson === '[]') {
+            try {
+                require(['uiRegistry'], function(registry) {
+                    var field = registry.get('panth_menu_form.panth_menu_form.menu_items.items_json');
+                    if (field && typeof field.value === 'function' && field.value()) {
+                        _submitPreview(field.value());
+                    }
+                });
+            } catch(e) {}
+        }
+
+        if (itemsJson !== '[]' && itemsJson.length > 2) {
+            _submitPreview(itemsJson);
+        } else {
+            alert('No menu items to preview.');
+        }
+    }
+
+    function _submitPreview(itemsJson) {
+        var ts = Date.now();
+        var url = '<?= $block->escapeJs($baseUrl) ?>panth_menu/preview/index?_t=' + ts;
+
+        var formFields = {};
+        ['css_class','custom_css','container_bg_color','container_padding','container_margin',
+         'item_gap','container_max_width','container_border','container_border_radius','container_box_shadow'
+        ].forEach(function(n) {
+            var el = document.querySelector('[name="' + n + '"]');
+            if (el && el.value) formFields[n] = el.value;
+        });
+
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.target = 'megamenu_preview_' + ts;
+        form.style.display = 'none';
+
+        var inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'items_json'; inp.value = itemsJson;
+        form.appendChild(inp);
+
+        for (var k in formFields) {
+            var fi = document.createElement('input');
+            fi.type = 'hidden'; fi.name = k; fi.value = formFields[k];
+            form.appendChild(fi);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+        setTimeout(function() { form.remove(); }, 2000);
+    }
+
+    /**
+     * Preview button — direct preview (works on first click, may cache on repeat)
+     */
+    window.panthPreviewMenu = function() {
+        _collectAndPreview();
+    };
+
+    /**
+     * Flush cache then preview — use when preview shows stale data
+     */
+    window.panthFlushAndPreview = function() {
+        var btn = document.querySelector('.preview.action-secondary');
+        if (btn) btn.textContent = 'Flushing cache...';
+
+        // Flush FPC via AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '<?= $block->escapeJs($flushUrl) ?>', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onload = function() {
+            if (btn) btn.textContent = 'Preview';
+            console.log('[Preview] Cache flushed, opening preview...');
+            _collectAndPreview();
+        };
+        xhr.onerror = function() {
+            if (btn) btn.textContent = 'Preview';
+            // Open preview anyway
+            _collectAndPreview();
+        };
+        xhr.send('form_key=' + encodeURIComponent(
+            document.querySelector('input[name="form_key"]')?.value || ''
+        ));
+    };
+</script>
+

@@ -1,0 +1,60 @@
+<?php
+/**
+ * MegaMenu JavaScript Initialization Template
+ * Hyvä Theme Compatible - No RequireJS
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ * @var \Magento\Framework\View\Element\Template $block
+ */
+
+/** @var \Panth\MegaMenu\Helper\Data $helper */
+$helper = $block->getData('helper');
+if (!$helper) {
+    return;
+}
+
+if (!$helper->isEnabled()) {
+    return;
+}
+?>
+<script>
+// MegaMenu Configuration
+window.megaMenuConfig = window.megaMenuConfig || {
+    enabled: <?= $helper->isEnabled() ? 'true' : 'false' /* @noEscape */ ?>,
+    mobileEnabled: <?= $helper->isMobileEnabled() ? 'true' : 'false' /* @noEscape */ ?>,
+    mobileBreakpoint: <?= (int) $helper->getMobileBreakpoint() ?>,
+    stickyMenu: <?= $helper->isStickyMenuEnabled() ? 'true' : 'false' /* @noEscape */ ?>,
+    animationType: "<?= $block->escapeJs($helper->getAnimationType()) ?>",
+    animationDuration: <?= (int) $helper->getAnimationDuration() ?>,
+    hoverIntentDelay: <?= (int) $helper->getHoverIntentDelay() ?>,
+    showIcons: <?= $helper->showIcons() ? 'true' : 'false' /* @noEscape */ ?>,
+    showImages: <?= $helper->showImages() ? 'true' : 'false' /* @noEscape */ ?>,
+    maxDepth: <?= (int) $helper->getMaxDepth() ?>,
+    lazyLoad: <?= $helper->isLazyLoadEnabled() ? 'true' : 'false' /* @noEscape */ ?>,
+    debugMode: <?= $helper->isDebugEnabled() ? 'true' : 'false' /* @noEscape */ ?>
+};
+</script>
+
+<?php if ($helper->getCustomCss()): ?>
+<style type="text/css">
+<?= /* @noEscape */ $helper->getCustomCss() ?>
+</style>
+<?php endif; ?>
+
+<?php if ($helper->getCustomJs()): ?>
+<script>
+(function() {
+    'use strict';
+
+    // Execute custom JavaScript when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            <?= /* @noEscape */ $helper->getCustomJs() ?>
+        });
+    } else {
+        <?= /* @noEscape */ $helper->getCustomJs() ?>
+    }
+})();
+</script>
+<?php endif; ?>

@@ -1,0 +1,77 @@
+<div class="admin__fieldset" style="margin-top: 20px;">
+    <div class="admin__field-note" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: start; gap: 12px;">
+            <span style="font-size: 24px;">ℹ️</span>
+            <div>
+                <strong style="display: block; margin-bottom: 8px; color: #856404;">Advanced Menu Builder</strong>
+                <p style="margin: 0 0 12px 0; color: #856404;">
+                    The full drag-and-drop menu builder with visual editor is available in a popup modal.
+                </p>
+                <button type="button"
+                        id="open-advanced-builder-btn"
+                        class="action-secondary"
+                        style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                    <span>Open Advanced Builder</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin__field-note" style="margin-bottom: 12px; font-size: 13px; color: #666;">
+        <strong>Quick Note:</strong> You can also manually edit the menu items JSON below. The items_json field is automatically managed when using the visual builder.
+    </div>
+</div>
+
+<script>
+require([
+    'jquery',
+    'uiRegistry'
+], function($, registry) {
+    'use strict';
+
+    $(document).ready(function() {
+
+        // Use event delegation and try multiple times
+        var attempts = 0;
+        var maxAttempts = 10;
+
+        function bindButton() {
+            attempts++;
+            var $button = $('#open-advanced-builder-btn');
+
+            if ($button.length > 0) {
+
+                $button.off('click').on('click', function(e) {
+                    e.preventDefault();
+
+                    // Try to get modal with retry
+                    var tryOpenModal = function(retries) {
+                        var modal = registry.get('panth_menu_form.panth_menu_form.menu_builder_modal');
+
+                        if (modal) {
+                            if (typeof modal.openModal === 'function') {
+                                modal.openModal();
+                            } else if (typeof modal.toggleModal === 'function') {
+                                modal.toggleModal();
+                            } else {
+                            }
+                        } else if (retries > 0) {
+                            setTimeout(function() {
+                                tryOpenModal(retries - 1);
+                            }, 500);
+                        } else {
+                        }
+                    };
+
+                    tryOpenModal(5);
+                });
+            } else if (attempts < maxAttempts) {
+                setTimeout(bindButton, 500);
+            } else {
+            }
+        }
+
+        bindButton();
+    });
+});
+</script>

@@ -1,0 +1,24 @@
+# Files / dirs that should NEVER be shipped in a Composer package or
+# Marketplace zip. `export-ignore` strips them when GitHub generates a
+# release archive AND when composer creates a dist-zip.
+
+# IDE / OS junk
+.idea/                  export-ignore
+.vscode/                export-ignore
+.DS_Store               export-ignore
+*.swp                   export-ignore
+
+# Source-control metadata
+.git/                   export-ignore
+.gitignore              export-ignore
+.gitattributes          export-ignore
+
+# Local development
+node_modules/           export-ignore
+vendor/                 export-ignore
+*.log                   export-ignore
+
+# Test artefacts
+tests/_output/          export-ignore
+tests/_data/            export-ignore
+phpunit.xml             export-ignore

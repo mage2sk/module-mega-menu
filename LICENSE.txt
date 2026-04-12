@@ -1,0 +1,79 @@
+Panth — Commercial Software License Agreement
+
+Copyright (c) 2026 Kishan Savaliya. All rights reserved.
+
+This software and the associated documentation files (the "Software")
+are the confidential and proprietary work of the copyright holder.
+
+By installing, copying, or otherwise using the Software, you agree to
+be bound by the terms of this License Agreement.
+
+────────────────────────────────────────────────────────────────────────
+1. GRANT OF LICENSE
+────────────────────────────────────────────────────────────────────────
+
+Subject to the terms and conditions of this Agreement, the copyright
+holder grants You a non-exclusive, non-transferable, non-sublicensable
+license to install and use one (1) copy of the Software on a single
+Magento production installation, plus any number of associated
+development and staging installations operated by the same legal
+entity, provided You have purchased a valid license for the Software.
+
+A separate license is required for each distinct production
+installation (one license per Magento store domain).
+
+────────────────────────────────────────────────────────────────────────
+2. RESTRICTIONS
+────────────────────────────────────────────────────────────────────────
+
+You may NOT:
+
+  a. Distribute, sublicense, lease, rent, loan, or otherwise transfer
+     the Software to any third party;
+  b. Reverse engineer, decompile, or disassemble the Software, except
+     and only to the extent that such activity is expressly permitted
+     by applicable law;
+  c. Modify, translate, or create derivative works based on the
+     Software for the purpose of redistribution;
+  d. Remove, alter, or obscure any proprietary notices (including
+     copyright notices) on the Software;
+  e. Use the Software to provide hosting, SaaS, or any service offering
+     in which the Software's functionality is made available to any
+     third party other than Your own customers visiting Your website.
+
+────────────────────────────────────────────────────────────────────────
+3. SUPPORT AND UPDATES
+────────────────────────────────────────────────────────────────────────
+
+The copyright holder provides email support and free version updates
+for twelve (12) months from the date of purchase, after which a renewal
+fee applies for continued support and updates. Support requests should
+be sent to kishansavaliyakb@gmail.com.
+
+────────────────────────────────────────────────────────────────────────
+4. DISCLAIMER OF WARRANTY
+────────────────────────────────────────────────────────────────────────
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+────────────────────────────────────────────────────────────────────────
+5. TERMINATION
+────────────────────────────────────────────────────────────────────────
+
+This License is effective until terminated. Your rights under this
+License will terminate automatically without notice from the copyright
+holder if You fail to comply with any of its terms. Upon termination
+You shall cease all use of the Software and destroy all copies of it.
+
+────────────────────────────────────────────────────────────────────────
+
+For all questions about licensing, support, or general inquiries:
+    Email:    kishansavaliyakb@gmail.com
+    Website:  https://kishansavaliya.com
+    WhatsApp: +91 84012 70422

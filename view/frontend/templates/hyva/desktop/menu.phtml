@@ -1,0 +1,32 @@
+<?php
+/**
+ * Panth MegaMenu - Desktop Menu for Hyvä Theme
+ * MenuRenderer outputs EVERYTHING - 100% reusable component
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ */
+
+$menuTree = $block->getCurrentMenuTree();
+if (empty($menuTree)) return;
+
+/** @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel */
+$menuViewModel = $block->getData('view_model') ?: $block->getViewModel();
+$menuRenderer = $menuViewModel ? $menuViewModel->getMenuRenderer() : null;
+if (!$menuRenderer) return;
+?>
+<?= /* @noEscape */ $menuRenderer->renderDesktopMenu($menuTree, false) ?>
+<style>
+@media (max-width: 1023px) { .megamenu-container { display: none; } }
+a[aria-current="page"] { color: #4f46e5; font-weight: 700; }
+<?php if ($menu = $block->getCurrentMenu()): ?>
+<?= /* @noEscape */ $menu->getCustomCss() ?>
+<?php endif; ?>
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const path = window.location.origin + window.location.pathname;
+    document.querySelectorAll('.megamenu-container a[href]').forEach(link => {
+        if (link.href === path) link.setAttribute('aria-current', 'page');
+    });
+});
+</script>

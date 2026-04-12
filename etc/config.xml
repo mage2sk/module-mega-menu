@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Default Configuration Values for MegaMenu
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <panth_megamenu>
+            <!-- General Settings -->
+            <general>
+                <enabled>1</enabled>
+                <menu_identifier>mainmenu</menu_identifier>
+                <mobile_breakpoint>1024</mobile_breakpoint>
+                <sticky_menu>0</sticky_menu>
+            </general>
+
+            <!-- Styling Settings -->
+            <styling>
+                <hover_effect>underline</hover_effect>
+                <image_size>thumbnail</image_size>
+            </styling>
+
+            <!-- Display Settings -->
+            <display>
+                <animation_type>fade</animation_type>
+                <animation_duration>200</animation_duration>
+                <hover_intent_delay>150</hover_intent_delay>
+                <show_icons>1</show_icons>
+                <show_images>1</show_images>
+                <max_depth>5</max_depth>
+                <columns>4</columns>
+                <show_category_count>0</show_category_count>
+                <enable_custom_blocks>1</enable_custom_blocks>
+            </display>
+
+            <!-- Mobile Settings -->
+            <mobile>
+                <mobile_enabled>1</mobile_enabled>
+                <position>left</position>
+                <overlay_enabled>1</overlay_enabled>
+                <accordion_enabled>1</accordion_enabled>
+                <swipe_enabled>0</swipe_enabled>
+                <animation_speed>300</animation_speed>
+                <show_category_icons>1</show_category_icons>
+            </mobile>
+
+            <!-- Sticky Menu Settings -->
+            <sticky>
+                <offset>100</offset>
+                <hide_on_scroll_down>0</hide_on_scroll_down>
+                <show_on_scroll_up>1</show_on_scroll_up>
+                <show_shadow>1</show_shadow>
+                <compact_mode>0</compact_mode>
+                <animation_speed>300</animation_speed>
+            </sticky>
+
+            <!-- Performance Settings -->
+            <performance>
+                <cache_enabled>1</cache_enabled>
+                <cache_lifetime>3600</cache_lifetime>
+                <lazy_load>0</lazy_load>
+            </performance>
+
+            <!-- Advanced Settings -->
+            <advanced>
+                <enable_debug>0</enable_debug>
+            </advanced>
+        </panth_megamenu>
+    </default>
+</config>

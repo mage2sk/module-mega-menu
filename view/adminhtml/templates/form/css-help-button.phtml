@@ -1,0 +1,84 @@
+<?php
+/**
+ * "How it works" button that opens CSS Reference modal
+ */
+?>
+<div style="margin: 8px 0 16px;">
+    <button type="button" id="megamenu-help-btn"
+            style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f0f4ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer">
+        <span style="font-size:15px">📖</span> How it works
+    </button>
+</div>
+
+<div id="megamenu-help-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">
+    <div style="background:#fff;border-radius:12px;max-width:680px;width:95%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #eee;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;z-index:1">
+            <b style="font-size:15px;color:#1e293b">📖 MegaMenu CSS Reference</b>
+            <button type="button" id="megamenu-help-close" style="border:none;background:#f1f5f9;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;color:#64748b">&times;</button>
+        </div>
+        <div style="padding:16px 20px">
+            <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;margin-bottom:14px;font-size:12px;line-height:1.6;border-left:3px solid #4F46E5">
+                <b>Scoping:</b> <code style="background:#dbeafe;padding:1px 4px;border-radius:2px;font-size:11px">#panth-megamenu-{id} .selector { }</code>
+            </div>
+            <?php
+            $sections = [
+                'Container' => [
+                    '.panth-mega-panel' => 'Mega dropdown panel',
+                    '.panth-mega-item' => 'Top-level mega item',
+                    '.panth-col-header' => 'Column header in mega panel',
+                    'nav > ul > li > a' => 'Top-level link',
+                ],
+                'Hover Effects' => [
+                    '.panth-hover-underline' => 'Animated underline',
+                    '.panth-hover-fade' => 'Opacity fade',
+                    '.panth-hover-highlight' => 'Background highlight',
+                    '.panth-hover-slide' => 'Slide up',
+                    '.panth-hover-glow' => 'Text glow',
+                    '.panth-hover-grow' => 'Scale grow',
+                ],
+                'Layout' => [
+                    '.grid-cols-2 to .grid-cols-5' => 'Column grids',
+                    '.panth-badge' => 'Item badge (NEW, SALE, HOT)',
+                    '.panth-cms-block' => 'CMS block content area',
+                ],
+                'Mobile & Alpine.js' => [
+                    '[x-data="megaMenuDesktop()"]' => 'Desktop navigation',
+                    '[x-data="megaMenuMobile()"]' => 'Mobile drawer',
+                    '[x-data="megaMenuMegaPanel()"]' => 'Deep accordion',
+                ],
+                'CSS Variables (theme-config.json)' => [
+                    '--menu-text / --menu-text-hover' => 'Text colors',
+                    '--menu-dropdown-bg' => 'Dropdown background',
+                    '--menu-level1-bg / --menu-level2-bg' => 'Panel backgrounds',
+                    '--menu-mobile-bg' => 'Mobile drawer background',
+                ],
+            ];
+            foreach ($sections as $title => $items): ?>
+                <h3 style="font-size:13px;font-weight:600;color:#334155;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #e2e8f0"><?= $block->escapeHtml($title) ?></h3>
+                <table style="width:100%;border-collapse:collapse">
+                    <?php foreach ($items as $selector => $desc): ?>
+                        <tr>
+                            <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;font-size:13px;font-family:monospace;color:#4338ca"><?= $block->escapeHtml($selector) ?></td>
+                            <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b"><?= $block->escapeHtml($desc) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+require(['jquery'], function($) {
+    'use strict';
+    $('#megamenu-help-btn').on('click', function() {
+        $('#megamenu-help-modal').css('display', 'flex');
+    });
+    $('#megamenu-help-close').on('click', function() {
+        $('#megamenu-help-modal').hide();
+    });
+    $('#megamenu-help-modal').on('click', function(e) {
+        if (e.target === this) $(this).hide();
+    });
+});
+</script>

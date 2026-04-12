@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Panth_MegaMenu::css/custom-admin.css"/>
+    </head>
+    <update handle="styles"/>
+    <body>
+        <referenceContainer name="content">
+            <block class="Panth\MegaMenu\Block\Adminhtml\Menu\CustomEdit" name="megamenu_custom_edit" template="Panth_MegaMenu::menu/edit.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

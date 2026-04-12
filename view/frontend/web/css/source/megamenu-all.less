@@ -1,0 +1,747 @@
+// ============================================================================
+// Panth MegaMenu - Complete LESS Stylesheet
+//
+// Sections:
+//   1. Variables
+//   2. Base nav bar (horizontal flex, proper height)
+//   3. Menu items (padding, hover states)
+//   4. Dropdowns (absolute positioning, shadow, border, z-index)
+//   5. Mega dropdown grid (CSS grid with configurable columns)
+//   6. Hover effects (underline, fade, highlight, slide, glow, grow)
+//   7. Mobile hamburger button
+//   8. Mobile drawer (fixed, slide-in, overlay)
+//   9. Mobile accordion (collapsible sections)
+//  10. Responsive breakpoints
+//  11. Animations (fade-in, slide-down, grow)
+//  12. Sticky header
+//  13. Badges
+//  14. Icons & images
+//  15. CMS block wrapper
+//  16. Utility
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// 1. Variables
+// ---------------------------------------------------------------------------
+@pmenu-bg:                 var(--pmenu-bg, #ffffff);
+@pmenu-text:               var(--pmenu-text, #333333);
+@pmenu-hover:              var(--pmenu-hover, #f5f5f5);
+@pmenu-dropdown-bg:        var(--pmenu-dropdown-bg, #ffffff);
+@pmenu-dropdown-border:    var(--pmenu-dropdown-border, #e0e0e0);
+@pmenu-animation-speed:    var(--pmenu-animation-speed, 200ms);
+
+@pmenu-font-family:        inherit;
+@pmenu-font-size:          14px;
+@pmenu-font-weight:        600;
+@pmenu-line-height:        1.4;
+
+@pmenu-bar-height:         52px;
+@pmenu-bar-padding:        0 16px;
+
+@pmenu-item-padding-x:     16px;
+@pmenu-item-padding-y:     14px;
+
+@pmenu-dropdown-min-width: 220px;
+@pmenu-dropdown-shadow:    0 8px 30px rgba(0, 0, 0, 0.12);
+@pmenu-dropdown-radius:    8px;
+@pmenu-dropdown-padding:   8px;
+@pmenu-dropdown-zindex:    1000;
+
+@pmenu-mega-max-width:     1200px;
+
+@pmenu-badge-bg:           #DC2626;
+@pmenu-badge-color:        #ffffff;
+@pmenu-badge-radius:       10px;
+@pmenu-badge-font-size:    10px;
+
+@pmenu-mobile-drawer-width: 300px;
+@pmenu-mobile-drawer-bg:    #ffffff;
+@pmenu-mobile-overlay-bg:   rgba(0, 0, 0, 0.45);
+
+@pmenu-breakpoint:         1024px;
+
+@pmenu-arrow-size:         10px;
+@pmenu-transition:         all 0.2s ease;
+
+// ---------------------------------------------------------------------------
+// 2. Base nav bar
+// ---------------------------------------------------------------------------
+.pmenu-nav {
+    position: relative;
+    z-index: @pmenu-dropdown-zindex;
+    background: @pmenu-bg;
+    font-family: @pmenu-font-family;
+    font-size: @pmenu-font-size;
+    line-height: @pmenu-line-height;
+    width: 100%;
+}
+
+.pmenu-bar {
+    display: flex;
+    align-items: center;
+    min-height: @pmenu-bar-height;
+    padding: @pmenu-bar-padding;
+    margin: 0 auto;
+}
+
+.pmenu-items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// 3. Menu items
+// ---------------------------------------------------------------------------
+.pmenu-item {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pmenu-item-l0 {
+    > .pmenu-link {
+        font-weight: @pmenu-font-weight;
+        white-space: nowrap;
+    }
+}
+
+.pmenu-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: @pmenu-item-padding-y @pmenu-item-padding-x;
+    color: @pmenu-text;
+    text-decoration: none;
+    transition: @pmenu-transition;
+    cursor: pointer;
+    border-radius: 4px;
+    line-height: @pmenu-line-height;
+
+    &:hover,
+    &:focus {
+        background: @pmenu-hover;
+        color: @pmenu-text;
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0D9488;
+        outline-offset: -2px;
+    }
+}
+
+// Text wrapper
+.pmenu-text-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.pmenu-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pmenu-subtitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: #888;
+    line-height: 1.3;
+}
+
+.pmenu-desc {
+    font-size: 12px;
+    font-weight: 400;
+    color: #999;
+    line-height: 1.3;
+    max-width: 200px;
+}
+
+// Arrow
+.pmenu-arrow {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    padding-left: 4px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    color: #999;
+
+    svg {
+        display: block;
+    }
+}
+
+// Rotate arrow when open
+.pmenu-item-open > .pmenu-link > .pmenu-arrow {
+    transform: rotate(180deg);
+}
+
+// ---------------------------------------------------------------------------
+// 4. Dropdowns
+// ---------------------------------------------------------------------------
+.pmenu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: @pmenu-dropdown-zindex;
+    min-width: @pmenu-dropdown-min-width;
+    background: @pmenu-dropdown-bg;
+    border: 1px solid @pmenu-dropdown-border;
+    border-radius: @pmenu-dropdown-radius;
+    box-shadow: @pmenu-dropdown-shadow;
+    padding: @pmenu-dropdown-padding;
+    list-style: none;
+    margin: 4px 0 0;
+
+    // Reset nested
+    .pmenu-dropdown {
+        top: 0;
+        left: 100%;
+        margin: 0 0 0 4px;
+    }
+}
+
+// Right-align when overflowing viewport
+.pmenu-dropdown.pmenu-dd-right {
+    left: auto;
+    right: 0;
+}
+
+// Nested dropdown flip
+.pmenu-dropdown .pmenu-dropdown.pmenu-dd-right {
+    left: auto;
+    right: 100%;
+    margin: 0 4px 0 0;
+}
+
+// Child items inside dropdowns
+.pmenu-dropdown .pmenu-item {
+    > .pmenu-link {
+        font-weight: 500;
+        padding: 10px 14px;
+        border-radius: 6px;
+
+        &:hover {
+            background: @pmenu-hover;
+        }
+    }
+}
+
+// Level 2+ get slightly smaller text
+.pmenu-dropdown .pmenu-dropdown .pmenu-link {
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+// ---------------------------------------------------------------------------
+// 5. Mega dropdown grid
+// ---------------------------------------------------------------------------
+.pmenu-dropdown-mega {
+    width: 100%;
+    max-width: @pmenu-mega-max-width;
+    padding: 16px;
+}
+
+// Full-width mega
+.pmenu-width-full > .pmenu-dropdown {
+    left: 0;
+    right: 0;
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(-50vw + 50%);
+}
+
+// Grid columns via CSS grid
+.pmenu-dropdown-mega > .pmenu-item {
+    break-inside: avoid;
+}
+
+// Generate .pmenu-cols-1 through .pmenu-cols-6
+.pmenu-cols-1 { display: grid; grid-template-columns: repeat(1, 1fr); gap: 8px; }
+.pmenu-cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.pmenu-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pmenu-cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pmenu-cols-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.pmenu-cols-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+
+// ---------------------------------------------------------------------------
+// 6. Hover effects
+// ---------------------------------------------------------------------------
+.pmenu-hover-underline > .pmenu-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+}
+
+.pmenu-hover-fade > .pmenu-link:hover {
+    opacity: 0.7;
+}
+
+.pmenu-hover-highlight > .pmenu-link:hover {
+    background: @pmenu-hover;
+    border-radius: 6px;
+}
+
+.pmenu-hover-slide > .pmenu-link:hover {
+    transform: translateY(-2px);
+}
+
+.pmenu-hover-glow > .pmenu-link:hover {
+    box-shadow: 0 0 16px rgba(13, 148, 136, 0.35);
+}
+
+.pmenu-hover-grow > .pmenu-link:hover {
+    transform: scale(1.03);
+}
+
+// Active bottom-border indicator for L0
+.pmenu-item-l0.pmenu-item-open > .pmenu-link {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: @pmenu-item-padding-x;
+        right: @pmenu-item-padding-x;
+        height: 2px;
+        background: currentColor;
+        border-radius: 1px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 7. Mobile hamburger button
+// ---------------------------------------------------------------------------
+.pmenu-mobile-toggle {
+    display: none;    // Hidden on desktop
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: @pmenu-text;
+}
+
+.pmenu-hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 22px;
+    height: 18px;
+
+    span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: currentColor;
+        border-radius: 1px;
+        transition: @pmenu-transition;
+    }
+}
+
+.pmenu-mobile-toggle-label {
+    font-weight: 600;
+}
+
+// ---------------------------------------------------------------------------
+// 8. Mobile drawer
+// ---------------------------------------------------------------------------
+.pmenu-mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    background: @pmenu-mobile-overlay-bg;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+
+    &.pmenu-overlay-visible {
+        display: block;
+        opacity: 1;
+    }
+}
+
+.pmenu-mobile-drawer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 9999;
+    width: @pmenu-mobile-drawer-width;
+    max-width: 85vw;
+    background: @pmenu-mobile-drawer-bg;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    // Left (default)
+    &.pmenu-mobile-drawer--left {
+        left: 0;
+        right: auto;
+        transform: translateX(-100%);
+    }
+
+    // Right
+    &.pmenu-mobile-drawer--right {
+        left: auto;
+        right: 0;
+        transform: translateX(100%);
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    }
+
+    // Open state
+    &.pmenu-drawer-open {
+        transform: translateX(0);
+    }
+}
+
+.pmenu-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.pmenu-mobile-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.pmenu-mobile-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: #f0f0f0;
+    }
+}
+
+.pmenu-mobile-items {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+}
+
+// Body lock
+body.pmenu-no-scroll {
+    overflow: hidden;
+}
+
+// ---------------------------------------------------------------------------
+// 9. Mobile accordion
+// ---------------------------------------------------------------------------
+.pmenu-accordion-toggle {
+    display: none;    // Hidden on desktop
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 48px;
+    height: 48px;
+    background: none;
+    border: none;
+    border-left: 1px solid #eee;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+        transition: transform 0.2s ease;
+    }
+}
+
+.pmenu-accordion-open > .pmenu-accordion-toggle svg {
+    transform: rotate(180deg);
+}
+
+.pmenu-accordion-panel {
+    display: none;
+    padding-left: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.pmenu-accordion-open > .pmenu-accordion-panel {
+    display: block;
+}
+
+// Mobile item styles inside drawer
+.pmenu-mobile-drawer {
+    .pmenu-item {
+        position: relative;
+
+        > .pmenu-link {
+            padding: 12px 20px;
+            padding-right: 56px;    // Room for accordion toggle
+            border-bottom: 1px solid #f5f5f5;
+            border-radius: 0;
+            font-size: 15px;
+
+            &:hover {
+                background: #fafafa;
+            }
+        }
+    }
+
+    .pmenu-accordion-toggle {
+        display: flex;
+    }
+
+    .pmenu-dropdown {
+        position: static;
+        display: none;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0 0 0 16px;
+        margin: 0;
+        min-width: 0;
+        background: #fafafa;
+    }
+
+    .pmenu-accordion-open > .pmenu-dropdown {
+        display: block;
+    }
+
+    .pmenu-arrow {
+        display: none;
+    }
+
+    .pmenu-image {
+        max-width: 40px;
+        max-height: 40px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 10. Responsive breakpoints
+// ---------------------------------------------------------------------------
+@media (max-width: (@pmenu-breakpoint - 1)) {
+    // Hide desktop nav
+    .pmenu-nav {
+        display: none;
+    }
+
+    // Show hamburger
+    .pmenu-mobile-toggle {
+        display: flex;
+    }
+}
+
+@media (min-width: @pmenu-breakpoint) {
+    // Hide mobile elements
+    .pmenu-mobile-toggle,
+    .pmenu-mobile-overlay,
+    .pmenu-mobile-drawer,
+    .pmenu-accordion-toggle {
+        display: none !important;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 11. Animations (applied via JS, these are base states)
+// ---------------------------------------------------------------------------
+// Fade
+.pmenu-anim-fade-enter {
+    opacity: 0;
+}
+.pmenu-anim-fade-active {
+    opacity: 1;
+    transition: opacity @pmenu-animation-speed ease;
+}
+
+// Slide-down
+.pmenu-anim-slide-enter {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+.pmenu-anim-slide-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity @pmenu-animation-speed ease, transform @pmenu-animation-speed ease;
+}
+
+// Grow
+.pmenu-anim-grow-enter {
+    opacity: 0;
+    transform: scale(0.95);
+}
+.pmenu-anim-grow-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity @pmenu-animation-speed ease, transform @pmenu-animation-speed ease;
+}
+
+// ---------------------------------------------------------------------------
+// 12. Sticky header
+// ---------------------------------------------------------------------------
+.pmenu-sticky {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    animation: pmenuStickySlide 0.25s ease;
+}
+
+.pmenu-sticky-placeholder {
+    display: none;
+}
+
+@keyframes pmenuStickySlide {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(0); }
+}
+
+// ---------------------------------------------------------------------------
+// 13. Badges
+// ---------------------------------------------------------------------------
+.pmenu-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    font-size: @pmenu-badge-font-size;
+    font-weight: 700;
+    line-height: 1.6;
+    color: @pmenu-badge-color;
+    background: @pmenu-badge-bg;
+    border-radius: @pmenu-badge-radius;
+    vertical-align: middle;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+// ---------------------------------------------------------------------------
+// 14. Icons & images
+// ---------------------------------------------------------------------------
+.pmenu-icon {
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+    font-size: 16px;
+    color: inherit;
+}
+
+.pmenu-icon-emoji {
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.pmenu-image {
+    flex-shrink: 0;
+    max-width: 28px;
+    max-height: 28px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+// Larger images in dropdowns
+.pmenu-dropdown .pmenu-image {
+    max-width: 36px;
+    max-height: 36px;
+}
+
+// ---------------------------------------------------------------------------
+// 15. CMS block wrapper
+// ---------------------------------------------------------------------------
+.pmenu-cms-block-wrapper {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pmenu-cms-block {
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid @pmenu-dropdown-border;
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+// Content blocks
+.pmenu-content {
+    padding: 12px 14px;
+    font-weight: 400;
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 16. Utility
+// ---------------------------------------------------------------------------
+// FontAwesome fix for Luma (Luma overrides .fa font-family)
+.pmenu-nav,
+.pmenu-mobile-drawer {
+    .fa, .fas, .far, .fab, .fa-solid, .fa-regular, .fa-brands {
+        font-family: "Font Awesome 6 Free" !important;
+    }
+    .fa-solid, .fas { font-weight: 900 !important; }
+    .fa-regular, .far { font-weight: 400 !important; }
+    .fa-brands, .fab {
+        font-family: "Font Awesome 6 Brands" !important;
+        font-weight: 400 !important;
+    }
+    .material-symbols-outlined {
+        font-family: "Material Symbols Outlined" !important;
+    }
+}
+
+// Full-width children heading for mega menus
+.pmenu-dropdown-mega .pmenu-item-l1 > .pmenu-link {
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:hover {
+        background: none;
+    }
+}
+
+.pmenu-dropdown-mega .pmenu-item-l2 > .pmenu-link {
+    font-weight: 400;
+    color: #555;
+}

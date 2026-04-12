@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">panth_menu_listing.panth_menu_listing_data_source</item>
+        </item>
+    </argument>
+
+    <settings>
+        <buttons>
+            <button name="add">
+                <url path="*/*/edit"/>
+                <class>primary</class>
+                <label translate="true">Create Menu</label>
+            </button>
+            <button name="import" class="Panth\MegaMenu\Block\Adminhtml\Button\Import"/>
+        </buttons>
+        <spinner>panth_menu_columns</spinner>
+        <deps>
+            <dep>panth_menu_listing.panth_menu_listing_data_source</dep>
+        </deps>
+    </settings>
+
+    <!-- Import Modal -->
+    <modal name="import_menu_modal">
+        <argument name="data" xsi:type="array">
+            <item name="config" xsi:type="array">
+                <item name="component" xsi:type="string">Panth_MegaMenu/js/import-modal</item>
+                <item name="onCancel" xsi:type="string">actionCancel</item>
+                <item name="options" xsi:type="array">
+                    <item name="title" xsi:type="string" translate="true">Import Menu</item>
+                </item>
+            </item>
+        </argument>
+        <settings>
+            <options>
+                <option name="title" xsi:type="string" translate="true">Import Menu</option>
+            </options>
+        </settings>
+        <fieldset name="import_fieldset">
+            <settings>
+                <label/>
+            </settings>
+            <container name="file_upload_container">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="template" xsi:type="string">Panth_MegaMenu/form/field/file-input</item>
+                    </item>
+                </argument>
+            </container>
+            <field name="menu_data" formElement="textarea">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="component" xsi:type="string">Magento_Ui/js/form/element/textarea</item>
+                        <item name="template" xsi:type="string">ui/form/field</item>
+                        <item name="elementTmpl" xsi:type="string">ui/form/element/textarea</item>
+                        <item name="rows" xsi:type="number">15</item>
+                        <item name="cols" xsi:type="number">80</item>
+                    </item>
+                </argument>
+                <settings>
+                    <dataType>text</dataType>
+                    <label translate="true">Menu JSON Data</label>
+                    <dataScope>menu_data</dataScope>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                        <rule name="validate-json" xsi:type="boolean">true</rule>
+                    </validation>
+                    <notice translate="true">This field will be automatically populated when you upload a file above, or you can paste JSON data manually. If the identifier exists, the menu will be updated; otherwise, a new menu will be created.</notice>
+                </settings>
+            </field>
+            <button name="import_action">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="buttonClasses" xsi:type="string">action-primary action-accept modal-import-button</item>
+                        <item name="actions" xsi:type="array">
+                            <item name="0" xsi:type="array">
+                                <item name="targetName" xsi:type="string">${ $.ns }.${ $.ns }.import_menu_modal</item>
+                                <item name="actionName" xsi:type="string">actionDone</item>
+                            </item>
+                        </item>
+                    </item>
+                </argument>
+                <settings>
+                    <title translate="true">Import Menu</title>
+                </settings>
+            </button>
+        </fieldset>
+    </modal>
+
+    <!-- Data Source -->
+    <dataSource name="panth_menu_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">menu_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>Panth_MegaMenu::menu</aclResource>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider" name="panth_menu_listing_data_source">
+            <settings>
+                <requestFieldName>menu_id</requestFieldName>
+                <primaryFieldName>menu_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+
+    <!-- Listing Toolbar -->
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+
+        <filterSearch name="fulltext">
+            <settings>
+                <placeholder translate="true">Search by title or identifier</placeholder>
+            </settings>
+        </filterSearch>
+
+        <filters name="listing_filters">
+            <settings>
+                <templates>
+                    <filters>
+                        <select>
+                            <param name="template" xsi:type="string">ui/grid/filters/elements/ui-select</param>
+                            <param name="component" xsi:type="string">Magento_Ui/js/form/element/ui-select</param>
+                        </select>
+                    </filters>
+                </templates>
+            </settings>
+
+            <filterSelect name="is_active" provider="${ $.parentName }">
+                <settings>
+                    <caption translate="true">Select...</caption>
+                    <options class="Magento\Config\Model\Config\Source\Yesno"/>
+                    <label translate="true">Status</label>
+                    <dataScope>is_active</dataScope>
+                </settings>
+            </filterSelect>
+        </filters>
+
+        <massaction name="listing_massaction" component="Magento_Ui/js/grid/tree-massactions">
+            <action name="enable">
+                <settings>
+                    <type>enable</type>
+                    <label translate="true">Enable</label>
+                    <url path="panth_menu/menu/massEnable"/>
+                </settings>
+            </action>
+            <action name="disable">
+                <settings>
+                    <type>disable</type>
+                    <label translate="true">Disable</label>
+                    <url path="panth_menu/menu/massDisable"/>
+                </settings>
+            </action>
+            <action name="delete">
+                <settings>
+                    <confirm>
+                        <message translate="true">Are you sure you want to delete the selected menus?</message>
+                        <title translate="true">Delete Menus</title>
+                    </confirm>
+                    <url path="panth_menu/menu/massDelete"/>
+                    <type>delete</type>
+                    <label translate="true">Delete</label>
+                </settings>
+            </action>
+        </massaction>
+
+        <paging name="listing_paging"/>
+    </listingToolbar>
+
+    <!-- Grid Columns -->
+    <columns name="panth_menu_columns">
+        <!-- Selection Column -->
+        <selectionsColumn name="ids">
+            <settings>
+                <indexField>menu_id</indexField>
+            </settings>
+        </selectionsColumn>
+
+        <!-- Menu ID -->
+        <column name="menu_id">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">ID</label>
+                <sorting>asc</sorting>
+            </settings>
+        </column>
+
+        <!-- Menu Title -->
+        <column name="title">
+            <settings>
+                <filter>text</filter>
+                <editor>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                    </validation>
+                    <editorType>text</editorType>
+                </editor>
+                <label translate="true">Menu Title</label>
+            </settings>
+        </column>
+
+        <!-- Identifier -->
+        <column name="identifier">
+            <settings>
+                <filter>text</filter>
+                <editor>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                    </validation>
+                    <editorType>text</editorType>
+                </editor>
+                <label translate="true">Identifier</label>
+            </settings>
+        </column>
+
+        <!-- Item Count -->
+        <column name="item_count">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Items</label>
+            </settings>
+        </column>
+
+        <!-- Status -->
+        <column name="is_active" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <options class="Magento\Config\Model\Config\Source\Yesno"/>
+                <filter>select</filter>
+                <editor>
+                    <editorType>select</editorType>
+                </editor>
+                <dataType>select</dataType>
+                <label translate="true">Status</label>
+            </settings>
+        </column>
+
+        <!-- CSS Class -->
+        <column name="css_class">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">CSS Class</label>
+                <visible>false</visible>
+            </settings>
+        </column>
+
+        <!-- Created Date -->
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created</label>
+            </settings>
+        </column>
+
+        <!-- Updated Date -->
+        <column name="updated_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Updated</label>
+                <visible>false</visible>
+            </settings>
+        </column>
+
+        <!-- Actions Column -->
+        <actionsColumn name="actions" class="Panth\MegaMenu\Ui\Component\Listing\Column\MenuActions">
+            <settings>
+                <indexField>menu_id</indexField>
+                <resizeEnabled>false</resizeEnabled>
+                <resizeDefaultWidth>107</resizeDefaultWidth>
+            </settings>
+        </actionsColumn>
+    </columns>
+</listing>

@@ -1,0 +1,368 @@
+<?php
+/**
+ * Panth MegaMenu - Menu Item Template (Enhanced)
+ * Renders individual menu items with full admin configuration support
+ *
+ * @var \Panth\MegaMenu\Block\MenuItem $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel
+ */
+
+// Get item data
+$item = $block->getData('item');
+$level = (int)$block->getData('level');
+$index = (int)$block->getData('index');
+$menuViewModel = $block->getData('menu_view_model');
+
+// Get theme helper for conditional rendering (Hyva Alpine.js vs Luma RequireJS)
+/** @var \Panth\MegaMenu\Helper\Theme $themeHelper */
+$themeHelper = $block->getData('theme_helper');
+if (!$themeHelper) {
+    return;
+}
+$isHyva = $themeHelper->isHyva();
+
+// Helper function to get item value (handles both array and object)
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method ? $item->$method() : $default;
+};
+
+// Check if item is visible using ViewModel
+if (!$item || !$menuViewModel->isItemVisible($item)) {
+    return;
+}
+
+// Get item properties
+$itemId = $getValue($item, 'item_id', 'getItemId');
+$tempId = $getValue($item, 'temp_id', 'getTempId');
+$title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+$children = $getValue($item, 'children', 'getChildren', []);
+$hasChildren = !empty($children);
+$itemType = $getValue($item, 'item_type', 'getItemType', 'link');
+
+// Get URL and link properties from ViewModel
+$url = $menuViewModel->getItemUrl($item);
+// Ensure URL is never empty or undefined
+if (empty($url) || $url === 'undefined' || $url === null) {
+    $url = '#';
+}
+$target = $menuViewModel->getLinkTarget($item);
+$rel = $menuViewModel->getLinkRel($item);
+
+// Get styling from ViewModel
+$inlineStyles = $menuViewModel->getItemInlineStyles($item);
+$cssClass = $getValue($item, 'css_class', 'getCssClass', '');
+$deviceVisibilityClasses = $menuViewModel->getDeviceVisibilityClasses($item);
+$animationClass = $menuViewModel->getAnimationClass($item);
+
+// Get hover data attributes from ViewModel
+$hoverDataAttrs = $menuViewModel->getHoverDataAttributes($item);
+
+// Get custom data attributes from ViewModel
+$customDataAttrs = $menuViewModel->getCustomDataAttributes($item);
+
+// Get behavior settings from ViewModel
+$tooltipText = $menuViewModel->getTooltipText($item);
+$customClickAction = $menuViewModel->getCustomClickAction($item);
+$ariaLabel = $menuViewModel->getAriaLabel($item);
+$ariaRole = $menuViewModel->getAriaRole($item);
+
+// Get badge HTML from ViewModel
+$badgeHtml = $menuViewModel->getBadgeHtml($item);
+
+// Build CSS classes - support both pmenu (Luma) and panth-mega-menu (Hyva) prefixes
+$itemClasses = [
+    'pmenu-item',
+    'panth-mega-menu__item',  // Hyva compatibility
+    'pmenu-item-l' . $level,
+    'panth-mega-menu__item--level-' . $level,
+    'level' . $level, // Magento's widget uses level0, level1, etc.
+    'pmenu-type-' . $itemType,
+    'panth-mega-menu__item--type-' . $itemType,
+    'ui-menu-item', // Required for Magento's menu.js widget
+];
+
+if ($hasChildren) {
+    $itemClasses[] = 'pmenu-haschildren';
+    $itemClasses[] = 'parent'; // Required for Magento's mobile menu widget
+}
+
+// Top-level items need level-top class for Magento's widget
+if ($level === 0) {
+    $itemClasses[] = 'level-top';
+}
+
+if ($cssClass) {
+    $itemClasses[] = $cssClass;
+}
+
+// Add device visibility classes
+if ($deviceVisibilityClasses) {
+    $itemClasses[] = $deviceVisibilityClasses;
+}
+
+// Add animation class
+if ($animationClass) {
+    $itemClasses[] = $animationClass;
+}
+
+// Get hover effect
+$hoverEffect = $getValue($item, 'hover_effect', 'getHoverEffect', '');
+if ($hoverEffect && $hoverEffect !== 'default') {
+    $itemClasses[] = 'pmenu-hover-' . $hoverEffect;
+}
+
+// Mega menu settings for level 0
+$megaWidth = $getValue($item, 'mega_width', 'getMegaWidth', 'auto');
+$columnCount = $getValue($item, 'column_count', 'getColumnCount', 4);
+$megaWidthClass = '';
+if ($level === 0 && $hasChildren) {
+    $megaWidthClass = 'pmenu-width-' . $megaWidth;
+    $itemClasses[] = 'pmenu-megamenu';
+}
+
+// Column width for mega menu items
+$columnWidth = $menuViewModel->getColumnWidth($item);
+if ($columnWidth && $columnWidth !== 'auto' && $level > 0) {
+    $itemClasses[] = 'pmenu-col-' . $columnWidth;
+}
+
+// Determine if this is a mega menu item
+$isMegaMenu = $hasChildren && $level === 0;
+
+// Check if should show content instead of link
+// Custom HTML and CMS blocks should only show in dropdowns (level > 0), not at top level
+$cmsBlock = $getValue($item, 'cms_block', 'getCmsBlock', '');
+$showContent = ($level > 0) && (in_array($itemType, ['custom_html', 'cms_block', 'widget']) || $cmsBlock);
+
+// Generate unique ID for ARIA
+$uniqueItemId = $tempId ?: $itemId;
+$itemUniqueId = 'pmenu-item-' . $uniqueItemId . '-' . $level;
+$dropdownId = $itemUniqueId . '-dropdown';
+
+// Build all data attributes
+$allDataAttrs = [];
+
+// Add standard data attributes
+$allDataAttrs['data-item-id'] = $uniqueItemId;
+$allDataAttrs['data-level'] = $level;
+
+// Merge hover data attributes
+foreach ($hoverDataAttrs as $key => $value) {
+    $allDataAttrs[$key] = $value;
+}
+
+// Merge custom data attributes
+foreach ($customDataAttrs as $key => $value) {
+    if (is_string($key) && strpos($key, 'data-') === 0) {
+        $allDataAttrs[$key] = $value;
+    }
+}
+
+// Icon and display settings
+$iconClass = $getValue($item, 'icon', 'getIcon', '');
+if (!$iconClass) {
+    $iconClass = $getValue($item, 'icon_class', 'getIconClass', '');
+}
+$displayType = $getValue($item, 'display_type', 'getDisplayType', 'text');
+
+// Image settings
+$image = $getValue($item, 'image', 'getImage', '');
+$imageWidth = $getValue($item, 'image_width', 'getImageWidth', '');
+$imageHeight = $getValue($item, 'image_height', 'getImageHeight', '');
+
+// Additional content fields
+$subtitle = $getValue($item, 'subtitle', 'getSubtitle', '');
+$description = $getValue($item, 'description', 'getDescription', '');
+
+// Add has-image class for card layout
+if ($image) {
+    $itemClasses[] = 'has-image';
+}
+?>
+
+<li class="<?= $escaper->escapeHtmlAttr(implode(' ', $itemClasses)) ?>"
+    role="<?= $escaper->escapeHtmlAttr($ariaRole) ?>"
+    data-item-id="<?= $escaper->escapeHtmlAttr($uniqueItemId) ?>"
+    data-level="<?= (int) $level ?>"
+    <?php if ($isHyva): ?>
+    x-data="menuItemInit(<?= (int) $itemId ?>, <?= (int) $level ?>, <?= $hasChildren ? 'true' : 'false' ?>)"
+    :class="{ 'pmenu-item-open': isOpen() }"
+    <?php endif; ?>
+    <?php if ($inlineStyles): ?>style="<?= $escaper->escapeHtmlAttr($inlineStyles) ?>"<?php endif; ?>
+    <?php if ($tooltipText): ?>title="<?= $escaper->escapeHtmlAttr($tooltipText) ?>"<?php endif; ?>
+    <?php if ($ariaLabel): ?>aria-label="<?= $escaper->escapeHtmlAttr($ariaLabel) ?>"<?php endif; ?>
+    <?php foreach ($allDataAttrs as $attrKey => $attrValue): ?>
+        <?= $escaper->escapeHtmlAttr($attrKey) ?>="<?= $escaper->escapeHtmlAttr($attrValue) ?>"
+    <?php endforeach; ?>>
+
+    <?php if ($showContent): ?>
+        <!-- Content Block (Custom HTML and/or CMS Block) -->
+        <?php
+        $hasContent = false;
+        $htmlContent = '';
+        $cmsBlockContent = '';
+
+        // Get Custom HTML content
+        $customContent = $getValue($item, 'custom_content', 'getCustomContent', '');
+        if (!$customContent) {
+            $customContent = $getValue($item, 'content', 'getContent', '');
+        }
+
+        if (!empty(trim($customContent))) {
+            $htmlContent = $customContent;
+            $hasContent = true;
+        }
+
+        // Get CMS Block content - Show even if HTML exists
+        if (!empty($cmsBlock)) {
+            try {
+                $cmsBlockHtml = $block->getLayout()
+                    ->createBlock(\Magento\Cms\Block\Block::class)
+                    ->setBlockId($cmsBlock)
+                    ->toHtml();
+
+                if (!empty(trim(strip_tags($cmsBlockHtml)))) {
+                    $cmsBlockContent = $cmsBlockHtml;
+                    $hasContent = true;
+                }
+            } catch (\Exception $e) {
+                // Log error but don't break menu
+            }
+        }
+        ?>
+
+        <?php if ($hasContent): ?>
+        <div class="pmenu-content pmenu-content-<?= $escaper->escapeHtmlAttr($itemType) ?>">
+            <?php if ($htmlContent): ?>
+                <?= /* @noEscape */ $htmlContent ?>
+            <?php endif; ?>
+
+            <?php if ($cmsBlockContent): ?>
+                <?= /* @noEscape */ $cmsBlockContent ?>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+    <?php else: ?>
+        <!-- Menu Link -->
+        <a href="<?= $escaper->escapeUrl($url) ?>"
+           id="<?= $escaper->escapeHtmlAttr($itemUniqueId) ?>"
+           class="pmenu-link pmenu-link-l<?= (int) $level ?>"
+           title="<?= $escaper->escapeHtmlAttr($title) ?>"
+           target="<?= $escaper->escapeHtmlAttr($target) ?>"
+           <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>
+           <?php if ($hasChildren): ?>
+           aria-haspopup="true"
+           aria-expanded="false"
+           aria-controls="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+           <?php endif; ?>
+           <?php if ($customClickAction): ?>
+           onclick="<?= $escaper->escapeHtmlAttr($customClickAction) ?>"
+           <?php endif; ?>
+           <?php if ($isHyva): ?>
+           @mouseenter="handleMouseEnter()"
+           @mouseleave="handleMouseLeave()"
+           @click="handleClick($event)"
+           <?php endif; ?>>
+
+            <?php if ($iconClass): ?>
+                <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?> pmenu-icon" aria-hidden="true"></i>
+            <?php endif; ?>
+
+            <?php if ($image): ?>
+                <?php
+                $imageStyles = [];
+                if ($imageWidth) {
+                    $imageStyles[] = 'width:' . $escaper->escapeHtmlAttr($imageWidth);
+                }
+                if ($imageHeight) {
+                    $imageStyles[] = 'height:' . $escaper->escapeHtmlAttr($imageHeight);
+                }
+                $imageStyleAttr = !empty($imageStyles) ? 'style="' . implode(';', $imageStyles) . '"' : '';
+                ?>
+                <img src="<?= $escaper->escapeUrl($image) ?>"
+                     alt="<?= $escaper->escapeHtmlAttr($title) ?>"
+                     class="pmenu-image pmenu-image-<?= $escaper->escapeHtmlAttr($displayType) ?>"
+                     <?= /* @noEscape */ $imageStyleAttr ?>
+                     loading="lazy" />
+            <?php endif; ?>
+
+            <span class="pmenu-text-wrapper">
+                <span class="pmenu-text">
+                    <?= $escaper->escapeHtml($title) ?>
+                    <?php if ($badgeHtml): ?>
+                        <?= /* @noEscape */ $badgeHtml ?>
+                    <?php endif; ?>
+                </span>
+                <?php if ($subtitle): ?>
+                    <span class="pmenu-subtitle"><?= $escaper->escapeHtml($subtitle) ?></span>
+                <?php endif; ?>
+                <?php if ($description): ?>
+                    <span class="pmenu-description"><?= $escaper->escapeHtml($description) ?></span>
+                <?php endif; ?>
+            </span>
+
+            <?php if ($hasChildren): ?>
+                <?php
+                // Top level (L0) = down arrow, Nested (L1+) = right arrow - Bootstrap Icons
+                $arrowIcon = ($level === 0) ? 'bi-chevron-down' : 'bi-chevron-right';
+                ?>
+                <i class="bi <?= $escaper->escapeHtmlAttr($arrowIcon) ?> pmenu-arrow" aria-hidden="true"></i>
+            <?php endif; ?>
+        </a>
+
+        <?php if ($hasChildren): ?>
+            <!-- Mobile Toggle (visible on mobile only) -->
+            <span class="pmenu-toggle" aria-label="Toggle submenu">
+                <i class="fa fa-angle-down"></i>
+            </span>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if ($hasChildren): ?>
+        <!-- Dropdown Menu -->
+        <ul id="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+             class="pmenu-dropdown submenu ui-menu pmenu-dropdown-l<?= (int) $level ?> <?= $escaper->escapeHtmlAttr($megaWidthClass) ?> <?= $isMegaMenu ? 'pmenu-mega pmenu-cols-' . (int) $columnCount : '' ?>"
+             <?php if ($isHyva): ?>
+             x-show="isOpen()"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform -translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-2"
+             x-cloak
+             <?php else: ?>
+             style="display: none;"
+             <?php endif; ?>
+             role="menu"
+             aria-label="<?= $escaper->escapeHtmlAttr($title . ' ' . __('submenu')) ?>">
+
+            <?php foreach ($children as $childIndex => $child): ?>
+                <?php
+                // Use ViewModel to check child visibility
+                if (!$menuViewModel->isItemVisible($child)):
+                    continue;
+                endif;
+                ?>
+
+                <?= /* @noEscape */ $block->getLayout()
+                    ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                    ->setTemplate('Panth_MegaMenu::pmenu/item.phtml')
+                    ->setData('item', $child)
+                    ->setData('level', $level + 1)
+                    ->setData('index', $childIndex)
+                    ->setData('menu_view_model', $menuViewModel)
+                    ->setData('theme_helper', $themeHelper)
+                    ->toHtml() ?>
+
+            <?php endforeach; ?>
+
+        </ul>
+    <?php endif; ?>
+
+</li>

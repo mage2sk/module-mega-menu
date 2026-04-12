@@ -1,0 +1,310 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Panth MegaMenu Module
+ * Advanced menu system with hierarchical structure, multiple item types, and caching
+ * Improved version based on Snowdog Menu with additional features
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+
+    <!-- Main Menu Container Table -->
+    <table name="panth_megamenu_menu" resource="default" engine="innodb" comment="MegaMenu Menu Table" charset="utf8mb4" collation="utf8mb4_unicode_ci">
+        <column xsi:type="int" name="menu_id" unsigned="true" nullable="false" identity="true" comment="Menu ID"/>
+        <column xsi:type="varchar" name="title" nullable="false" length="255" comment="Menu Title"/>
+        <column xsi:type="varchar" name="identifier" nullable="false" length="100" comment="Menu Identifier"/>
+        <column xsi:type="varchar" name="menu_type" nullable="false" length="50" default="header" comment="Menu Type (header/footer/sidebar)"/>
+        <column xsi:type="smallint" name="is_active" unsigned="true" nullable="false" default="1" comment="Is Active"/>
+        <column xsi:type="varchar" name="css_class" nullable="true" length="255" comment="CSS Class"/>
+        <column xsi:type="int" name="sort_order" unsigned="true" nullable="false" default="0" comment="Sort Order"/>
+        <column xsi:type="text" name="description" nullable="true" comment="Menu Description"/>
+        <column xsi:type="text" name="custom_css" nullable="true" comment="Custom CSS Styles"/>
+        <column xsi:type="varchar" name="mobile_layout" nullable="true" length="20" default="accordion" comment="Mobile Layout (accordion/slide)"/>
+        <column xsi:type="mediumtext" name="items_json" nullable="true" comment="Menu Items as JSON"/>
+
+        <!-- Container Styling Fields -->
+        <column xsi:type="varchar" name="container_bg_color" nullable="true" length="50" comment="Container Background Color"/>
+        <column xsi:type="varchar" name="container_padding" nullable="true" length="100" comment="Container Padding"/>
+        <column xsi:type="varchar" name="container_margin" nullable="true" length="100" comment="Container Margin"/>
+        <column xsi:type="varchar" name="item_gap" nullable="true" length="50" comment="Gap Between Menu Items"/>
+        <column xsi:type="varchar" name="container_max_width" nullable="true" length="50" comment="Container Max Width"/>
+        <column xsi:type="varchar" name="container_border" nullable="true" length="100" comment="Container Border"/>
+        <column xsi:type="varchar" name="container_border_radius" nullable="true" length="50" comment="Container Border Radius"/>
+        <column xsi:type="varchar" name="container_box_shadow" nullable="true" length="255" comment="Container Box Shadow"/>
+
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true" comment="Updated At"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="menu_id"/>
+        </constraint>
+
+        <constraint xsi:type="unique" referenceId="PANTH_MEGAMENU_MENU_IDENTIFIER">
+            <column name="identifier"/>
+        </constraint>
+
+        <index referenceId="PANTH_MEGAMENU_MENU_IS_ACTIVE" indexType="btree">
+            <column name="is_active"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_MENU_MENU_TYPE" indexType="btree">
+            <column name="menu_type"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_MENU_SORT_ORDER" indexType="btree">
+            <column name="sort_order"/>
+        </index>
+    </table>
+
+    <!-- Menu Items Table with Hierarchical Structure -->
+    <table name="panth_megamenu_item" resource="default" engine="innodb" comment="MegaMenu Item Table" charset="utf8mb4" collation="utf8mb4_unicode_ci">
+        <column xsi:type="int" name="item_id" unsigned="true" nullable="false" identity="true" comment="Item ID"/>
+        <column xsi:type="int" name="menu_id" unsigned="true" nullable="false" comment="Menu ID"/>
+        <column xsi:type="int" name="parent_id" unsigned="true" nullable="true" comment="Parent Item ID"/>
+        <column xsi:type="int" name="level" unsigned="true" nullable="false" default="0" comment="Item Level in Hierarchy"/>
+        <column xsi:type="varchar" name="path" nullable="true" length="255" comment="Item Path (e.g., 1/2/3)"/>
+        <column xsi:type="int" name="position" unsigned="true" nullable="false" default="0" comment="Position among siblings"/>
+        <column xsi:type="varchar" name="item_type" nullable="false" length="50" default="link" comment="Item Type (category/cms_page/link/custom/cms_block/custom_html)"/>
+        <column xsi:type="varchar" name="title" nullable="true" length="255" comment="Item Title"/>
+        <column xsi:type="text" name="url" nullable="true" comment="Item URL"/>
+        <column xsi:type="varchar" name="target" nullable="true" length="50" default="_self" comment="Link Target"/>
+        <column xsi:type="varchar" name="css_class" nullable="true" length="255" comment="CSS Class"/>
+        <column xsi:type="varchar" name="icon" nullable="true" length="255" comment="Icon Class or Path"/>
+        <column xsi:type="varchar" name="icon_library" nullable="true" length="50" default="fontawesome" comment="Icon Library (fontawesome/lineicons/feather/material/emoji)"/>
+        <column xsi:type="varchar" name="image" nullable="true" length="255" comment="Image Path"/>
+        <column xsi:type="text" name="content" nullable="true" comment="HTML Content for html type items"/>
+        <column xsi:type="text" name="custom_html" nullable="true" comment="Custom HTML for child items"/>
+        <column xsi:type="int" name="category_id" unsigned="true" nullable="true" comment="Category ID"/>
+        <column xsi:type="smallint" name="cms_page_id" unsigned="false" nullable="true" comment="CMS Page ID"/>
+        <column xsi:type="smallint" name="cms_block_id" unsigned="false" nullable="true" comment="CMS Block ID"/>
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="true" comment="Product ID"/>
+        <column xsi:type="text" name="widget_code" nullable="true" comment="Widget Code/Configuration"/>
+        <column xsi:type="varchar" name="hover_effect" nullable="true" length="50" default="fade" comment="Hover Effect Type (fade/slide/zoom/underline/glow/none)"/>
+        <column xsi:type="varchar" name="child_type" nullable="true" length="50" default="inherit" comment="Child Type (inherit/link/cms_block/custom_html)"/>
+        <column xsi:type="text" name="tooltip_text" nullable="true" comment="Tooltip Description"/>
+        <column xsi:type="smallint" name="is_active" unsigned="true" nullable="false" default="1" comment="Is Active"/>
+        <column xsi:type="smallint" name="show_on_frontend" unsigned="true" nullable="false" default="1" comment="Show on Frontend"/>
+        <column xsi:type="int" name="columns" unsigned="true" nullable="false" default="1" comment="Number of Columns for Mega Menu Layout"/>
+        <column xsi:type="int" name="submenu_columns" unsigned="true" nullable="false" default="1" comment="Number of Columns for Submenu Layout (1-6)"/>
+        <column xsi:type="varchar" name="background_color" nullable="true" length="20" comment="Background Color (hex or rgb)"/>
+        <column xsi:type="varchar" name="text_color" nullable="true" length="20" comment="Text Color (hex or rgb)"/>
+        <column xsi:type="smallint" name="show_children" unsigned="true" nullable="false" default="1" comment="Show Children Items"/>
+        <column xsi:type="smallint" name="open_in_new_tab" unsigned="true" nullable="false" default="0" comment="Open Link in New Tab"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true" comment="Updated At"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="item_id"/>
+        </constraint>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_ITEM_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID"
+                    table="panth_megamenu_item" column="menu_id"
+                    referenceTable="panth_megamenu_menu" referenceColumn="menu_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_ITEM_PARENT_ID_PANTH_MEGAMENU_ITEM_ITEM_ID"
+                    table="panth_megamenu_item" column="parent_id"
+                    referenceTable="panth_megamenu_item" referenceColumn="item_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_ITEM_CATEGORY_ID_CATALOG_CATEGORY_ENTITY_ENTITY_ID"
+                    table="panth_megamenu_item" column="category_id"
+                    referenceTable="catalog_category_entity" referenceColumn="entity_id" onDelete="SET NULL"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_ITEM_CMS_PAGE_ID_CMS_PAGE_PAGE_ID"
+                    table="panth_megamenu_item" column="cms_page_id"
+                    referenceTable="cms_page" referenceColumn="page_id" onDelete="SET NULL"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_ITEM_PRODUCT_ID_CATALOG_PRODUCT_ENTITY_ENTITY_ID"
+                    table="panth_megamenu_item" column="product_id"
+                    referenceTable="catalog_product_entity" referenceColumn="entity_id" onDelete="SET NULL"/>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_MENU_ID" indexType="btree">
+            <column name="menu_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_PARENT_ID" indexType="btree">
+            <column name="parent_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_LEVEL" indexType="btree">
+            <column name="level"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_PATH" indexType="btree">
+            <column name="path"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_POSITION" indexType="btree">
+            <column name="position"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_ITEM_TYPE" indexType="btree">
+            <column name="item_type"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_IS_ACTIVE" indexType="btree">
+            <column name="is_active"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_CATEGORY_ID" indexType="btree">
+            <column name="category_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_CMS_PAGE_ID" indexType="btree">
+            <column name="cms_page_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_ITEM_PRODUCT_ID" indexType="btree">
+            <column name="product_id"/>
+        </index>
+
+        <!-- Composite index for efficient hierarchy queries -->
+        <index referenceId="PANTH_MEGAMENU_ITEM_MENU_PARENT_POSITION" indexType="btree">
+            <column name="menu_id"/>
+            <column name="parent_id"/>
+            <column name="position"/>
+        </index>
+    </table>
+
+    <!-- Menu to Store Relation Table -->
+    <table name="panth_megamenu_store" resource="default" engine="innodb" comment="MegaMenu to Store Relation">
+        <column xsi:type="int" name="menu_id" unsigned="true" nullable="false" comment="Menu ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="menu_id"/>
+            <column name="store_id"/>
+        </constraint>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_STORE_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID"
+                    table="panth_megamenu_store" column="menu_id"
+                    referenceTable="panth_megamenu_menu" referenceColumn="menu_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_STORE_STORE_ID_STORE_STORE_ID"
+                    table="panth_megamenu_store" column="store_id"
+                    referenceTable="store" referenceColumn="store_id" onDelete="CASCADE"/>
+
+        <index referenceId="PANTH_MEGAMENU_STORE_STORE_ID" indexType="btree">
+            <column name="store_id"/>
+        </index>
+    </table>
+
+    <!-- Menu to Customer Group Relation Table -->
+    <table name="panth_megamenu_customer_group" resource="default" engine="innodb" comment="MegaMenu to Customer Group Relation">
+        <column xsi:type="int" name="menu_id" unsigned="true" nullable="false" comment="Menu ID"/>
+        <column xsi:type="int" name="customer_group_id" unsigned="true" nullable="false" comment="Customer Group ID"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="menu_id"/>
+            <column name="customer_group_id"/>
+        </constraint>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_CSTR_GRP_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID"
+                    table="panth_megamenu_customer_group" column="menu_id"
+                    referenceTable="panth_megamenu_menu" referenceColumn="menu_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_CSTR_GRP_CSTR_GRP_ID_CSTR_GRP_CSTR_GRP_ID"
+                    table="panth_megamenu_customer_group" column="customer_group_id"
+                    referenceTable="customer_group" referenceColumn="customer_group_id" onDelete="CASCADE"/>
+
+        <index referenceId="PANTH_MEGAMENU_CUSTOMER_GROUP_CUSTOMER_GROUP_ID" indexType="btree">
+            <column name="customer_group_id"/>
+        </index>
+    </table>
+
+    <!-- Menu Render Cache Table -->
+    <table name="panth_megamenu_cache" resource="default" engine="innodb" comment="MegaMenu Render Cache">
+        <column xsi:type="int" name="cache_id" unsigned="true" nullable="false" identity="true" comment="Cache ID"/>
+        <column xsi:type="int" name="menu_id" unsigned="true" nullable="false" comment="Menu ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="int" name="customer_group_id" unsigned="true" nullable="false" comment="Customer Group ID"/>
+        <column xsi:type="mediumtext" name="cache_data" nullable="true" comment="Cached Menu HTML"/>
+        <column xsi:type="timestamp" name="cache_time" nullable="false" default="CURRENT_TIMESTAMP" on_update="true" comment="Cache Time"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="cache_id"/>
+        </constraint>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_CACHE_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID"
+                    table="panth_megamenu_cache" column="menu_id"
+                    referenceTable="panth_megamenu_menu" referenceColumn="menu_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_CACHE_STORE_ID_STORE_STORE_ID"
+                    table="panth_megamenu_cache" column="store_id"
+                    referenceTable="store" referenceColumn="store_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_CACHE_CSTR_GRP_ID_CSTR_GRP_CSTR_GRP_ID"
+                    table="panth_megamenu_cache" column="customer_group_id"
+                    referenceTable="customer_group" referenceColumn="customer_group_id" onDelete="CASCADE"/>
+
+        <!-- Unique constraint for cache lookup -->
+        <constraint xsi:type="unique" referenceId="PANTH_MEGAMENU_CACHE_MENU_STORE_CSTR_GRP">
+            <column name="menu_id"/>
+            <column name="store_id"/>
+            <column name="customer_group_id"/>
+        </constraint>
+
+        <index referenceId="PANTH_MEGAMENU_CACHE_MENU_ID" indexType="btree">
+            <column name="menu_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_CACHE_STORE_ID" indexType="btree">
+            <column name="store_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_CACHE_CUSTOMER_GROUP_ID" indexType="btree">
+            <column name="customer_group_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_CACHE_CACHE_TIME" indexType="btree">
+            <column name="cache_time"/>
+        </index>
+    </table>
+
+    <!-- Menu Version History Table -->
+    <table name="panth_megamenu_menu_version" resource="default" engine="innodb" comment="MegaMenu Version History Table" charset="utf8mb4" collation="utf8mb4_unicode_ci">
+        <column xsi:type="int" name="version_id" unsigned="true" nullable="false" identity="true" comment="Version ID"/>
+        <column xsi:type="int" name="menu_id" unsigned="true" nullable="false" comment="Menu ID"/>
+        <column xsi:type="int" name="version_number" unsigned="true" nullable="false" comment="Version Number"/>
+        <column xsi:type="varchar" name="title" nullable="false" length="255" comment="Menu Title"/>
+        <column xsi:type="varchar" name="identifier" nullable="false" length="255" comment="Menu Identifier"/>
+        <column xsi:type="mediumtext" name="items_json" nullable="true" comment="Menu Items as JSON"/>
+        <column xsi:type="varchar" name="css_class" nullable="true" length="255" comment="CSS Class"/>
+        <column xsi:type="text" name="custom_css" nullable="true" comment="Custom CSS Styles"/>
+        <column xsi:type="text" name="container_bg_color" nullable="true" comment="Container Background Color"/>
+        <column xsi:type="text" name="container_padding" nullable="true" comment="Container Padding"/>
+        <column xsi:type="text" name="container_margin" nullable="true" comment="Container Margin"/>
+        <column xsi:type="text" name="container_max_width" nullable="true" comment="Container Max Width"/>
+        <column xsi:type="text" name="container_border" nullable="true" comment="Container Border"/>
+        <column xsi:type="text" name="container_border_radius" nullable="true" comment="Container Border Radius"/>
+        <column xsi:type="text" name="container_box_shadow" nullable="true" comment="Container Box Shadow"/>
+        <column xsi:type="varchar" name="item_gap" nullable="true" length="50" comment="Gap Between Menu Items"/>
+        <column xsi:type="smallint" name="is_active" unsigned="true" nullable="false" default="1" comment="Is Active"/>
+        <column xsi:type="text" name="store_ids" nullable="true" comment="Store IDs (comma separated)"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="varchar" name="created_by" nullable="true" length="255" comment="Created By Admin Username"/>
+        <column xsi:type="text" name="version_comment" nullable="true" comment="Version Comment"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="version_id"/>
+        </constraint>
+
+        <constraint xsi:type="foreign" referenceId="PANTH_MEGAMENU_VERSION_MENU_ID_PANTH_MEGAMENU_MENU_MENU_ID"
+                    table="panth_megamenu_menu_version" column="menu_id"
+                    referenceTable="panth_megamenu_menu" referenceColumn="menu_id" onDelete="CASCADE"/>
+
+        <index referenceId="PANTH_MEGAMENU_VERSION_MENU_ID" indexType="btree">
+            <column name="menu_id"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_VERSION_CREATED_AT" indexType="btree">
+            <column name="created_at"/>
+        </index>
+
+        <index referenceId="PANTH_MEGAMENU_VERSION_MENU_VERSION" indexType="btree">
+            <column name="menu_id"/>
+            <column name="version_number"/>
+        </index>
+    </table>
+
+</schema>

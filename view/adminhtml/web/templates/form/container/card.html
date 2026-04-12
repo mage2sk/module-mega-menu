@@ -1,0 +1,19 @@
+<!--
+/**
+ * Card Container Template
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<div class="panth-megamenu-card" data-bind="attr: {id: name}">
+    <!-- ko if: label -->
+    <div class="card-label" data-bind="i18n: label"></div>
+    <!-- /ko -->
+
+    <div class="card-content">
+        <!-- ko foreach: {data: elems, as: 'element'} -->
+            <!-- ko template: {name: element.template, data: element} --><!-- /ko -->
+        <!-- /ko -->
+    </div>
+</div>

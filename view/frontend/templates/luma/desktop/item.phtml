@@ -1,0 +1,266 @@
+<?php
+/**
+ * Panth MegaMenu - Desktop Menu Item (Hyva Theme)
+ *
+ * Enhanced template with support for ABOUT YOU-style mega menus
+ * Supports multiple display types: text, image-card, image-banner, brand-logo, icon-card
+ *
+ * @var \Panth\MegaMenu\Block\MenuItem $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel
+ * @var \Panth\MegaMenu\Api\Data\ItemInterface $item
+ */
+
+// Get item data
+$item = $block->getData('item');
+$level = (int)$block->getData('level');
+$index = (int)$block->getData('index');
+$menuViewModel = $block->getData('menu_view_model');
+
+// Helper function to get item value (handles both array and object)
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method ? $item->$method() : $default;
+};
+
+// Check if item is active
+$isActive = is_array($item) ? ($item['is_active'] ?? true) : $item->getIsActive();
+if (!$item || !$isActive) {
+    return;
+}
+
+// Get item properties
+$itemId = $getValue($item, 'item_id', 'getItemId');
+$title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+$children = $getValue($item, 'children', 'getChildren', []);
+$hasChildren = !empty($children) || (is_object($item) && $item->hasChildren());
+$cssClass = $getValue($item, 'css_class', 'getCssClass', '');
+$iconClass = $getValue($item, 'icon', 'getIcon', '');
+$itemType = $getValue($item, 'item_type', 'getItemType', 'link');
+$image = $getValue($item, 'image', 'getImage', '');
+$displayType = $getValue($item, 'display_type', 'getDisplayType', 'text');
+$columnWidth = $getValue($item, 'column_width', 'getColumnWidth', '');
+$columnCount = $getValue($item, 'column_count', 'getColumnCount', '');
+$megaWidth = $getValue($item, 'mega_width', 'getMegaWidth', 'auto');
+$bgColor = $getValue($item, 'bg_color', 'getBgColor', '');
+$textColor = $getValue($item, 'text_color', 'getTextColor', '');
+$customContent = $getValue($item, 'custom_content', 'getCustomContent', '');
+
+// Get URL and link properties
+$url = $menuViewModel->getItemUrl($item);
+$target = $menuViewModel->getLinkTarget($item);
+$rel = $menuViewModel->getLinkRel($item);
+
+// Build CSS classes with unique prefix
+$itemClasses = [
+    'panth-mega-menu__item',
+    'panth-mega-menu__item--level-' . $level,
+    'panth-mega-menu__item--type-' . $itemType,
+    'panth-mega-menu__item--display-' . $displayType,
+];
+
+if ($hasChildren) {
+    $itemClasses[] = 'panth-mega-menu__item--has-children';
+}
+
+if ($cssClass) {
+    $itemClasses[] = $cssClass;
+}
+
+// Column width class
+$columnClass = '';
+if ($columnWidth && $level > 0) {
+    $columnClass = 'panth-mega-menu__column--' . $columnWidth;
+}
+
+// Mega menu width class (only for level 0)
+$megaWidthClass = '';
+if ($level === 0 && $hasChildren) {
+    $megaWidthClass = 'panth-mega-menu__dropdown--width-' . $megaWidth;
+}
+
+// Determine if this is a mega menu item
+$isMegaMenu = $hasChildren && $level === 0;
+
+// Check if should show content instead of link
+$showContent = in_array($itemType, ['custom_html', 'cms_block', 'widget']);
+
+// Generate unique ID for ARIA
+$itemUniqueId = 'panth-mega-menu-item-' . $itemId . '-' . $level . '-' . $index;
+$dropdownId = $itemUniqueId . '-dropdown';
+
+// Inline styles — validate colors to prevent CSS injection
+$isValidColor = function ($c) { return $c && preg_match('/^(#[0-9a-fA-F]{3,8}|rgba?\([\d.,\s%]+\)|hsla?\([\d.,\s%deg]+\)|[a-z]{3,20})$/i', trim($c)); };
+$inlineStyles = [];
+if ($bgColor && $isValidColor($bgColor)) {
+    $inlineStyles[] = 'background-color:' . $bgColor;
+}
+if ($textColor && $isValidColor($textColor)) {
+    $inlineStyles[] = 'color:' . $textColor;
+}
+$styleAttr = !empty($inlineStyles) ? 'style="' . implode(';', $inlineStyles) . '"' : '';
+?>
+
+<li class="<?= $escaper->escapeHtmlAttr(implode(' ', $itemClasses)) ?> <?= $escaper->escapeHtmlAttr($columnClass) ?>"
+    role="<?= $escaper->escapeHtmlAttr($level === 0 ? 'none' : 'menuitem') ?>"
+    data-item-id="<?= (int) $itemId ?>"
+    data-level="<?= (int) $level ?>"
+    <?= /* @noEscape */ $styleAttr ?>>
+
+    <?php if ($showContent && $customContent): ?>
+        <!-- Custom HTML Content -->
+        <div class="panth-mega-menu__content">
+            <?= /* @noEscape */ $customContent ?>
+        </div>
+
+    <?php elseif ($displayType === 'image-card' && $image): ?>
+        <!-- Image Card Display -->
+        <a href="<?= $escaper->escapeUrl($url) ?>"
+           class="panth-mega-menu__image-card"
+           title="<?= $escaper->escapeHtmlAttr($title) ?>"
+           target="<?= $escaper->escapeHtmlAttr($target) ?>"
+           <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>>
+            <div class="panth-mega-menu__image-card-wrapper">
+                <img src="<?= $escaper->escapeUrl($image) ?>"
+                     alt="<?= $escaper->escapeHtmlAttr($title) ?>"
+                     class="panth-mega-menu__image-card-img"
+                     loading="lazy" />
+                <?php if ($title): ?>
+                    <div class="panth-mega-menu__image-card-overlay">
+                        <span class="panth-mega-menu__image-card-title"><?= $escaper->escapeHtml($title) ?></span>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </a>
+
+    <?php elseif ($displayType === 'image-banner' && $image): ?>
+        <!-- Image Banner Display -->
+        <a href="<?= $escaper->escapeUrl($url) ?>"
+           class="panth-mega-menu__image-banner"
+           title="<?= $escaper->escapeHtmlAttr($title) ?>"
+           target="<?= $escaper->escapeHtmlAttr($target) ?>"
+           <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>>
+            <img src="<?= $escaper->escapeUrl($image) ?>"
+                 alt="<?= $escaper->escapeHtmlAttr($title) ?>"
+                 class="panth-mega-menu__image-banner-img"
+                 loading="lazy" />
+            <?php if ($title): ?>
+                <div class="panth-mega-menu__image-banner-overlay">
+                    <span class="panth-mega-menu__image-banner-title"><?= $escaper->escapeHtml($title) ?></span>
+                </div>
+            <?php endif; ?>
+        </a>
+
+    <?php elseif ($displayType === 'brand-logo' && $image): ?>
+        <!-- Brand Logo Display -->
+        <a href="<?= $escaper->escapeUrl($url) ?>"
+           class="panth-mega-menu__brand-logo"
+           title="<?= $escaper->escapeHtmlAttr($title) ?>"
+           target="<?= $escaper->escapeHtmlAttr($target) ?>"
+           <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>>
+            <img src="<?= $escaper->escapeUrl($image) ?>"
+                 alt="<?= $escaper->escapeHtmlAttr($title) ?>"
+                 class="panth-mega-menu__brand-logo-img"
+                 loading="lazy" />
+        </a>
+
+    <?php elseif ($displayType === 'icon-card' && $iconClass): ?>
+        <!-- Icon Card Display -->
+        <a href="<?= $escaper->escapeUrl($url) ?>"
+           id="<?= $escaper->escapeHtmlAttr($itemUniqueId) ?>"
+           class="panth-mega-menu__icon-card"
+           title="<?= $escaper->escapeHtmlAttr($title) ?>"
+           target="<?= $escaper->escapeHtmlAttr($target) ?>"
+           <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>
+           role="menuitem"
+           <?php if ($hasChildren): ?>
+           aria-haspopup="true"
+           aria-expanded="false"
+           aria-controls="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+           <?php endif; ?>>
+            <div class="panth-mega-menu__icon-card-icon">
+                <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?>" aria-hidden="true"></i>
+            </div>
+            <div class="panth-mega-menu__icon-card-text">
+                <span class="panth-mega-menu__icon-card-title"><?= $escaper->escapeHtml($title) ?></span>
+            </div>
+        </a>
+
+    <?php else: ?>
+        <!-- Text Link Display (Default) -->
+        <a href="<?= $escaper->escapeUrl($url) ?>"
+           id="<?= $escaper->escapeHtmlAttr($itemUniqueId) ?>"
+           class="panth-mega-menu__link panth-mega-menu__link--level-<?= (int) $level ?>"
+           title="<?= $escaper->escapeHtmlAttr($title) ?>"
+           target="<?= $escaper->escapeHtmlAttr($target) ?>"
+           <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>
+           role="menuitem"
+           <?php if ($hasChildren): ?>
+           aria-haspopup="true"
+           aria-expanded="false"
+           aria-controls="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+           <?php endif; ?>>
+
+            <span class="panth-mega-menu__link-inner">
+                <?php if ($iconClass): ?>
+                    <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?> panth-mega-menu__link-icon" aria-hidden="true"></i>
+                <?php endif; ?>
+
+                <span class="panth-mega-menu__link-text"><?= $escaper->escapeHtml($title) ?></span>
+
+                <?php if ($hasChildren): ?>
+                    <svg class="panth-mega-menu__link-arrow"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg"
+                         aria-hidden="true">
+                        <?php if ($level === 0): ?>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        <?php else: ?>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        <?php endif; ?>
+                    </svg>
+                <?php endif; ?>
+            </span>
+        </a>
+    <?php endif; ?>
+
+    <?php if ($hasChildren): ?>
+        <!-- Dropdown Menu -->
+        <div id="<?= $escaper->escapeHtmlAttr($dropdownId) ?>"
+             class="panth-mega-menu__dropdown panth-mega-menu__dropdown--level-<?= (int) $level ?> <?= $escaper->escapeHtmlAttr($megaWidthClass) ?>"
+             role="menu"
+             style="display: none;"
+             aria-label="<?= $escaper->escapeHtmlAttr($title . ' ' . __('submenu')) ?>">
+
+            <div class="panth-mega-menu__dropdown-inner">
+                <ul class="panth-mega-menu__dropdown-list <?= $isMegaMenu ? 'panth-mega-menu__dropdown-list--mega' : '' /* @noEscape */ ?> <?= $columnCount && $isMegaMenu ? 'panth-mega-menu__dropdown-list--columns-' . (int) $columnCount : '' /* @noEscape */ ?>"
+                    role="menu">
+
+                    <?php foreach ($children as $childIndex => $child): ?>
+                        <?php
+                        $childIsActive = is_array($child) ? ($child['is_active'] ?? true) : $child->getIsActive();
+                        if (!$childIsActive): continue; endif;
+                        ?>
+
+                        <?= /* @noEscape */ $block->getLayout()
+                            ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                            ->setTemplate('Panth_MegaMenu::luma/desktop/item.phtml')
+                            ->setData('item', $child)
+                            ->setData('level', $level + 1)
+                            ->setData('index', $childIndex)
+                            ->setData('menu_view_model', $menuViewModel)
+                            ->toHtml() ?>
+
+                    <?php endforeach; ?>
+
+                </ul>
+            </div>
+
+        </div>
+    <?php endif; ?>
+
+</li>

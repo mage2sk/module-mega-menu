@@ -1,0 +1,156 @@
+<?php
+/**
+ * Preview Full Page - Uses EXACT same template as frontend
+ *
+ * @var \Panth\MegaMenu\Block\Preview $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Get view file URLs dynamically for current theme
+$requireJsUrl = $block->getViewFileUrl('requirejs/require.js');
+?><!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <title>Menu Preview</title>
+
+    <!-- MegaMenu CSS (loaded via XML layout) -->
+    <!-- Additional theme styles will be inherited from layout -->
+
+    <!-- Icon Libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #333;
+        }
+
+        /* Preview Container */
+        .preview-content {
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .preview-wrapper {
+            width: 100%;
+            max-width: 100%;
+            background: white;
+            padding: 20px;
+        }
+
+        /* Link Reset */
+        a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+
+        /* List Reset */
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Preview-specific overrides to ensure visibility */
+        .pmenu-link-l0 {
+            color: #000 !important;
+        }
+
+        @media (min-width: 992px) {
+            .pmenu-link-l0 {
+                color: #000 !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Preview Content -->
+    <div class="preview-content">
+        <div class="preview-wrapper" id="preview-wrapper">
+            <?php
+            // Check if menu tree exists (for error display only)
+            $menuTree = $block->getCurrentMenuTree();
+
+            if (empty($menuTree)):
+            ?>
+                <div style="padding: 40px; text-align: center; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 20px;">
+                    <h2 style="color: #856404; margin: 0 0 10px 0;">⚠️ No Menu Items Found</h2>
+                    <p style="color: #856404; margin: 0;">The preview did not receive any menu items. Please ensure you have added items to your menu.</p>
+                </div>
+            <?php
+            endif;
+            ?>
+
+            <?= /* @noEscape */ $block->getLayout()
+                ->createBlock(\Panth\MegaMenu\Block\Preview::class)
+                ->setTemplate('Panth_MegaMenu::pmenu/menu.phtml')
+                ->setData('menu_id', $block->getMenuId())
+                ->setData('theme_helper', $block->getData('theme_helper'))
+                ->toHtml() ?>
+        </div>
+    </div>
+
+    <!-- Load RequireJS -->
+    <script src="<?= $escaper->escapeUrl($requireJsUrl) ?>"></script>
+
+    <script>
+        // Configure RequireJS for preview
+        require.config({
+            paths: {
+                'jquery': 'jquery',
+                'Panth_MegaMenu/js/megamenu': 'Panth_MegaMenu/js/megamenu'
+            },
+            shim: {
+                'Panth_MegaMenu/js/megamenu': {
+                    deps: ['jquery']
+                }
+            }
+        });
+
+        // Load jQuery first, then initialize MegaMenu
+        require(['jquery'], function($) {
+            console.log('Preview: jQuery loaded');
+
+            // Load MegaMenu widget
+            require(['Panth_MegaMenu/js/megamenu'], function(megamenuWidget) {
+                console.log('Preview: MegaMenu widget loaded');
+
+                $(document).ready(function() {
+                    // Find any menu element (supports dynamic ID)
+                    var menuElement = document.querySelector('.pmenu-wrapper');
+                    if (menuElement) {
+                        console.log('Preview: Menu element found, initializing widget...', menuElement.id);
+
+                        // Initialize the widget (Magento pattern: config, element)
+                        megamenuWidget({}, menuElement);
+
+                        console.log('Preview: MegaMenu initialized successfully');
+                    } else {
+                        console.error('Preview: Menu element .pmenu-wrapper not found!');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

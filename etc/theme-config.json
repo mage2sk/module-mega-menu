@@ -1,0 +1,63 @@
+{
+  "pmenu-bg": "#FFFFFF",
+  "pmenu-text": "#374151",
+  "pmenu-link-size": "14px",
+  "pmenu-link-weight": "500",
+  "pmenu-hover-bg": "#F0FDFA",
+  "pmenu-hover-text": "#0D9488",
+  "pmenu-active-text": "#0D9488",
+  "pmenu-active-bg": "#F0FDFA",
+
+  "pmenu-dropdown-bg": "#FFFFFF",
+  "pmenu-dropdown-border": "#E5E5E5",
+  "pmenu-dropdown-radius": "8px",
+  "pmenu-dropdown-shadow": "0 12px 36px -8px rgba(0,0,0,0.15)",
+  "pmenu-dropdown-padding": "24px",
+
+  "pmenu-col-header-size": "13px",
+  "pmenu-col-header-weight": "700",
+  "pmenu-col-header-color": "#0D9488",
+  "pmenu-col-header-border": "#0D9488",
+
+  "pmenu-sub-link-size": "13px",
+  "pmenu-sub-link-color": "#444444",
+  "pmenu-sub-link-hover": "#0D9488",
+  "pmenu-sub-link-hover-bg": "#F0FDFA",
+
+  "pmenu-deep-link-size": "12px",
+  "pmenu-deep-link-color": "#666666",
+  "pmenu-deep-link-hover": "#0D9488",
+  "pmenu-deep-link-hover-bg": "#F5F5F5",
+  "pmenu-deep-border": "#EEEEEE",
+
+  "pmenu-simple-link-size": "13px",
+  "pmenu-simple-link-color": "#333333",
+  "pmenu-simple-link-hover": "#0D9488",
+  "pmenu-simple-link-hover-bg": "#F0FDFA",
+
+  "pmenu-badge-new-bg": "#16A34A",
+  "pmenu-badge-sale-bg": "#DC2626",
+  "pmenu-badge-hot-bg": "#F97316",
+  "pmenu-badge-text": "#FFFFFF",
+  "pmenu-badge-size": "10px",
+
+  "pmenu-mobile-bg": "#FFFFFF",
+  "pmenu-mobile-header-bg": "#F9FAFB",
+  "pmenu-mobile-border": "#EEEEEE",
+  "pmenu-mobile-text": "#1A1A1A",
+  "pmenu-mobile-text-hover": "#0D9488",
+  "pmenu-mobile-l0-size": "15px",
+  "pmenu-mobile-l0-weight": "600",
+  "pmenu-mobile-l1-size": "14px",
+  "pmenu-mobile-l1-weight": "500",
+  "pmenu-mobile-l2-size": "13px",
+  "pmenu-mobile-l3-size": "12px",
+  "pmenu-mobile-item-padding": "10px 16px",
+  "pmenu-mobile-toggle-color": "#999999",
+  "pmenu-mobile-active-color": "#0D9488",
+  "pmenu-mobile-active-bg": "#F0FDFA",
+
+  "pmenu-cms-block-bg": "#F9FAFB",
+  "pmenu-cms-block-radius": "6px",
+  "pmenu-cms-block-padding": "12px"
+}

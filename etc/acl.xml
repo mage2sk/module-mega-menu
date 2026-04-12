@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Panth Mega Menu ACL Configuration
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ * @author    Panth
+ * @copyright Copyright (c) Panth
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="Magento_Backend::content">
+                    <resource id="Panth_MegaMenu::panth_extensions" title="Panth Extensions" sortOrder="200">
+                        <resource id="Panth_MegaMenu::menu" title="Mega Menu" sortOrder="80">
+                            <resource id="Panth_MegaMenu::menu_items" title="Manage Menu Items" sortOrder="5"/>
+                            <resource id="Panth_MegaMenu::menu_save" title="Save Menu" sortOrder="10"/>
+                            <resource id="Panth_MegaMenu::menu_delete" title="Delete Menu" sortOrder="20"/>
+                            <resource id="Panth_MegaMenu::menu_builder" title="Menu Builder" sortOrder="30"/>
+                            <resource id="Panth_MegaMenu::item_save" title="Save Item" sortOrder="40"/>
+                            <resource id="Panth_MegaMenu::item_delete" title="Delete Item" sortOrder="50"/>
+                            <resource id="Panth_MegaMenu::menu_version_restore" title="Restore Menu Version" sortOrder="60"/>
+                            <resource id="Panth_MegaMenu::menu_version_view" title="View Menu Version" sortOrder="70"/>
+                        </resource>
+                    </resource>
+                </resource>
+                <resource id="Magento_Backend::stores">
+                    <resource id="Magento_Backend::stores_settings">
+                        <resource id="Magento_Config::config">
+                            <resource id="Panth_MegaMenu::config" title="MegaMenu Configuration" sortOrder="100"/>
+                            <resource id="Panth_MegaMenu::design_config" title="MegaMenu Design" sortOrder="110"/>
+                        </resource>
+                    </resource>
+                </resource>
+            </resource>
+        </resources>
+    </acl>
+</config>

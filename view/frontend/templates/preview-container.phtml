@@ -1,0 +1,12 @@
+<?php
+/**
+ * Preview Container - Wraps menu preview with badge
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ */
+?>
+<div class="preview-badge">LIVE PREVIEW</div>
+
+<div class="preview-menu-wrapper">
+    <?= /* @noEscape */ $block->getChildHtml('panth.megamenu.preview') ?>
+</div>

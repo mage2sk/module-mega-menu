@@ -1,0 +1,1391 @@
+<?php
+/**
+ * Panth MegaMenu - Complete Luma Frontend Template
+ *
+ * Desktop: Horizontal nav bar with hover dropdowns (mega panel / simple dropdown)
+ * Mobile:  Hamburger button + off-canvas drawer with accordion
+ *
+ * Uses RequireJS/jQuery and data-mage-init (NO Alpine.js, NO Tailwind).
+ * All admin per-item fields fully supported.
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->isEnabled()) {
+    return;
+}
+
+$menuTree = $block->getCurrentMenuTree();
+$menu     = $block->getCurrentMenu();
+$helper   = $block->getMenuHelper();
+$renderer = $block->getMenuRenderer();
+
+if (empty($menuTree)) {
+    return;
+}
+
+// ── Admin config ──
+$hoverEffect     = $escaper->escapeHtmlAttr($helper->getHoverEffect() ?: 'underline');
+$animationType   = $escaper->escapeHtmlAttr($helper->getAnimationType() ?: 'fade');
+$animationDur    = (int) ($helper->getAnimationDuration() ?: 200);
+$hoverDelay      = (int) ($helper->getHoverIntentDelay() ?: 150);
+$showIcons       = (bool) $helper->showIcons();
+$showImages      = (bool) $helper->showImages();
+$maxDepth        = (int) ($helper->getMaxDepth() ?: 5);
+$columns         = (int) ($helper->getColumns() ?: 4);
+$showCount       = (bool) $helper->showCategoryCount();
+$enableBlocks    = (bool) $helper->isCustomBlocksEnabled();
+$customCss       = $helper->getCustomCss();
+$mobilePosition  = $escaper->escapeHtmlAttr($helper->getMobilePosition() ?: 'left');
+
+// ── Menu entity data ──
+$menuCssClass  = $menu ? ($menu->getCssClass() ?? '') : '';
+$menuCustomCss = $menu ? ($menu->getCustomCss() ?? '') : '';
+$menuId        = 'pmenu-' . ($menu ? $menu->getId() : 'default');
+
+// ── Container styling from menu entity ──
+$containerStyle = '';
+$itemGapStyle   = '';
+if ($menu) {
+    $bgColor              = $menu->getContainerBgColor();
+    $padding              = $menu->getContainerPadding();
+    $containerMargin      = $menu->getContainerMargin();
+    $gap                  = $menu->getItemGap();
+    $maxWidth             = $menu->getContainerMaxWidth();
+    $containerBorder      = $menu->getContainerBorder();
+    $containerBorderRadius = $menu->getContainerBorderRadius();
+    $containerBoxShadow   = $menu->getContainerBoxShadow();
+
+    if ($bgColor)              $containerStyle .= "background-color:{$bgColor};";
+    if ($padding)              $containerStyle .= "padding:{$padding};";
+    if ($containerMargin)      $containerStyle .= "margin:{$containerMargin};";
+    if ($maxWidth)             $containerStyle .= "max-width:{$maxWidth};";
+    if ($containerBorder)      $containerStyle .= "border:{$containerBorder};";
+    if ($containerBorderRadius) $containerStyle .= "border-radius:{$containerBorderRadius};";
+    if ($containerBoxShadow)   $containerStyle .= "box-shadow:{$containerBoxShadow};";
+
+    if ($gap) $itemGapStyle = "gap:{$gap};";
+}
+
+// ── Breakpoint / animation config ──
+$breakpoint     = (int) $block->getMobileBreakpoint() ?: 1024;
+$animationSpeed = (int) $block->getAnimationSpeed() ?: $animationDur;
+
+// ── Desktop widget config (JSON for data-mage-init) ──
+$desktopConfig = [
+    'hoverDelay'        => $hoverDelay,
+    'animationType'     => $animationType,
+    'animationDuration' => $animationSpeed,
+    'breakpoint'        => $breakpoint,
+    'stickyEnabled'     => (bool) $block->isStickyEnabled(),
+    'stickyOffset'      => (int) $block->getStickyOffset(),
+];
+
+// ── Mobile widget config ──
+$mobileConfig = [
+    'position'          => $mobilePosition,
+    'overlay'           => true,
+    'accordion'         => true,
+    'breakpoint'        => $breakpoint,
+    'animationDuration' => $animationSpeed,
+];
+
+// ══════════════════════════════════════════════════════════════════════
+// Normalize menu tree items into a common structure
+// ══════════════════════════════════════════════════════════════════════
+$normalizeItem = function (array $item, int $depth = 0) use (
+    &$normalizeItem, $maxDepth, $showIcons, $showImages, $showCount, $enableBlocks
+): array {
+    $children    = [];
+    $rawChildren = $item['children'] ?? [];
+    if ($depth < $maxDepth) {
+        foreach ($rawChildren as $child) {
+            $children[] = $normalizeItem($child, $depth + 1);
+        }
+        // Sort by sort_order
+        usort($children, function ($a, $b) {
+            return ((int)$a['sort_order']) - ((int)$b['sort_order']);
+        });
+    }
+
+    return [
+        'title'            => $item['title'] ?? '',
+        'url'              => $item['url'] ?? '#',
+        'children'         => $children,
+        'css_class'        => $item['css_class'] ?? '',
+        'icon'             => $showIcons ? ($item['icon'] ?? '') : '',
+        'icon_library'     => $item['icon_library'] ?? 'fontawesome',
+        'image'            => $showImages ? ($item['image'] ?? '') : '',
+        'image_width'      => $item['image_width'] ?? '',
+        'image_height'     => $item['image_height'] ?? '',
+        'badge_text'       => $item['badge_text'] ?? ($item['badge'] ?? ''),
+        'target'           => $item['target'] ?? '_self',
+        'rel'              => $item['rel'] ?? '',
+        'cms_block'        => $enableBlocks ? ($item['cms_block_id'] ?? ($item['cms_block'] ?? '')) : '',
+        'custom_content'   => $item['custom_content'] ?? '',
+        'product_count'    => $showCount ? ($item['product_count'] ?? '') : '',
+        'display_type'     => $item['display_type'] ?? '',
+        'column_width'     => $item['column_width'] ?? '',
+        // Styling
+        'bg_color'         => $item['bg_color'] ?? '',
+        'text_color'       => $item['text_color'] ?? '',
+        'font_family'      => $item['font_family'] ?? '',
+        'font_size'        => $item['font_size'] ?? '',
+        'font_weight'      => $item['font_weight'] ?? '',
+        'text_transform'   => $item['text_transform'] ?? '',
+        'padding'          => $item['padding'] ?? '',
+        'margin'           => $item['margin'] ?? '',
+        'border'           => $item['border'] ?? '',
+        'border_radius'    => $item['border_radius'] ?? '',
+        'box_shadow'       => $item['box_shadow'] ?? '',
+        'opacity'          => $item['opacity'] ?? '',
+        'hover_effect'     => $item['hover_effect'] ?? '',
+        'hover_bg_color'   => $item['hover_bg_color'] ?? '',
+        'hover_text_color' => $item['hover_text_color'] ?? '',
+        'animation'        => $item['animation'] ?? '',
+        // Visibility
+        'is_active'        => !isset($item['is_active']) || !empty($item['is_active']),
+        'sort_order'       => $item['sort_order'] ?? 0,
+        'show_on_desktop'  => !isset($item['show_on_desktop']) || !empty($item['show_on_desktop']),
+        'show_on_mobile'   => !isset($item['show_on_mobile']) || !empty($item['show_on_mobile']),
+        'start_date'       => $item['start_date'] ?? '',
+        'end_date'         => $item['end_date'] ?? '',
+    ];
+};
+
+// ── Build per-item inline style string ──
+$getItemStyle = function (array $item): string {
+    $s = [];
+    if (!empty($item['bg_color']))       $s[] = 'background-color:' . $item['bg_color'];
+    if (!empty($item['text_color']))     $s[] = 'color:' . $item['text_color'];
+    if (!empty($item['font_family']))    $s[] = 'font-family:' . $item['font_family'];
+    if (!empty($item['font_size']))      $s[] = 'font-size:' . $item['font_size'];
+    if (!empty($item['font_weight']))    $s[] = 'font-weight:' . $item['font_weight'];
+    if (!empty($item['text_transform'])) $s[] = 'text-transform:' . $item['text_transform'];
+    if (!empty($item['padding']))        $s[] = 'padding:' . $item['padding'];
+    if (!empty($item['margin']))         $s[] = 'margin:' . $item['margin'];
+    if (!empty($item['border']))         $s[] = 'border:' . $item['border'];
+    if (!empty($item['border_radius']))  $s[] = 'border-radius:' . $item['border_radius'];
+    if (!empty($item['box_shadow']))     $s[] = 'box-shadow:' . $item['box_shadow'];
+    if (!empty($item['opacity']))        $s[] = 'opacity:' . $item['opacity'];
+    return implode(';', $s);
+};
+
+// ── Schedule-based visibility ──
+$isItemScheduleActive = function (array $item): bool {
+    $now = time();
+    if (!empty($item['start_date']) && strtotime($item['start_date']) > $now) return false;
+    if (!empty($item['end_date']) && strtotime($item['end_date']) < $now) return false;
+    return true;
+};
+
+// ── Filter by desktop visibility ──
+$filterDesktop = function (array $items) use ($isItemScheduleActive): array {
+    return array_values(array_filter($items, function ($i) use ($isItemScheduleActive) {
+        return !empty($i['is_active']) && !empty($i['show_on_desktop']) && $isItemScheduleActive($i);
+    }));
+};
+
+// ── Filter by mobile visibility ──
+$filterMobile = function (array $items) use ($isItemScheduleActive): array {
+    return array_values(array_filter($items, function ($i) use ($isItemScheduleActive) {
+        return !empty($i['is_active']) && !empty($i['show_on_mobile']) && $isItemScheduleActive($i);
+    }));
+};
+
+// ── Has grandchildren? ──
+$hasGrandchildren = function (array $children): bool {
+    foreach ($children as $c) {
+        if (!empty($c['children'])) return true;
+    }
+    return false;
+};
+
+// ── Normalize all items ──
+$items = [];
+foreach ($menuTree as $raw) {
+    $items[] = $normalizeItem($raw);
+}
+usort($items, function ($a, $b) {
+    return ((int)$a['sort_order']) - ((int)$b['sort_order']);
+});
+
+$desktopItems = $filterDesktop($items);
+$mobileItems  = $filterMobile($items);
+
+// ══════════════════════════════════════════════════════════════════════
+// Recursive renderers (closures)
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Render Level 3+ items recursively inside a mega column
+ */
+$renderDeepItems = function (array $items, int $level, string $parentKey) use (
+    &$renderDeepItems, $escaper, $maxDepth, $getItemStyle, $filterDesktop, $renderer, $enableBlocks
+) {
+    if ($level > $maxDepth) return;
+    $items = $filterDesktop($items);
+    if (empty($items)) return;
+    ?>
+    <ul class="pmenu-deep-list pmenu-deep-level-<?= (int) $level ?>">
+        <?php foreach ($items as $di => $deep):
+            $hasKids   = !empty($deep['children']);
+            $deepKey   = $parentKey . '_d' . $level . '_' . $di;
+            $deepStyle = $getItemStyle($deep);
+        ?>
+        <li class="pmenu-deep-item<?= $hasKids ? ' has-children' : '' ?><?= !empty($deep['css_class']) ? ' ' . $escaper->escapeHtmlAttr($deep['css_class']) : '' ?>">
+            <div class="pmenu-deep-row">
+                <a href="<?= $escaper->escapeUrl($deep['url']) ?>"
+                   class="pmenu-deep-link"
+                   <?php if ($deepStyle): ?>style="<?= $escaper->escapeHtmlAttr($deepStyle) ?>"<?php endif; ?>
+                   <?php if (!empty($deep['target']) && $deep['target'] !== '_self'): ?>target="<?= $escaper->escapeHtmlAttr($deep['target']) ?>"<?php endif; ?>
+                   <?php if (!empty($deep['rel'])): ?>rel="<?= $escaper->escapeHtmlAttr($deep['rel']) ?>"<?php endif; ?>>
+                    <?php if (!empty($deep['icon'])): ?>
+                        <?= /* @noEscape */ $renderer->renderIcon($deep['icon'], $deep['icon_library'] ?? 'fontawesome') ?>
+                    <?php endif; ?>
+                    <?= $escaper->escapeHtml($deep['title']) ?>
+                    <?php if (!empty($deep['badge_text'])): ?>
+                        <span class="pmenu-badge"><?= $escaper->escapeHtml($deep['badge_text']) ?></span>
+                    <?php endif; ?>
+                </a>
+                <?php if ($hasKids): ?>
+                    <button class="pmenu-deep-toggle" data-toggle-key="<?= $escaper->escapeHtmlAttr($deepKey) ?>"
+                            aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle submenu')) ?>">
+                        <span class="pmenu-arrow-down"></span>
+                    </button>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($deep['custom_content'])): ?>
+                <div class="pmenu-custom-content"><?= /* @noEscape */ $deep['custom_content'] ?></div>
+            <?php endif; ?>
+            <?php if ($enableBlocks && !empty($deep['cms_block'])): ?>
+                <div class="pmenu-cms-block"><?= /* @noEscape */ $renderer->renderCmsBlock($deep['cms_block']) ?></div>
+            <?php endif; ?>
+            <?php if ($hasKids): ?>
+                <div class="pmenu-deep-children" data-children-key="<?= $escaper->escapeHtmlAttr($deepKey) ?>" style="display:none;">
+                    <?php $renderDeepItems($deep['children'], $level + 1, $deepKey); ?>
+                </div>
+            <?php endif; ?>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php
+};
+
+/**
+ * Render mega panel (multi-column grid for items with grandchildren)
+ */
+$renderMegaPanel = function (array $children, string $parentKey) use (
+    $escaper, $columns, $renderer, $renderDeepItems, $maxDepth,
+    $getItemStyle, $filterDesktop, $showCount, $enableBlocks
+) {
+    $children   = $filterDesktop($children);
+    $actualCols = min(count($children), $columns);
+    ?>
+    <div class="pmenu-grid cols-<?= (int) $actualCols ?>">
+        <?php foreach ($children as $ci => $child):
+            $childKey   = $parentKey . '_c' . $ci;
+            $childStyle = $getItemStyle($child);
+            $childCss   = !empty($child['css_class']) ? ' ' . $escaper->escapeHtmlAttr($child['css_class']) : '';
+            $colWidth   = !empty($child['column_width']) ? 'width:' . $escaper->escapeHtmlAttr($child['column_width']) . ';' : '';
+        ?>
+        <div class="pmenu-column<?= /* @noEscape */ $childCss ?>"<?php if ($colWidth): ?> style="<?= /* @noEscape */ $colWidth ?>"<?php endif; ?>>
+            <!-- Column header (Level 1) -->
+            <h3 class="pmenu-col-header">
+                <a href="<?= $escaper->escapeUrl($child['url']) ?>"
+                   <?php if ($childStyle): ?>style="<?= $escaper->escapeHtmlAttr($childStyle) ?>"<?php endif; ?>
+                   <?php if (!empty($child['target']) && $child['target'] !== '_self'): ?>target="<?= $escaper->escapeHtmlAttr($child['target']) ?>"<?php endif; ?>
+                   <?php if (!empty($child['rel'])): ?>rel="<?= $escaper->escapeHtmlAttr($child['rel']) ?>"<?php endif; ?>>
+                    <?php if (!empty($child['icon'])): ?>
+                        <?= /* @noEscape */ $renderer->renderIcon($child['icon'], $child['icon_library'] ?? 'fontawesome') ?>
+                    <?php endif; ?>
+                    <?= $escaper->escapeHtml($child['title']) ?>
+                    <?php if ($showCount && !empty($child['product_count'])): ?>
+                        <span class="pmenu-count">(<?= $escaper->escapeHtml((string) $child['product_count']) ?>)</span>
+                    <?php endif; ?>
+                    <?php if (!empty($child['badge_text'])): ?>
+                        <span class="pmenu-badge"><?= $escaper->escapeHtml($child['badge_text']) ?></span>
+                    <?php endif; ?>
+                </a>
+            </h3>
+
+            <?php if (!empty($child['image'])): ?>
+                <div class="pmenu-col-image">
+                    <?= /* @noEscape */ $renderer->renderImage($child, 'medium') ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($child['custom_content'])): ?>
+                <div class="pmenu-custom-content"><?= /* @noEscape */ $child['custom_content'] ?></div>
+            <?php endif; ?>
+
+            <?php // Level 2 items ?>
+            <?php if (!empty($child['children'])):
+                $filteredL2 = $filterDesktop($child['children']);
+            ?>
+            <ul class="pmenu-sub-list">
+                <?php foreach ($filteredL2 as $gi => $gc):
+                    $gcKey   = $childKey . '_g' . $gi;
+                    $gcStyle = $getItemStyle($gc);
+                    $gcCss   = !empty($gc['css_class']) ? ' ' . $escaper->escapeHtmlAttr($gc['css_class']) : '';
+                    $hasDeep = !empty($gc['children']);
+                ?>
+                <li class="pmenu-sub-item<?= $hasDeep ? ' has-children' : '' /* @noEscape */ ?><?= /* @noEscape */ $gcCss ?>">
+                    <a href="<?= $escaper->escapeUrl($gc['url']) ?>"
+                       class="pmenu-sub-link"
+                       <?php if ($gcStyle): ?>style="<?= $escaper->escapeHtmlAttr($gcStyle) ?>"<?php endif; ?>
+                       <?php if (!empty($gc['target']) && $gc['target'] !== '_self'): ?>target="<?= $escaper->escapeHtmlAttr($gc['target']) ?>"<?php endif; ?>
+                       <?php if (!empty($gc['rel'])): ?>rel="<?= $escaper->escapeHtmlAttr($gc['rel']) ?>"<?php endif; ?>>
+                        <?php if (!empty($gc['icon'])): ?>
+                            <?= /* @noEscape */ $renderer->renderIcon($gc['icon'], $gc['icon_library'] ?? 'fontawesome') ?>
+                        <?php endif; ?>
+                        <?= $escaper->escapeHtml($gc['title']) ?>
+                        <?php if ($showCount && !empty($gc['product_count'])): ?>
+                            <span class="pmenu-count">(<?= $escaper->escapeHtml((string) $gc['product_count']) ?>)</span>
+                        <?php endif; ?>
+                        <?php if (!empty($gc['badge_text'])): ?>
+                            <span class="pmenu-badge"><?= $escaper->escapeHtml($gc['badge_text']) ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <?php if (!empty($gc['custom_content'])): ?>
+                        <div class="pmenu-custom-content"><?= /* @noEscape */ $gc['custom_content'] ?></div>
+                    <?php endif; ?>
+                    <?php if ($hasDeep && $maxDepth > 2): ?>
+                        <div class="pmenu-deep-children" data-children-key="<?= $escaper->escapeHtmlAttr($gcKey) ?>" style="display:none;">
+                            <?php $renderDeepItems($gc['children'], 3, $gcKey); ?>
+                        </div>
+                    <?php endif; ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+            <?php endif; ?>
+
+            <?php if ($enableBlocks && !empty($child['cms_block'])): ?>
+                <div class="pmenu-cms-block"><?= /* @noEscape */ $renderer->renderCmsBlock($child['cms_block']) ?></div>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php
+};
+
+/**
+ * Render simple dropdown (for items without grandchildren)
+ */
+$renderSimpleDropdown = function (array $children) use (
+    $escaper, $renderer, $getItemStyle, $filterDesktop, $showCount, $enableBlocks
+) {
+    $children = $filterDesktop($children);
+    ?>
+    <ul class="pmenu-simple-list">
+        <?php foreach ($children as $child):
+            $sdStyle = $getItemStyle($child);
+            $sdCss   = !empty($child['css_class']) ? ' ' . $escaper->escapeHtmlAttr($child['css_class']) : '';
+        ?>
+        <li class="pmenu-simple-item<?= /* @noEscape */ $sdCss ?>">
+            <a href="<?= $escaper->escapeUrl($child['url']) ?>"
+               class="pmenu-simple-link"
+               <?php if ($sdStyle): ?>style="<?= $escaper->escapeHtmlAttr($sdStyle) ?>"<?php endif; ?>
+               <?php if (!empty($child['target']) && $child['target'] !== '_self'): ?>target="<?= $escaper->escapeHtmlAttr($child['target']) ?>"<?php endif; ?>
+               <?php if (!empty($child['rel'])): ?>rel="<?= $escaper->escapeHtmlAttr($child['rel']) ?>"<?php endif; ?>>
+                <?php if (!empty($child['icon'])): ?>
+                    <?= /* @noEscape */ $renderer->renderIcon($child['icon'], $child['icon_library'] ?? 'fontawesome') ?>
+                <?php endif; ?>
+                <?= $escaper->escapeHtml($child['title']) ?>
+                <?php if ($showCount && !empty($child['product_count'])): ?>
+                    <span class="pmenu-count">(<?= $escaper->escapeHtml((string) $child['product_count']) ?>)</span>
+                <?php endif; ?>
+                <?php if (!empty($child['badge_text'])): ?>
+                    <span class="pmenu-badge"><?= $escaper->escapeHtml($child['badge_text']) ?></span>
+                <?php endif; ?>
+            </a>
+            <?php if (!empty($child['custom_content'])): ?>
+                <div class="pmenu-custom-content"><?= /* @noEscape */ $child['custom_content'] ?></div>
+            <?php endif; ?>
+            <?php if ($enableBlocks && !empty($child['cms_block'])): ?>
+                <div class="pmenu-cms-block"><?= /* @noEscape */ $renderer->renderCmsBlock($child['cms_block']) ?></div>
+            <?php endif; ?>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php
+};
+
+/**
+ * Render mobile accordion items recursively
+ */
+$renderMobileItems = function (array $items, int $level = 0) use (
+    &$renderMobileItems, $escaper, $maxDepth, $renderer,
+    $getItemStyle, $filterMobile, $showCount, $enableBlocks
+) {
+    if ($level > $maxDepth) return;
+    $items = $filterMobile($items);
+    if (empty($items)) return;
+    ?>
+    <ul class="pmenu-mobile-list pmenu-mobile-level-<?= (int) $level ?>">
+        <?php foreach ($items as $i => $item):
+            $hasChildren = !empty($item['children']);
+            $mKey        = 'ml' . $level . 'i' . $i;
+            $mobStyle    = $getItemStyle($item);
+            $mobCss      = !empty($item['css_class']) ? ' ' . $escaper->escapeHtmlAttr($item['css_class']) : '';
+        ?>
+        <li class="pmenu-mobile-item<?= $hasChildren ? ' has-children' : '' /* @noEscape */ ?><?= /* @noEscape */ $mobCss ?>"
+            data-level="<?= (int) $level ?>">
+            <div class="pmenu-mobile-row">
+                <a href="<?= $escaper->escapeUrl($item['url']) ?>"
+                   class="pmenu-mobile-link"
+                   <?php if ($mobStyle): ?>style="<?= $escaper->escapeHtmlAttr($mobStyle) ?>"<?php endif; ?>
+                   <?php if (!empty($item['target']) && $item['target'] !== '_self'): ?>target="<?= $escaper->escapeHtmlAttr($item['target']) ?>"<?php endif; ?>
+                   <?php if (!empty($item['rel'])): ?>rel="<?= $escaper->escapeHtmlAttr($item['rel']) ?>"<?php endif; ?>>
+                    <?php if (!empty($item['icon'])): ?>
+                        <?= /* @noEscape */ $renderer->renderIcon($item['icon'], $item['icon_library'] ?? 'fontawesome') ?>
+                    <?php endif; ?>
+                    <span class="pmenu-mobile-title-text"><?= $escaper->escapeHtml($item['title']) ?></span>
+                    <?php if ($showCount && !empty($item['product_count'])): ?>
+                        <span class="pmenu-count">(<?= $escaper->escapeHtml((string) $item['product_count']) ?>)</span>
+                    <?php endif; ?>
+                    <?php if (!empty($item['badge_text'])): ?>
+                        <span class="pmenu-badge"><?= $escaper->escapeHtml($item['badge_text']) ?></span>
+                    <?php endif; ?>
+                </a>
+                <?php if ($hasChildren): ?>
+                    <button class="pmenu-mobile-toggle-sub"
+                            data-accordion-key="<?= $escaper->escapeHtmlAttr($mKey) ?>"
+                            aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle %1', $item['title'])) ?>"
+                            aria-expanded="false">
+                        <span class="pmenu-arrow-down"></span>
+                    </button>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($item['custom_content'])): ?>
+                <div class="pmenu-custom-content"><?= /* @noEscape */ $item['custom_content'] ?></div>
+            <?php endif; ?>
+
+            <?php if ($enableBlocks && !empty($item['cms_block'])): ?>
+                <div class="pmenu-cms-block"><?= /* @noEscape */ $renderer->renderCmsBlock($item['cms_block']) ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($item['image'])): ?>
+                <div class="pmenu-mobile-image">
+                    <?= /* @noEscape */ $renderer->renderImage($item, 'small') ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($hasChildren): ?>
+                <div class="pmenu-mobile-children" data-accordion-children="<?= $escaper->escapeHtmlAttr($mKey) ?>" style="display:none;">
+                    <?php $renderMobileItems($item['children'], $level + 1); ?>
+                </div>
+            <?php endif; ?>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php
+};
+?>
+
+<!-- ══════════════ STYLES — matches Hyva Panth MegaMenu exactly ══════════════ -->
+<style>
+:root {
+    --pmenu-animation-speed: <?= (int) $animationSpeed ?>ms;
+    --pmenu-breakpoint: <?= (int) $breakpoint ?>px;
+}
+
+/* ══════════ RESET — kill Luma's global a colors inside our menu ══════════ */
+.pmenu-nav a, .pmenu-nav a:visited, .pmenu-nav a:active,
+.pmenu-mobile-drawer a, .pmenu-mobile-drawer a:visited, .pmenu-mobile-drawer a:active {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ══════════ DESKTOP NAV ══════════ */
+.pmenu-nav {
+    position: relative;
+    z-index: 9999;
+    font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+}
+.pmenu-bar { position: relative; }
+.pmenu-items {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-wrap: wrap; align-items: center;
+}
+.pmenu-item { position: relative; list-style: none; }
+.pmenu-item.is-mega { position: static; }
+.pmenu-item.is-open { z-index: 10000; }
+
+/* ── Level 0 links (matches Hyva: text-sm font-medium, py-4 px-3, gap-1.5) ── */
+.pmenu-link {
+    display: flex; align-items: center; gap: 6px;
+    padding: 16px 12px;
+    font-size: 14px; font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+.pmenu-link:hover,
+.pmenu-item:hover > .pmenu-link,
+.pmenu-item.is-open > .pmenu-link {
+    color: var(--color-primary, #0D9488);
+}
+
+/* ── Arrow: replaced by SVG via JS, this is just a container ── */
+.pmenu-arrow-down {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    transition: transform 0.2s;
+    border: none; background: none;
+}
+.pmenu-item.is-open > .pmenu-link .pmenu-arrow-down {
+    transform: rotate(180deg);
+}
+
+/* ── Badge (matches Hyva: 10px, bold, rounded, bg-red-500) ── */
+.pmenu-badge {
+    display: inline-block; margin-left: 6px;
+    padding: 2px 8px; font-size: 10px; font-weight: 700;
+    line-height: 1.4; color: #fff; background: #EF4444;
+    border-radius: 4px; vertical-align: middle;
+    white-space: nowrap; text-transform: uppercase;
+}
+.pmenu-count {
+    font-size: 11px; font-weight: 400; opacity: 0.5; margin-left: 3px;
+}
+
+/* ── Hover effects ── */
+.pmenu-hover-underline .pmenu-item:hover > .pmenu-link { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; text-decoration-color: var(--color-primary, #0D9488); }
+.pmenu-hover-fade .pmenu-item:hover > .pmenu-link { opacity: 0.7; }
+.pmenu-hover-highlight .pmenu-item:hover > .pmenu-link { background: #F0FDFA; border-radius: 6px; }
+.pmenu-hover-slide .pmenu-item:hover > .pmenu-link { transform: translateY(-2px); }
+.pmenu-hover-glow .pmenu-item:hover > .pmenu-link { text-shadow: 0 0 8px currentColor; }
+.pmenu-hover-grow .pmenu-item:hover > .pmenu-link { transform: scale(1.05); }
+
+/* ══════════ DROPDOWNS ══════════ */
+.pmenu-dropdown {
+    position: absolute; top: 100%; z-index: 10001;
+    display: none;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px -12px rgba(0,0,0,0.15);
+    min-width: 220px; margin: 2px 0 0;
+    padding: 0; /* Reset megamenu-all.less padding — grid handles its own padding */
+    overflow: hidden; /* Clip card corners to dropdown border-radius */
+}
+.pmenu-dropdown.pmenu-mega { left: 0; right: 0; width: auto; }
+.pmenu-dropdown.pmenu-simple { left: 0; width: max-content; max-width: 320px; background: #fff; padding: 0; }
+.pmenu-item.is-open > .pmenu-dropdown { display: block; }
+
+/* Animation */
+.pmenu-nav[data-anim="fade"] .pmenu-dropdown { opacity: 0; transition: opacity var(--pmenu-animation-speed) ease; }
+.pmenu-nav[data-anim="fade"] .pmenu-item.is-open > .pmenu-dropdown { opacity: 1; }
+.pmenu-nav[data-anim="slide"] .pmenu-dropdown { opacity: 0; transform: translateY(-6px); transition: opacity var(--pmenu-animation-speed) ease, transform var(--pmenu-animation-speed) ease; }
+.pmenu-nav[data-anim="slide"] .pmenu-item.is-open > .pmenu-dropdown { opacity: 1; transform: translateY(0); }
+.pmenu-nav[data-anim="grow"] .pmenu-dropdown { opacity: 0; transform: scaleY(0.96); transform-origin: top center; transition: opacity var(--pmenu-animation-speed) ease, transform var(--pmenu-animation-speed) ease; }
+.pmenu-nav[data-anim="grow"] .pmenu-item.is-open > .pmenu-dropdown { opacity: 1; transform: scaleY(1); }
+.pmenu-nav[data-anim="fade"] .pmenu-dropdown,
+.pmenu-nav[data-anim="slide"] .pmenu-dropdown,
+.pmenu-nav[data-anim="grow"] .pmenu-dropdown { display: block; visibility: hidden; pointer-events: none; }
+.pmenu-nav[data-anim="fade"] .pmenu-item.is-open > .pmenu-dropdown,
+.pmenu-nav[data-anim="slide"] .pmenu-item.is-open > .pmenu-dropdown,
+.pmenu-nav[data-anim="grow"] .pmenu-item.is-open > .pmenu-dropdown { visibility: visible; pointer-events: auto; }
+
+/* ══════════ MEGA PANEL — Tight gray bg, white card columns (matches Hyva p-6 gap-4) ══════════ */
+.pmenu-grid {
+    display: grid; gap: 12px; padding: 12px;
+}
+.pmenu-grid.cols-1 { grid-template-columns: 1fr; }
+.pmenu-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.pmenu-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.pmenu-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.pmenu-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+.pmenu-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+
+/* Each column = white card (matches Hyva bg-white rounded-lg p-4 border border-gray-100) */
+.pmenu-column {
+    min-width: 0;
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #f3f4f6;
+}
+
+/* ── Column header: teal left-border accent (matches Hyva .panth-col-header) ── */
+.pmenu-col-header {
+    margin: 0 0 12px; padding: 0 0 0 12px;
+    border-bottom: none;
+    border-left: 3px solid var(--color-primary, #0D9488);
+    font-size: 14px; font-weight: 700;
+    color: var(--color-primary, #0D9488); line-height: 1.4;
+    text-transform: none; letter-spacing: 0;
+}
+.pmenu-col-header a { color: inherit; }
+.pmenu-col-header a:hover { opacity: 0.8; }
+.pmenu-col-image { margin-bottom: 8px; }
+.pmenu-col-image img { max-width: 100%; height: auto; border-radius: 6px; }
+
+/* ── Sub list (Level 2 items in mega panel) ── */
+.pmenu-sub-list { list-style: none; margin: 0; padding: 0; }
+.pmenu-sub-item { list-style: none; }
+
+/* Sub-item flex row (created by JS for items with children) */
+.pmenu-sub-row {
+    display: flex; align-items: center;
+}
+.pmenu-sub-row .pmenu-sub-link {
+    flex: 1; min-width: 0;
+}
+
+.pmenu-sub-link {
+    display: block;
+    padding: 6px 8px; border-radius: 6px;
+    font-size: 14px; color: #374151;
+    transition: color 0.15s, background 0.15s;
+    line-height: 1.5;
+}
+.pmenu-sub-link:hover { color: var(--color-primary, #0D9488); background: #f3f4f6; }
+
+/* Sub-item chevron button (matches Hyva's inline toggle) */
+.pmenu-sub-chevron {
+    flex-shrink: 0;
+    background: none; border: none;
+    padding: 4px; cursor: pointer;
+    color: #9ca3af; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, transform 0.2s;
+}
+.pmenu-sub-chevron:hover { color: #374151; }
+.pmenu-sub-chevron.is-rotated { transform: rotate(180deg); }
+.pmenu-sub-chevron svg { width: 16px; height: 16px; }
+
+.pmenu-sub-item.has-children { position: relative; }
+.pmenu-sub-item.is-open > .pmenu-deep-children { display: block !important; }
+
+/* ── Deep items (Level 3+) — indented under parent, matching Hyva (ml-4 = 16px) ── */
+.pmenu-deep-list {
+    list-style: none; margin: 2px 0 0; padding: 0 0 0 12px;
+    border-left: none;
+}
+.pmenu-deep-row { display: flex; align-items: center; }
+.pmenu-deep-link {
+    flex: 1; display: block;
+    padding: 5px 8px; border-radius: 6px;
+    font-size: 14px; color: #4b5563;
+    transition: color 0.15s, background 0.15s; line-height: 1.5;
+}
+.pmenu-deep-link:hover { color: var(--color-primary, #0D9488); background: #f3f4f6; }
+
+/* Deep toggle chevron (matches Hyva's SVG button) */
+.pmenu-deep-toggle {
+    flex-shrink: 0;
+    background: none; border: none;
+    padding: 4px; cursor: pointer;
+    color: #9ca3af; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, transform 0.2s;
+}
+.pmenu-deep-toggle:hover { color: #374151; }
+.pmenu-deep-toggle.is-rotated { transform: rotate(180deg); }
+.pmenu-deep-toggle svg { width: 14px; height: 14px; }
+
+.pmenu-deep-children { overflow: hidden; }
+.pmenu-deep-item.is-open > .pmenu-deep-children { display: block !important; }
+
+/* ── Simple dropdown ── */
+.pmenu-simple-list { list-style: none; margin: 0; padding: 8px 0; }
+.pmenu-simple-item { list-style: none; }
+.pmenu-simple-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 20px; font-size: 14px; color: #374151;
+    white-space: nowrap; transition: color 0.15s, background 0.15s;
+}
+.pmenu-simple-link:hover { color: var(--color-primary, #0D9488); background: #f0fdfa; }
+
+/* ── CMS blocks & custom content ── */
+.pmenu-custom-content { padding: 4px 0; font-size: 13px; line-height: 1.5; }
+.pmenu-cms-block { padding: 8px 0; font-size: 13px; line-height: 1.5; }
+.pmenu-cms-block > div, .pmenu-cms-block .widget {
+    background: #f9fafb; border-radius: 8px; padding: 12px;
+}
+.pmenu-cms-block img { max-width: 100%; height: auto; border-radius: 6px; }
+.pmenu-cms-block h3, .pmenu-cms-block h4 { font-size: 14px; font-weight: 700; margin: 0 0 4px; color: #1f2937; }
+.pmenu-cms-block p { font-size: 13px; margin: 0 0 6px; color: #6b7280; }
+.pmenu-cms-block a, .pmenu-cms-block a:visited { color: var(--color-primary, #0D9488); font-size: 13px; }
+.pmenu-cms-block a:hover { text-decoration: underline; }
+.pmenu-mega-footer { border-top: 1px solid #e5e7eb; padding: 12px 24px; }
+.pmenu-mega-footer .widget, .pmenu-mega-footer > div { background: #f9fafb; border-radius: 8px; padding: 12px; }
+.pmenu-dropdown-image { padding: 0 24px 16px; }
+.pmenu-dropdown-image img { max-width: 100%; height: auto; border-radius: 8px; }
+
+/* ══════════ MOBILE HAMBURGER ══════════ */
+.pmenu-hamburger-btn {
+    display: none; align-items: center; justify-content: center;
+    background: none; border: none; padding: 8px;
+    cursor: pointer; color: #1f2937;
+    min-width: 44px; min-height: 44px;
+}
+.pmenu-hamburger-icon { display: flex; flex-direction: column; gap: 5px; width: 22px; }
+.pmenu-hamburger-icon span { display: block; height: 2px; background: currentColor; border-radius: 1px; transition: transform 0.3s, opacity 0.3s; }
+.pmenu-hamburger-btn.is-active .pmenu-hamburger-icon span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.pmenu-hamburger-btn.is-active .pmenu-hamburger-icon span:nth-child(2) { opacity: 0; }
+.pmenu-hamburger-btn.is-active .pmenu-hamburger-icon span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* ══════════ MOBILE OVERLAY ══════════ */
+.pmenu-mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; }
+.pmenu-mobile-overlay.is-visible { display: block; }
+
+/* ══════════ MOBILE DRAWER (matches Hyva exactly) ══════════ */
+.pmenu-mobile-drawer {
+    position: fixed; top: 0; bottom: 0;
+    width: 85vw; max-width: 380px;
+    background: #fff; z-index: 400;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+}
+.pmenu-mobile-drawer--left { left: 0; transform: translateX(-100%); }
+.pmenu-mobile-drawer--right { right: 0; transform: translateX(100%); }
+.pmenu-mobile-drawer.is-open { transform: translateX(0); }
+
+/* ── Drawer header (matches Hyva: "Menu" + X, white bg, border) ── */
+.pmenu-mobile-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky; top: 0; background: #fff; z-index: 10;
+}
+.pmenu-mobile-header-title { font-size: 18px; font-weight: 800; color: #1f2937; }
+.pmenu-mobile-close {
+    background: none; border: none; cursor: pointer;
+    color: #6b7280; padding: 4px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; line-height: 1;
+}
+.pmenu-mobile-close:hover { color: #1f2937; }
+
+/* ── Mobile list (matches Hyva: clean, border-bottom on each item) ── */
+.pmenu-mobile-list { list-style: none; margin: 0; padding: 0; }
+.pmenu-mobile-item { list-style: none; border-bottom: 1px solid #f3f4f6; }
+.pmenu-mobile-level-0 > .pmenu-mobile-item { border-bottom-color: #e5e7eb; }
+.pmenu-mobile-row { display: flex; align-items: center; }
+
+/* ── Mobile links ── */
+.pmenu-mobile-link {
+    flex: 1; display: flex; align-items: center; gap: 6px;
+    padding: 14px 20px;
+    color: #1f2937; font-size: 15px;
+    overflow: hidden; transition: color 0.15s;
+}
+.pmenu-mobile-link:hover { color: var(--color-primary, #0D9488); }
+
+/* Level 0: bold, 16px (matches Hyva) */
+.pmenu-mobile-level-0 > .pmenu-mobile-item > .pmenu-mobile-row > .pmenu-mobile-link {
+    font-size: 16px; font-weight: 700; color: #111827; padding: 16px 20px;
+}
+/* Level 1: 15px, medium */
+.pmenu-mobile-level-1 .pmenu-mobile-link {
+    padding-left: 32px; font-size: 15px; font-weight: 500; color: #374151;
+}
+/* Level 2: 14px, normal */
+.pmenu-mobile-level-2 .pmenu-mobile-link {
+    padding-left: 48px; font-size: 14px; font-weight: 400; color: #4b5563;
+}
+/* Level 3: 14px, normal, deeper indent */
+.pmenu-mobile-level-3 .pmenu-mobile-link {
+    padding-left: 64px; font-size: 14px; font-weight: 400; color: #6b7280;
+}
+/* Level 4+: */
+.pmenu-mobile-level-4 .pmenu-mobile-link {
+    padding-left: 80px; font-size: 13px; color: #9ca3af;
+}
+
+.pmenu-mobile-title-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Mobile toggle (SVG chevron, no left border — matches Hyva) ── */
+.pmenu-mobile-toggle-sub {
+    background: none; border: none;
+    padding: 0 16px; cursor: pointer;
+    color: #9ca3af;
+    min-width: 48px; min-height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: color 0.15s;
+}
+.pmenu-mobile-toggle-sub:hover { color: #374151; }
+.pmenu-mobile-children { overflow: hidden; }
+
+/* Active/open state */
+.pmenu-mobile-item.is-open > .pmenu-mobile-row > .pmenu-mobile-toggle-sub { color: #374151; }
+
+.pmenu-mobile-image { padding: 4px 20px 8px; }
+.pmenu-mobile-image img { max-width: 100%; height: auto; border-radius: 6px; }
+
+/* ── Mobile CMS blocks ── */
+.pmenu-mobile-item .pmenu-cms-block { padding: 4px 20px 8px; }
+.pmenu-mobile-item .pmenu-cms-block > div, .pmenu-mobile-item .pmenu-cms-block .widget { padding: 10px; font-size: 13px; }
+.pmenu-mobile-item .pmenu-custom-content { padding: 2px 20px 8px; font-size: 13px; }
+
+/* ══════════════ RESPONSIVE ══════════════ */
+@media (max-width: <?= (int) $breakpoint ?>px) {
+    .pmenu-nav {
+        display: none !important;
+    }
+    .pmenu-hamburger-btn {
+        display: flex !important;
+    }
+}
+@media (min-width: <?= (int) $breakpoint + 1 ?>px) {
+    .pmenu-hamburger-btn {
+        display: none !important;
+    }
+    .pmenu-mobile-overlay,
+    .pmenu-mobile-drawer {
+        display: none !important;
+    }
+}
+
+/* ══════════════ Z-INDEX ESCALATION ══════════════ */
+/* Ensure Luma header containers do not trap dropdown stacking context.
+   Page content (carousels, banners, etc.) needs to sit below the open dropdown. */
+.page-header { position: relative; z-index: 9998; }
+.page-header .header.content { position: relative; z-index: 9998; }
+.panel.header { position: relative; z-index: 9997; }
+
+/* ══════════════ HEADER FLEX LAYOUT FIX ══════════════ */
+@media (min-width: <?= (int) $breakpoint + 1 ?>px) {
+    .header.content {
+        display: flex !important;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+    .header.content > .logo {
+        order: 1;
+        flex-shrink: 0;
+        float: none !important;
+        margin: 0 !important;
+        padding: 8px 0;
+    }
+    .header.content > .pmenu-scroll-wrap {
+        order: 2;
+        flex: 1 1 0%;
+        min-width: 0;
+        margin: 0 12px;
+    }
+    .header.content > .panth-header-icons {
+        order: 3;
+        flex-shrink: 0;
+    }
+    .header.content > .panth-search-bar {
+        order: 4;
+    }
+    /* Hide Luma's default elements that Panth replaces */
+    .header.content > .action.nav-toggle,
+    .header.content > .block-search,
+    .header.content > .minicart-wrapper,
+    .header.content > .compare.wrapper {
+        display: none !important;
+    }
+}
+
+/* ══════════════ HORIZONTAL SCROLL FOR OVERFLOW ══════════════ */
+.pmenu-scroll-wrap {
+    position: relative;
+    z-index: 9999;
+    min-width: 0 !important;
+    max-width: 100%;
+    /* clip-path clips left/right/top to element boundary, allows dropdowns to extend 200vh downward */
+    clip-path: inset(0 0 -200vh 0);
+}
+.pmenu-scroll-wrap .pmenu-items {
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+    transition: transform 0.3s ease;
+}
+.pmenu-scroll-wrap .pmenu-items > .pmenu-item { flex-shrink: 0; }
+.pmenu-scroll-wrap .pmenu-items .pmenu-dropdown { white-space: normal; }
+.pmenu-scroll-btn {
+    position: absolute; top: 24px; transform: translateY(-50%); z-index: 150;
+    width: 28px !important; height: 28px !important;
+    min-width: 28px !important; min-height: 28px !important;
+    border-radius: 50% !important;
+    background: #fff !important; border: 1px solid #d1d5db !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    padding: 0 !important; margin: 0 !important;
+    display: flex !important; align-items: center; justify-content: center;
+    cursor: pointer; color: #374151 !important; transition: all 0.2s;
+    opacity: 0; pointer-events: none;
+    line-height: 1 !important; font-size: 0 !important;
+}
+.pmenu-scroll-btn:hover { background: #f3f4f6 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important; color: #111827 !important; }
+.pmenu-scroll-btn.visible { opacity: 1; pointer-events: auto; }
+.pmenu-scroll-btn.scroll-left { left: 0; }
+.pmenu-scroll-btn.scroll-right { right: 0; }
+.pmenu-scroll-fade {
+    position: absolute; top: 0; height: 60px; width: 40px;
+    pointer-events: none; z-index: 140; opacity: 0; transition: opacity 0.2s;
+}
+.pmenu-scroll-fade.fade-left { left: 0; background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%); }
+.pmenu-scroll-fade.fade-right { right: 0; background: linear-gradient(to left, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%); }
+.pmenu-scroll-fade.visible { opacity: 1; }
+
+<?php if ($customCss): ?>
+/* Admin global custom CSS */
+<?= /* @noEscape */ $customCss ?>
+<?php endif; ?>
+
+<?php if ($menuCustomCss): ?>
+/* Per-menu custom CSS */
+<?= /* @noEscape */ $menuCustomCss ?>
+<?php endif; ?>
+</style>
+
+<!-- ══════════════ DESKTOP NAVIGATION ══════════════ -->
+<div class="pmenu-scroll-wrap" id="pmenuScrollWrap" style="min-width:0">
+<button type="button" class="pmenu-scroll-btn scroll-left" id="pmenuScrollLeft" aria-label="<?= $escaper->escapeHtmlAttr(__('Scroll menu left')) ?>">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<div class="pmenu-scroll-fade fade-left" id="pmenuFadeLeft"></div>
+<nav class="pmenu-nav pmenu-hover-<?= $escaper->escapeHtmlAttr($hoverEffect) ?> <?= $escaper->escapeHtmlAttr($menuCssClass) ?>"
+     id="<?= $escaper->escapeHtmlAttr($menuId) ?>"
+     role="navigation"
+     aria-label="<?= $escaper->escapeHtmlAttr(__('Main Menu')) ?>"
+     data-anim="<?= $escaper->escapeHtmlAttr($animationType) ?>"
+     <?php /* data-mage-init removed — using vanilla JS instead of jQuery widget */ ?>
+     <?php if ($containerStyle): ?>style="<?= $escaper->escapeHtmlAttr($containerStyle) ?>"<?php endif; ?>>
+
+    <div class="pmenu-bar">
+        <ul class="pmenu-items" role="menubar"
+            <?php if ($itemGapStyle): ?>style="<?= $escaper->escapeHtmlAttr($itemGapStyle) ?>"<?php endif; ?>>
+
+            <?php foreach ($desktopItems as $index => $item):
+                $hasChildren = !empty($item['children']);
+                $isMega      = $hasChildren && $hasGrandchildren($item['children']);
+                $itemId      = 'pmenu_l0_' . $index;
+                $itemCss     = !empty($item['css_class']) ? ' ' . $escaper->escapeHtmlAttr($item['css_class']) : '';
+                $itemStyle   = $getItemStyle($item);
+                // Per-item hover effect override
+                $itemHoverClass = !empty($item['hover_effect']) ? 'pmenu-hover-' . $escaper->escapeHtmlAttr($item['hover_effect']) : '';
+            ?>
+            <li class="pmenu-item<?= $isMega ? ' is-mega' : '' /* @noEscape */ ?><?= $hasChildren ? ' has-children' : '' /* @noEscape */ ?><?= /* @noEscape */ $itemCss ?>"
+                role="none"
+                data-item-id="<?= $escaper->escapeHtmlAttr($itemId) ?>">
+
+                <a href="<?= $escaper->escapeUrl($item['url']) ?>"
+                   class="pmenu-link<?= $itemHoverClass ? ' ' . $itemHoverClass : '' /* @noEscape */ ?>"
+                   role="menuitem"
+                   <?php if ($itemStyle): ?>style="<?= $escaper->escapeHtmlAttr($itemStyle) ?>"<?php endif; ?>
+                   <?php if (!empty($item['target']) && $item['target'] !== '_self'): ?>target="<?= $escaper->escapeHtmlAttr($item['target']) ?>"<?php endif; ?>
+                   <?php if (!empty($item['rel'])): ?>rel="<?= $escaper->escapeHtmlAttr($item['rel']) ?>"<?php endif; ?>
+                   <?php if ($hasChildren): ?>aria-haspopup="true" aria-expanded="false"<?php endif; ?>>
+                    <?php if (!empty($item['icon'])): ?>
+                        <?= /* @noEscape */ $renderer->renderIcon($item['icon'], $item['icon_library'] ?? 'fontawesome') ?>
+                    <?php endif; ?>
+                    <?= $escaper->escapeHtml($item['title']) ?>
+                    <?php if ($showCount && !empty($item['product_count'])): ?>
+                        <span class="pmenu-count">(<?= $escaper->escapeHtml((string) $item['product_count']) ?>)</span>
+                    <?php endif; ?>
+                    <?php if (!empty($item['badge_text'])): ?>
+                        <span class="pmenu-badge"><?= $escaper->escapeHtml($item['badge_text']) ?></span>
+                    <?php endif; ?>
+                    <?php if ($hasChildren): ?>
+                        <span class="pmenu-arrow-down"></span>
+                    <?php endif; ?>
+                </a>
+
+                <?php if (!empty($item['custom_content'])): ?>
+                    <div class="pmenu-custom-content"><?= /* @noEscape */ $item['custom_content'] ?></div>
+                <?php endif; ?>
+
+                <?php if ($hasChildren): ?>
+                    <div class="pmenu-dropdown <?= $isMega ? 'pmenu-mega' : 'pmenu-simple' /* @noEscape */ ?>">
+                        <?php if ($isMega): ?>
+                            <?php $renderMegaPanel($item['children'], $itemId); ?>
+                            <?php if ($enableBlocks && !empty($item['cms_block'])): ?>
+                                <div class="pmenu-mega-footer">
+                                    <?= /* @noEscape */ $renderer->renderCmsBlock($item['cms_block']) ?>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <?php $renderSimpleDropdown($item['children']); ?>
+                        <?php endif; ?>
+
+                        <?php if (!empty($item['image'])): ?>
+                            <div class="pmenu-dropdown-image">
+                                <?= /* @noEscape */ $renderer->renderImage($item, 'large') ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+</nav>
+<div class="pmenu-scroll-fade fade-right" id="pmenuFadeRight"></div>
+<button type="button" class="pmenu-scroll-btn scroll-right" id="pmenuScrollRight" aria-label="<?= $escaper->escapeHtmlAttr(__('Scroll menu right')) ?>">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
+</div><?php // Close pmenu-scroll-wrap ?>
+
+<script>
+(function() {
+    function initPmenuScroll() {
+        var wrap = document.getElementById('pmenuScrollWrap');
+        var ul = wrap ? wrap.querySelector('.pmenu-items') : null;
+        var btnL = document.getElementById('pmenuScrollLeft');
+        var btnR = document.getElementById('pmenuScrollRight');
+        var fadeL = document.getElementById('pmenuFadeLeft');
+        var fadeR = document.getElementById('pmenuFadeRight');
+        if (!ul || !btnL || !btnR) return;
+
+        var offset = 0, animFrame = null, targetOff = 0;
+        function getVisibleWidth() { return wrap.clientWidth; }
+        function getMaxOffset() { return Math.max(0, ul.scrollWidth - getVisibleWidth()); }
+        function update() {
+            var maxOff = getMaxOffset();
+            var hasOverflow = maxOff > 2;
+            btnL.classList.toggle('visible', hasOverflow && offset > 2);
+            btnR.classList.toggle('visible', hasOverflow && offset < maxOff - 2);
+            if (fadeL) fadeL.classList.toggle('visible', hasOverflow && offset > 2);
+            if (fadeR) fadeR.classList.toggle('visible', hasOverflow && offset < maxOff - 2);
+        }
+        function smoothTo() {
+            var diff = targetOff - offset;
+            if (Math.abs(diff) < 0.5) { offset = targetOff; animFrame = null; }
+            else { offset += diff * 0.2; animFrame = requestAnimationFrame(smoothTo); }
+            ul.style.transform = offset > 0 ? 'translateX(-' + offset + 'px)' : '';
+            update();
+        }
+        btnL.addEventListener('click', function() {
+            offset = Math.max(0, offset - 200); targetOff = offset;
+            ul.style.transform = 'translateX(-' + offset + 'px)'; update();
+        });
+        btnR.addEventListener('click', function() {
+            offset = Math.min(getMaxOffset(), offset + 200); targetOff = offset;
+            ul.style.transform = 'translateX(-' + offset + 'px)'; update();
+        });
+        wrap.addEventListener('wheel', function(e) {
+            var maxOff = getMaxOffset();
+            if (maxOff <= 2) return;
+            e.preventDefault();
+            targetOff = Math.max(0, Math.min(maxOff, (animFrame ? targetOff : offset) + (e.deltaY !== 0 ? e.deltaY : e.deltaX) * 0.5));
+            if (!animFrame) animFrame = requestAnimationFrame(smoothTo);
+        }, { passive: false });
+        window.addEventListener('resize', function() {
+            var m = getMaxOffset();
+            if (offset > m) { offset = m; targetOff = m; ul.style.transform = offset > 0 ? 'translateX(-' + offset + 'px)' : ''; }
+            update();
+        });
+        update();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPmenuScroll);
+    } else {
+        initPmenuScroll();
+    }
+})();
+</script>
+
+<!-- ══════════════ MOBILE: HAMBURGER BUTTON ══════════════ -->
+<button class="pmenu-hamburger-btn"
+        id="<?= $escaper->escapeHtmlAttr($menuId) ?>-mobile-toggle"
+        aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle Navigation')) ?>"
+        aria-expanded="false"
+        aria-controls="<?= $escaper->escapeHtmlAttr($menuId) ?>-mobile-drawer"
+        <?php /* data-mage-init removed — using vanilla JS */ ?>>
+    <span class="pmenu-hamburger-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+    </span>
+</button>
+
+<!-- ══════════════ MOBILE: OVERLAY ══════════════ -->
+<div class="pmenu-mobile-overlay"
+     id="<?= $escaper->escapeHtmlAttr($menuId) ?>-mobile-overlay"></div>
+
+<!-- ══════════════ MOBILE: OFF-CANVAS DRAWER ══════════════ -->
+<div class="pmenu-mobile-drawer pmenu-mobile-drawer--<?= $escaper->escapeHtmlAttr($mobilePosition) ?>"
+     id="<?= $escaper->escapeHtmlAttr($menuId) ?>-mobile-drawer"
+     role="dialog"
+     aria-label="<?= $escaper->escapeHtmlAttr(__('Navigation Menu')) ?>"
+     aria-modal="true">
+
+    <div class="pmenu-mobile-header">
+        <span class="pmenu-mobile-header-title"><?= $escaper->escapeHtml(__('Menu')) ?></span>
+        <button class="pmenu-mobile-close"
+                aria-label="<?= $escaper->escapeHtmlAttr(__('Close Menu')) ?>">&times;</button>
+    </div>
+
+    <?php $renderMobileItems($mobileItems); ?>
+</div>
+
+<!-- Panth MegaMenu — Vanilla JS (matches Hyva Alpine.js behavior) -->
+<script>
+function initPanthMegaMenu() {
+    'use strict';
+    // Prevent double init
+    if (window._panthMenuInitialized) return;
+    window._panthMenuInitialized = true;
+
+    // ═══════════════════════════════════════════════
+    // Replace all CSS triangle arrows with SVG chevrons (matches Hyva)
+    // ═══════════════════════════════════════════════
+    var svgChevron = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>';
+    document.querySelectorAll('.pmenu-link .pmenu-arrow-down').forEach(function(arrow) {
+        arrow.innerHTML = svgChevron;
+        arrow.style.cssText = 'display:inline-flex;align-items:center;width:16px;height:16px;opacity:0.5;border:none;transition:transform 0.2s;';
+    });
+    document.querySelectorAll('.pmenu-mobile-toggle-sub .pmenu-arrow-down').forEach(function(arrow) {
+        arrow.innerHTML = svgChevron;
+        arrow.style.cssText = 'display:inline-flex;align-items:center;width:18px;height:18px;border:none;transition:transform 0.2s;';
+    });
+
+    // ═══════════════════════════════════════════════
+    // DESKTOP: Hover intent dropdowns
+    // ═══════════════════════════════════════════════
+    var timers = {};
+    var DELAY_OPEN = <?= (int)$hoverDelay ?: 150 ?>;
+    var DELAY_CLOSE = 300;
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.pmenu-item.has-children').forEach(function(el) {
+            el.classList.remove('is-open');
+            var link = el.querySelector(':scope > .pmenu-link');
+            if (link) link.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    document.querySelectorAll('.pmenu-item.has-children').forEach(function(item) {
+        var itemId = item.getAttribute('data-item-id') || Math.random();
+
+        // Hover open
+        item.addEventListener('mouseenter', function() {
+            if (timers[itemId]) clearTimeout(timers[itemId]);
+            timers[itemId] = setTimeout(function() {
+                closeAllDropdowns();
+                item.classList.add('is-open');
+                var link = item.querySelector(':scope > .pmenu-link');
+                if (link) link.setAttribute('aria-expanded', 'true');
+            }, DELAY_OPEN);
+        });
+
+        // Hover close
+        item.addEventListener('mouseleave', function() {
+            if (timers[itemId]) clearTimeout(timers[itemId]);
+            timers[itemId] = setTimeout(function() {
+                item.classList.remove('is-open');
+                var link = item.querySelector(':scope > .pmenu-link');
+                if (link) link.setAttribute('aria-expanded', 'false');
+            }, DELAY_CLOSE);
+        });
+
+        // Click on link/arrow toggles
+        var link = item.querySelector(':scope > .pmenu-link');
+        if (link) {
+            link.addEventListener('click', function(e) {
+                var arrow = e.target.closest('.pmenu-arrow-down');
+                if (arrow || (window.innerWidth < 1024 && item.classList.contains('has-children'))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var isOpen = item.classList.contains('is-open');
+                    closeAllDropdowns();
+                    if (!isOpen) {
+                        item.classList.add('is-open');
+                        link.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            });
+        }
+    });
+
+    // Click outside closes desktop dropdowns
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.pmenu-nav')) {
+            closeAllDropdowns();
+        }
+    });
+
+    // Escape closes desktop dropdowns
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllDropdowns();
+            closeMobileMenu();
+        }
+    });
+
+    // ═══════════════════════════════════════════════
+    // MOBILE: Hamburger + Drawer + Sub-menu toggles
+    // ═══════════════════════════════════════════════
+    var hamburger = document.querySelector('.pmenu-hamburger-btn');
+    var drawer = document.querySelector('.pmenu-mobile-drawer');
+    var closeBtn = document.querySelector('.pmenu-mobile-close');
+
+    // Create overlay dynamically
+    var overlay = document.createElement('div');
+    overlay.className = 'pmenu-mobile-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:399;display:none;';
+    document.body.appendChild(overlay);
+
+    function openMobileMenu() {
+        if (!drawer) return;
+        drawer.classList.add('is-open');
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMobileMenu() {
+        if (!drawer) return;
+        drawer.classList.remove('is-open');
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+    }
+
+    if (hamburger) hamburger.addEventListener('click', openMobileMenu);
+    if (closeBtn) closeBtn.addEventListener('click', closeMobileMenu);
+    overlay.addEventListener('click', closeMobileMenu);
+
+    // ═══════════════════════════════════════════════
+    // DESKTOP: Deep level (Level 3+) toggle buttons
+    // Replace CSS triangle with SVG chevron, make it a proper flex row
+    // ═══════════════════════════════════════════════
+    document.querySelectorAll('.pmenu-deep-toggle').forEach(function(toggle) {
+        // Replace inner arrow-down span with SVG
+        toggle.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>';
+
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var deepItem = toggle.closest('.pmenu-deep-item');
+            if (!deepItem) return;
+            var children = deepItem.querySelector('.pmenu-deep-children');
+            if (!children) return;
+
+            var isOpen = children.style.display !== 'none';
+            children.style.display = isOpen ? 'none' : 'block';
+            deepItem.classList.toggle('is-open', !isOpen);
+            toggle.classList.toggle('is-rotated', !isOpen);
+        });
+    });
+
+    // ═══════════════════════════════════════════════
+    // DESKTOP: Sub-item toggles (Level 2 items with deep children)
+    // Wraps link + chevron in a flex row — matches Hyva's Alpine accordion
+    // ═══════════════════════════════════════════════
+    document.querySelectorAll('.pmenu-sub-item.has-children').forEach(function(subItem) {
+        var deepChildren = subItem.querySelector('.pmenu-deep-children');
+        if (!deepChildren) return;
+
+        var subLink = subItem.querySelector('.pmenu-sub-link');
+        if (!subLink) return;
+
+        // Create a flex wrapper (like Hyva's "flex items-center" div)
+        var wrapper = document.createElement('div');
+        wrapper.className = 'pmenu-sub-row';
+        subLink.parentNode.insertBefore(wrapper, subLink);
+        wrapper.appendChild(subLink);
+
+        // Create chevron button
+        var chevron = document.createElement('button');
+        chevron.className = 'pmenu-sub-chevron';
+        chevron.setAttribute('aria-label', 'Toggle submenu');
+        chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>';
+        wrapper.appendChild(chevron);
+
+        chevron.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var isOpen = deepChildren.style.display !== 'none';
+            deepChildren.style.display = isOpen ? 'none' : 'block';
+            subItem.classList.toggle('is-open', !isOpen);
+            chevron.classList.toggle('is-rotated', !isOpen);
+        });
+    });
+
+    // ═══════════════════════════════════════════════
+    // MOBILE: Sub-menu toggles (accordion)
+    // ═══════════════════════════════════════════════
+    document.querySelectorAll('.pmenu-mobile-toggle-sub').forEach(function(toggle) {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var item = toggle.closest('.pmenu-mobile-item');
+            if (!item) return;
+            var children = item.querySelector('.pmenu-mobile-children');
+            if (!children) return;
+
+            var isOpen = children.style.display !== 'none';
+            children.style.display = isOpen ? 'none' : 'block';
+            item.classList.toggle('is-open', !isOpen);
+
+            var arrow = toggle.querySelector('.pmenu-arrow-down');
+            if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+            toggle.setAttribute('aria-expanded', !isOpen);
+        });
+    });
+
+    // Active page highlighting
+    var path = window.location.pathname;
+    document.querySelectorAll('.pmenu-link[href], .pmenu-mobile-drawer a[href]').forEach(function(link) {
+        try {
+            var linkPath = new URL(link.href).pathname;
+            if (linkPath === path) {
+                link.classList.add('pmenu-active');
+                link.style.color = 'var(--pmenu-active-text, #0D9488)';
+                link.style.fontWeight = '700';
+            }
+        } catch(e) {}
+    });
+
+    console.log('[PanthMegaMenu] Initialized: ' +
+        document.querySelectorAll('.pmenu-item.has-children').length + ' desktop, ' +
+        document.querySelectorAll('.pmenu-mobile-toggle-sub').length + ' mobile toggles');
+}
+
+// Initialize on multiple events to ensure it runs after all rendering
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPanthMegaMenu);
+} else {
+    initPanthMegaMenu();
+}
+// Also try on window load as fallback
+window.addEventListener('load', initPanthMegaMenu);
+</script>
+
+<!-- Sticky nav styles -->
+<style>
+.pmenu-sticky {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    animation: pmenuSlideDown 0.3s ease;
+}
+@keyframes pmenuSlideDown {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(0); }
+}
+
+/* ── Mega footer (CMS block at bottom of mega panel) ── */
+.pmenu-mega-footer {
+    padding: 12px 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* ── Dropdown image ── */
+.pmenu-dropdown-image {
+    padding: 12px 24px;
+    text-align: center;
+}
+.pmenu-dropdown-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+</style>

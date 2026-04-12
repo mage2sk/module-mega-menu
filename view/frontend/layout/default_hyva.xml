@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Hyva-specific: Remove the Luma menu block added in default.xml.
+ * The Hyva menu is loaded by the theme-level layout override at:
+ * app/design/frontend/Panth/Infotech/Panth_MegaMenu/layout/default.xml
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Remove Luma menu — Hyva uses its own Alpine.js menu via theme layout -->
+        <referenceBlock name="megamenu.main" remove="true"/>
+    </body>
+</page>

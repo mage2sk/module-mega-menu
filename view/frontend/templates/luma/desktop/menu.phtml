@@ -1,0 +1,144 @@
+<?php
+/**
+ * Panth MegaMenu - Desktop Menu Template for Luma/Magento Themes
+ * Uses same BEM structure as Hyva for consistency
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel
+ */
+
+// Get menu data
+$menuTree = $block->getCurrentMenuTree();
+$menu = $block->getCurrentMenu();
+$menuViewModel = $block->getData('view_model') ?: $block->getViewModel();
+
+// Return early if no menu items
+if (empty($menuTree)) {
+    return;
+}
+
+// Get custom CSS from menu settings
+$customCss = $menu ? $menu->getCustomCss() : '';
+$menuCssClass = $menu ? $menu->getCssClass() : '';
+?>
+
+<!-- Panth MegaMenu - Desktop (Luma Theme) -->
+<nav class="panth-mega-menu-desktop" aria-label="Main Navigation" id="panth-megamenu">
+    <ul class="panth-mega-menu-list" role="menubar">
+        <?php foreach ($menuTree as $index => $item): ?>
+            <?php
+            $itemIsActive = is_array($item) ? ($item['is_active'] ?? true) : $item->getIsActive();
+            if (!$itemIsActive): continue; endif;
+            ?>
+
+            <?= /* @noEscape */ $block->getLayout()
+                ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                ->setTemplate('Panth_MegaMenu::luma/desktop/item.phtml')
+                ->setData('item', $item)
+                ->setData('level', 0)
+                ->setData('index', $index)
+                ->setData('menu_view_model', $menuViewModel)
+                ->toHtml() ?>
+
+        <?php endforeach; ?>
+    </ul>
+</nav>
+
+<!-- Custom CSS from menu settings -->
+<?php if ($customCss): ?>
+<style>
+<?= /* @noEscape */ $customCss ?>
+</style>
+<?php endif; ?>
+
+<!-- jQuery-based Menu Interaction (for Luma themes) -->
+<script type="text/javascript">
+require(['jquery', 'jquery/ui'], function($) {
+    'use strict';
+
+    $(document).ready(function() {
+        var menu = $('#panth-megamenu');
+        var openMenus = [];
+
+        // Desktop hover behavior
+        menu.find('.panth-mega-menu__item--level-0').hover(
+            function() {
+                var item = $(this);
+                var itemId = item.data('item-id');
+
+                // Close other menus at same level
+                menu.find('.panth-mega-menu__item--level-0')
+                    .not(this)
+                    .find('.panth-mega-menu__dropdown')
+                    .removeClass('is-open')
+                    .hide();
+
+                // Open this menu
+                item.find('> .panth-mega-menu__dropdown').addClass('is-open').show();
+                item.addClass('panth-mega-menu__item--open');
+            },
+            function() {
+                var item = $(this);
+
+                // Delay closing to allow moving to submenu
+                setTimeout(function() {
+                    if (!item.is(':hover')) {
+                        item.find('> .panth-mega-menu__dropdown').removeClass('is-open').hide();
+                        item.removeClass('panth-mega-menu__item--open');
+                    }
+                }, 300);
+            }
+        );
+
+        // Click behavior for items with dropdowns (toggle)
+        menu.find('.panth-mega-menu__link[aria-haspopup="true"]').on('click', function(e) {
+            var $this = $(this);
+            var $parent = $this.parent('.panth-mega-menu__item');
+            var $dropdown = $parent.find('> .panth-mega-menu__dropdown');
+
+            if ($dropdown.length > 0) {
+                e.preventDefault();
+
+                if ($dropdown.hasClass('is-open')) {
+                    $dropdown.removeClass('is-open').slideUp(200);
+                    $parent.removeClass('panth-mega-menu__item--open');
+                } else {
+                    // Close siblings
+                    $parent.siblings().find('> .panth-mega-menu__dropdown')
+                        .removeClass('is-open')
+                        .slideUp(200);
+                    $parent.siblings().removeClass('panth-mega-menu__item--open');
+
+                    // Open this one
+                    $dropdown.addClass('is-open').slideDown(200);
+                    $parent.addClass('panth-mega-menu__item--open');
+                }
+            }
+        });
+
+        // Close menus when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#panth-megamenu').length) {
+                menu.find('.panth-mega-menu__dropdown')
+                    .removeClass('is-open')
+                    .hide();
+                menu.find('.panth-mega-menu__item--open')
+                    .removeClass('panth-mega-menu__item--open');
+            }
+        });
+
+        // Active page highlighting
+        var currentPath = window.location.origin + window.location.pathname;
+        menu.find('a[href]').each(function() {
+            if (this.href === currentPath) {
+                $(this).attr('aria-current', 'page')
+                    .css({
+                        'color': '#1979c3',
+                        'font-weight': '700'
+                    });
+            }
+        });
+    });
+});
+</script>
