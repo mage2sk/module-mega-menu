@@ -2,7 +2,7 @@
     "name": "mage2kishan/module-mega-menu",
     "description": "Advanced mega menu for Magento 2 — works on Hyva and Luma. Drag-and-drop tree builder, multi-column dropdowns, image and icon support per item, custom CMS block injection per column, mobile drawer with smooth animations, store-view scoped, FPC-aware caching, role-based access. Modern Tailwind + Alpine UI on Hyva, vanilla JS on Luma.",
     "type": "magento2-module",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "proprietary",
     "keywords": [
         "magento2",
