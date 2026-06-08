@@ -397,7 +397,7 @@ var items = <?= /* @noEscape */ json_encode($itemsData, JSON_HEX_TAG | JSON_HEX_
 
 // Expose items to preview JS (menu-preview.js reads window.menuBuilderData)
 window.menuBuilderData = { items: items };
-// Keep reference in sync — when items array is modified, update menuBuilderData
+// Keep reference in sync - when items array is modified, update menuBuilderData
 var _origPush = Array.prototype.push;
 Object.defineProperty(window, 'menuBuilderData', {
     get: function() { return { items: items }; },
@@ -1659,7 +1659,7 @@ async function saveAndPreview() {
     txt.textContent = '⏳ Opening preview...';
 
     // Step 2: Just open the frontend URL directly (menu is saved, will load from DB)
-    // Skip the token mechanism for now — just open the regular preview page
+    // Skip the token mechanism for now - just open the regular preview page
     var previewUrl = window.location.origin + '/panth_menu/preview/index?menu_id=' + encodeURIComponent(menuId);
     console.log('[Preview] Step 2: Opening preview URL:', previewUrl);
 
@@ -2615,7 +2615,7 @@ async function saveAndContinue() {
 initializeCollapsedState();
 render();
 
-// Preview handler — called by the admin Preview button (panthPreviewMenu)
+// Preview handler - called by the admin Preview button (panthPreviewMenu)
 window.panthPreviewMenu = function() {
     var baseUrl = window.location.origin + '/';
     var ts = Date.now();

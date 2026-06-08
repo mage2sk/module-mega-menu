@@ -1,6 +1,6 @@
 <?php
 /**
- * Menu Preview — defines panthPreviewMenu() and panthFlushAndPreview()
+ * Menu Preview - defines panthPreviewMenu() and panthFlushAndPreview()
  *
  * @var \Magento\Framework\View\Element\Template $block
  */
@@ -30,7 +30,7 @@ $flushUrl = $block->getUrl('panth_menu/menu/flushCache');
             itemsJson = JSON.stringify(window.menuBuilderData.items);
         }
 
-        // Try KO registry (async — fallback)
+        // Try KO registry (async - fallback)
         if (itemsJson === '[]') {
             try {
                 require(['uiRegistry'], function(registry) {
@@ -83,14 +83,14 @@ $flushUrl = $block->getUrl('panth_menu/menu/flushCache');
     }
 
     /**
-     * Preview button — direct preview (works on first click, may cache on repeat)
+     * Preview button - direct preview (works on first click, may cache on repeat)
      */
     window.panthPreviewMenu = function() {
         _collectAndPreview();
     };
 
     /**
-     * Flush cache then preview — use when preview shows stale data
+     * Flush cache then preview - use when preview shows stale data
      */
     window.panthFlushAndPreview = function() {
         var btn = document.querySelector('.preview.action-secondary');

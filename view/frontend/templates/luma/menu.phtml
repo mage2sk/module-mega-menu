@@ -485,14 +485,14 @@ $renderMobileItems = function (array $items, int $level = 0) use (
 };
 ?>
 
-<!-- ══════════════ STYLES — matches Hyva Panth MegaMenu exactly ══════════════ -->
+<!-- ══════════════ STYLES - matches Hyva Panth MegaMenu exactly ══════════════ -->
 <style>
 :root {
     --pmenu-animation-speed: <?= (int) $animationSpeed ?>ms;
     --pmenu-breakpoint: <?= (int) $breakpoint ?>px;
 }
 
-/* ══════════ RESET — kill Luma's global a colors inside our menu ══════════ */
+/* ══════════ RESET - kill Luma's global a colors inside our menu ══════════ */
 .pmenu-nav a, .pmenu-nav a:visited, .pmenu-nav a:active,
 .pmenu-mobile-drawer a, .pmenu-mobile-drawer a:visited, .pmenu-mobile-drawer a:active {
     color: inherit;
@@ -569,7 +569,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
     border-radius: 12px;
     box-shadow: 0 20px 60px -12px rgba(0,0,0,0.15);
     min-width: 220px; margin: 2px 0 0;
-    padding: 0; /* Reset megamenu-all.less padding — grid handles its own padding */
+    padding: 0; /* Reset megamenu-all.less padding - grid handles its own padding */
     overflow: hidden; /* Clip card corners to dropdown border-radius */
 }
 .pmenu-dropdown.pmenu-mega { left: 0; right: 0; width: auto; }
@@ -590,7 +590,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
 .pmenu-nav[data-anim="slide"] .pmenu-item.is-open > .pmenu-dropdown,
 .pmenu-nav[data-anim="grow"] .pmenu-item.is-open > .pmenu-dropdown { visibility: visible; pointer-events: auto; }
 
-/* ══════════ MEGA PANEL — Tight gray bg, white card columns (matches Hyva p-6 gap-4) ══════════ */
+/* ══════════ MEGA PANEL - Tight gray bg, white card columns (matches Hyva p-6 gap-4) ══════════ */
 .pmenu-grid {
     display: grid; gap: 12px; padding: 12px;
 }
@@ -661,7 +661,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
 .pmenu-sub-item.has-children { position: relative; }
 .pmenu-sub-item.is-open > .pmenu-deep-children { display: block !important; }
 
-/* ── Deep items (Level 3+) — indented under parent, matching Hyva (ml-4 = 16px) ── */
+/* ── Deep items (Level 3+) - indented under parent, matching Hyva (ml-4 = 16px) ── */
 .pmenu-deep-list {
     list-style: none; margin: 2px 0 0; padding: 0 0 0 12px;
     border-left: none;
@@ -803,7 +803,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
 
 .pmenu-mobile-title-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── Mobile toggle (SVG chevron, no left border — matches Hyva) ── */
+/* ── Mobile toggle (SVG chevron, no left border - matches Hyva) ── */
 .pmenu-mobile-toggle-sub {
     background: none; border: none;
     padding: 0 16px; cursor: pointer;
@@ -952,7 +952,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
      role="navigation"
      aria-label="<?= $escaper->escapeHtmlAttr(__('Main Menu')) ?>"
      data-anim="<?= $escaper->escapeHtmlAttr($animationType) ?>"
-     <?php /* data-mage-init removed — using vanilla JS instead of jQuery widget */ ?>
+     <?php /* data-mage-init removed - using vanilla JS instead of jQuery widget */ ?>
      <?php if ($containerStyle): ?>style="<?= $escaper->escapeHtmlAttr($containerStyle) ?>"<?php endif; ?>>
 
     <div class="pmenu-bar">
@@ -1057,7 +1057,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
             if (Math.abs(diff) < 0.5) { offset = targetOff; animFrame = null; }
             else { offset += diff * 0.2; animFrame = requestAnimationFrame(smoothTo); }
             ul.style.transform = offset > 0 ? 'translateX(-' + offset + 'px)' : '';
-            update();   // safe now — uses cachedMaxOff, no layout read
+            update();   // safe now - uses cachedMaxOff, no layout read
         }
         btnL.addEventListener('click', function() {
             offset = Math.max(0, offset - 200); targetOff = offset;
@@ -1097,7 +1097,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
         aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle Navigation')) ?>"
         aria-expanded="false"
         aria-controls="<?= $escaper->escapeHtmlAttr($menuId) ?>-mobile-drawer"
-        <?php /* data-mage-init removed — using vanilla JS */ ?>>
+        <?php /* data-mage-init removed - using vanilla JS */ ?>>
     <span class="pmenu-hamburger-icon">
         <span></span>
         <span></span>
@@ -1125,7 +1125,7 @@ $renderMobileItems = function (array $items, int $level = 0) use (
     <?php $renderMobileItems($mobileItems); ?>
 </div>
 
-<!-- Panth MegaMenu — Vanilla JS (matches Hyva Alpine.js behavior) -->
+<!-- Panth MegaMenu - Vanilla JS (matches Hyva Alpine.js behavior) -->
 <script>
 function initPanthMegaMenu() {
     'use strict';
@@ -1277,7 +1277,7 @@ function initPanthMegaMenu() {
 
     // ═══════════════════════════════════════════════
     // DESKTOP: Sub-item toggles (Level 2 items with deep children)
-    // Wraps link + chevron in a flex row — matches Hyva's Alpine accordion
+    // Wraps link + chevron in a flex row - matches Hyva's Alpine accordion
     // ═══════════════════════════════════════════════
     document.querySelectorAll('.pmenu-sub-item.has-children').forEach(function(subItem) {
         var deepChildren = subItem.querySelector('.pmenu-deep-children');
