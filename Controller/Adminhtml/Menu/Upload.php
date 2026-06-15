@@ -15,6 +15,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
+use Panth\Core\Security\UploadExtensionPolicy;
 
 class Upload extends Action implements CsrfAwareActionInterface
 {
@@ -39,21 +40,29 @@ class Upload extends Action implements CsrfAwareActionInterface
     private StoreManagerInterface $storeManager;
 
     /**
+     * @var UploadExtensionPolicy
+     */
+    private UploadExtensionPolicy $uploadExtensionPolicy;
+
+    /**
      * @param Context $context
      * @param UploaderFactory $uploaderFactory
      * @param Filesystem $filesystem
      * @param StoreManagerInterface $storeManager
+     * @param UploadExtensionPolicy $uploadExtensionPolicy
      */
     public function __construct(
         Context $context,
         UploaderFactory $uploaderFactory,
         Filesystem $filesystem,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        UploadExtensionPolicy $uploadExtensionPolicy
     ) {
         parent::__construct($context);
         $this->uploaderFactory = $uploaderFactory;
         $this->filesystem = $filesystem;
         $this->storeManager = $storeManager;
+        $this->uploadExtensionPolicy = $uploadExtensionPolicy;
     }
 
     /**
@@ -67,6 +76,12 @@ class Upload extends Action implements CsrfAwareActionInterface
 
         try {
             $fileId = $this->getRequest()->getParam('param_name', 'image');
+
+            // Hard executable deny-list — defense-in-depth on top of the
+            // explicit image allowlist below.
+            if (isset($_FILES[$fileId]['name']) && is_string($_FILES[$fileId]['name'])) {
+                $this->uploadExtensionPolicy->assertSafeExtension($_FILES[$fileId]['name']);
+            }
 
             $uploader = $this->uploaderFactory->create(['fileId' => $fileId]);
             $uploader->setAllowedExtensions(['jpg', 'jpeg', 'gif', 'png', 'svg', 'webp']);
