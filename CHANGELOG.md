@@ -4,6 +4,15 @@ All notable changes to this extension are documented here. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.7] - README rewrite
+
+### Changed
+- README rewritten to document real features from system.xml, db_schema.xml, and
+  controller inventory: full configuration tables for General, Styling, Display,
+  Mobile, Sticky Menu, Performance, and Advanced groups; version history and
+  customer-group scoping sections added; all links updated to the live product
+  page at kishansavaliya.com/magento-2-mega-menu.html.
+
 ## [1.0.6] — Upload extension deny-list (defense-in-depth)
 
 ### Added
