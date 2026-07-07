@@ -10,52 +10,20 @@ use Magento\Framework\DataObject;
 use Panth\MegaMenu\ViewModel\Menu as MenuViewModel;
 use Panth\MegaMenu\Model\MenuFactory;
 
-/**
- * Preview Block - Renders menu using POST data or saved DB data (mimics Menu block interface)
- *
- * Supports two modes:
- * 1. POST data - original approach, receives unsaved menu data via form POST
- * 2. DB data - save-then-preview approach, loads saved menu by menu_id from request param
- */
 class Preview extends Template
 {
-    /**
-     * @var DecoderInterface
-     */
     protected $jsonDecoder;
 
-    /**
-     * @var array|null
-     */
     private $previewMenuData = null;
 
-    /**
-     * @var array|null
-     */
     private $menuTree = null;
 
-    /**
-     * @var DataObject|null
-     */
     private $currentMenu = null;
 
-    /**
-     * @var MenuViewModel
-     */
     private $viewModel;
 
-    /**
-     * @var MenuFactory
-     */
     private $menuFactory;
 
-    /**
-     * @param Context $context
-     * @param DecoderInterface $jsonDecoder
-     * @param MenuViewModel $viewModel
-     * @param MenuFactory $menuFactory
-     * @param array $data
-     */
     public function __construct(
         Context $context,
         DecoderInterface $jsonDecoder,
@@ -69,31 +37,22 @@ class Preview extends Template
         parent::__construct($context, $data);
     }
 
-    /**
-     * Get preview menu data from POST or from DB (by menu_id)
-     *
-     * @return array
-     */
     public function getMenuData(): array
     {
         if ($this->previewMenuData !== null) {
             return $this->previewMenuData;
         }
 
-        // Check ALL possible sources for items_json
         $itemsJson = $this->getRequest()->getParam('items_json', '');
 
-        // Also check POST body via Magento request
         if (empty($itemsJson)) {
             $itemsJson = (string) $this->getRequest()->getPostValue('items_json', '');
         }
-
 
         if (!empty($itemsJson)) {
             return $this->getMenuDataFromPost($itemsJson);
         }
 
-        // Fallback: load from DB by menu_id
         $menuId = $this->getRequest()->getParam('menu_id', '');
         if (!empty($menuId)) {
             return $this->getMenuDataFromDb($menuId);
@@ -102,12 +61,6 @@ class Preview extends Template
         return [];
     }
 
-    /**
-     * Load menu data from POST parameters
-     *
-     * @param string $itemsJson
-     * @return array
-     */
     private function getMenuDataFromPost(string $itemsJson): array
     {
         try {
@@ -139,12 +92,6 @@ class Preview extends Template
         }
     }
 
-    /**
-     * Load menu data from the database by menu_id
-     *
-     * @param string $menuId
-     * @return array
-     */
     private function getMenuDataFromDb(string $menuId): array
     {
         try {
@@ -155,7 +102,6 @@ class Preview extends Template
                 return [];
             }
 
-            // Parse items from the saved JSON column
             $itemsJson = $menu->getItemsJson();
             $items = [];
             if ($itemsJson) {
@@ -188,11 +134,6 @@ class Preview extends Template
         }
     }
 
-    /**
-     * Get current menu tree (mimics Menu block method)
-     *
-     * @return array
-     */
     public function getCurrentMenuTree(): array
     {
         if ($this->menuTree !== null) {
@@ -205,7 +146,6 @@ class Preview extends Template
         $this->_logger->info('Preview getCurrentMenuTree: menuData keys=' . implode(',', array_keys($menuData))
             . ', items count=' . count($items));
 
-        // Build tree structure from flat items array
         $this->menuTree = $this->buildTree($items);
 
         $this->_logger->info('Preview getCurrentMenuTree: tree count=' . count($this->menuTree)
@@ -214,46 +154,34 @@ class Preview extends Template
         return $this->menuTree;
     }
 
-    /**
-     * Build tree structure from flat items array
-     *
-     * @param array $items
-     * @return array
-     */
     private function buildTree(array $items): array
     {
         $tree = [];
         $lookup = [];
 
-        // First pass: create lookup array
         foreach ($items as $item) {
             $itemId = $item['item_id'] ?? '';
             $lookup[$itemId] = $item;
             $lookup[$itemId]['children'] = [];
         }
 
-        // Second pass: build relationships (add children to parents)
         foreach ($items as $item) {
             $itemId = $item['item_id'] ?? '';
             $parentId = $item['parent_id'] ?? 0;
 
             if ($parentId == 0 || $parentId === '0' || $parentId === '') {
-                // Root item
             } else {
-                // Child item - add to parent's children
                 if (isset($lookup[$parentId])) {
                     $lookup[$parentId]['children'][] = &$lookup[$itemId];
                 }
             }
         }
 
-        // Third pass: collect root items (AFTER children are built)
         foreach ($items as $item) {
             $itemId = $item['item_id'] ?? '';
             $parentId = $item['parent_id'] ?? 0;
 
             if ($parentId == 0 || $parentId === '0' || $parentId === '') {
-                // Add reference to lookup item which now has children
                 $tree[] = &$lookup[$itemId];
             }
         }
@@ -261,11 +189,6 @@ class Preview extends Template
         return $tree;
     }
 
-    /**
-     * Get current menu (mimics Menu block method)
-     *
-     * @return DataObject|null
-     */
     public function getCurrentMenu()
     {
         if ($this->currentMenu !== null) {
@@ -277,40 +200,23 @@ class Preview extends Template
             return null;
         }
 
-        // Add ID method for the menu object
         $menuData['id'] = 'preview';
 
-        // Create DataObject which auto-generates getters/setters for all keys
         $this->currentMenu = new DataObject($menuData);
 
         return $this->currentMenu;
     }
 
-    /**
-     * Get view model (mimics Menu block method)
-     *
-     * @return MenuViewModel
-     */
     public function getViewModel(): MenuViewModel
     {
         return $this->viewModel;
     }
 
-    /**
-     * Check if module is enabled
-     *
-     * @return bool
-     */
     public function isEnabled(): bool
     {
         return true;
     }
 
-    /**
-     * Get menu ID for preview (returns 'preview' for unique identification)
-     *
-     * @return string
-     */
     public function getId(): string
     {
         return 'preview';

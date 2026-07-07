@@ -1,10 +1,4 @@
 <?php
-/**
- * Menu Repository Implementation
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model;
@@ -29,73 +23,28 @@ use Psr\Log\LoggerInterface;
 
 class MenuRepository implements MenuRepositoryInterface
 {
-    /**
-     * @var MenuResource
-     */
     private $resource;
 
-    /**
-     * @var MenuInterfaceFactory
-     */
     private $menuFactory;
 
-    /**
-     * @var CollectionFactory
-     */
     private $collectionFactory;
 
-    /**
-     * @var MenuSearchResultsInterfaceFactory
-     */
     private $searchResultsFactory;
 
-    /**
-     * @var CollectionProcessorInterface
-     */
     private $collectionProcessor;
 
-    /**
-     * @var MenuVersionInterfaceFactory
-     */
     private $versionFactory;
 
-    /**
-     * @var MenuVersionRepositoryInterface
-     */
     private $versionRepository;
 
-    /**
-     * @var MenuVersionResource
-     */
     private $versionResource;
 
-    /**
-     * @var BackendAuthSession
-     */
     private $backendAuthSession;
 
-    /**
-     * @var LoggerInterface
-     */
     private $logger;
 
-    /**
-     * @var array
-     */
     private $instances = [];
 
-    /**
-     * @param MenuResource $resource
-     * @param MenuInterfaceFactory $menuFactory
-     * @param CollectionFactory $collectionFactory
-     * @param MenuSearchResultsInterfaceFactory $searchResultsFactory
-     * @param CollectionProcessorInterface $collectionProcessor
-     * @param MenuVersionInterfaceFactory $versionFactory
-     * @param MenuVersionRepositoryInterface $versionRepository
-     * @param MenuVersionResource $versionResource
-     * @param BackendAuthSession $backendAuthSession
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         MenuResource $resource,
         MenuInterfaceFactory $menuFactory,
@@ -120,9 +69,6 @@ class MenuRepository implements MenuRepositoryInterface
         $this->logger = $logger;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function save(MenuInterface $menu): MenuInterface
     {
         try {
@@ -137,7 +83,6 @@ class MenuRepository implements MenuRepositoryInterface
                 'menu_id' => $menu->getMenuId()
             ]);
 
-            // Create version after successful save
             $this->createVersion($menu);
 
             $this->logger->info('MenuRepository::save - Version created successfully');
@@ -157,13 +102,6 @@ class MenuRepository implements MenuRepositoryInterface
         return $menu;
     }
 
-    /**
-     * Create a new version of the menu
-     *
-     * @param MenuInterface $menu
-     * @return void
-     * @throws \Exception
-     */
     private function createVersion(MenuInterface $menu): void
     {
         $menuId = $menu->getMenuId();
@@ -172,14 +110,12 @@ class MenuRepository implements MenuRepositoryInterface
             'menu_id' => $menuId
         ]);
 
-        // Get next version number
         $versionNumber = $this->versionResource->getNextVersionNumber($menuId);
 
         $this->logger->info('MenuRepository::createVersion - Next version number', [
             'version_number' => $versionNumber
         ]);
 
-        // Get current admin user
         $createdBy = null;
         $user = $this->backendAuthSession->getUser();
         if ($user) {
@@ -190,13 +126,11 @@ class MenuRepository implements MenuRepositoryInterface
             'created_by' => $createdBy
         ]);
 
-        // Convert store IDs array to comma-separated string
         $storeIds = $menu->getStoreIds();
         if (is_array($storeIds)) {
             $storeIds = implode(',', $storeIds);
         }
 
-        // Create version object
         $version = $this->versionFactory->create();
         $version->setMenuId($menuId);
         $version->setVersionNumber($versionNumber);
@@ -217,7 +151,6 @@ class MenuRepository implements MenuRepositoryInterface
         $version->setStoreIds($storeIds);
         $version->setCreatedBy($createdBy);
 
-        // Get version comment if provided
         if ($menu->hasData('version_comment')) {
             $version->setVersionComment($menu->getData('version_comment'));
         }
@@ -227,7 +160,6 @@ class MenuRepository implements MenuRepositoryInterface
             'menu_id' => $menuId
         ]);
 
-        // Save version
         $this->versionRepository->save($version);
 
         $this->logger->info('MenuRepository::createVersion - Version saved successfully', [
@@ -236,9 +168,6 @@ class MenuRepository implements MenuRepositoryInterface
         ]);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getById(int $menuId): MenuInterface
     {
         if (!isset($this->instances[$menuId])) {
@@ -257,9 +186,6 @@ class MenuRepository implements MenuRepositoryInterface
         return $this->instances[$menuId];
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getByIdentifier(string $identifier, ?int $storeId = null): MenuInterface
     {
         $menuData = $this->resource->loadByIdentifier($identifier, $storeId);
@@ -276,9 +202,6 @@ class MenuRepository implements MenuRepositoryInterface
         return $menu;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getList(SearchCriteriaInterface $searchCriteria): MenuSearchResultsInterface
     {
         $collection = $this->collectionFactory->create();
@@ -292,9 +215,6 @@ class MenuRepository implements MenuRepositoryInterface
         return $searchResults;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function delete(MenuInterface $menu): bool
     {
         try {
@@ -311,9 +231,6 @@ class MenuRepository implements MenuRepositoryInterface
         return true;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function deleteById(int $menuId): bool
     {
         return $this->delete($this->getById($menuId));

@@ -1,12 +1,4 @@
 <?php
-/**
- * Panth Mega Menu Admin Controller - Delete Menu
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Controller\Adminhtml\Menu;
@@ -35,7 +27,6 @@ class Delete extends Action
 
     public function execute()
     {
-        // Check if it's an AJAX request
         if ($this->getRequest()->isAjax() || $this->getRequest()->getParam('ajax')) {
             return $this->executeJson();
         }

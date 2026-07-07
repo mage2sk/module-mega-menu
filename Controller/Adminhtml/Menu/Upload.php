@@ -19,38 +19,16 @@ use Panth\Core\Security\UploadExtensionPolicy;
 
 class Upload extends Action implements CsrfAwareActionInterface
 {
-    /**
-     * Authorization level
-     */
     public const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var UploaderFactory
-     */
     private UploaderFactory $uploaderFactory;
 
-    /**
-     * @var Filesystem
-     */
     private Filesystem $filesystem;
 
-    /**
-     * @var StoreManagerInterface
-     */
     private StoreManagerInterface $storeManager;
 
-    /**
-     * @var UploadExtensionPolicy
-     */
     private UploadExtensionPolicy $uploadExtensionPolicy;
 
-    /**
-     * @param Context $context
-     * @param UploaderFactory $uploaderFactory
-     * @param Filesystem $filesystem
-     * @param StoreManagerInterface $storeManager
-     * @param UploadExtensionPolicy $uploadExtensionPolicy
-     */
     public function __construct(
         Context $context,
         UploaderFactory $uploaderFactory,
@@ -65,11 +43,6 @@ class Upload extends Action implements CsrfAwareActionInterface
         $this->uploadExtensionPolicy = $uploadExtensionPolicy;
     }
 
-    /**
-     * Upload image file
-     *
-     * @return ResultInterface
-     */
     public function execute(): ResultInterface
     {
         $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
@@ -77,8 +50,6 @@ class Upload extends Action implements CsrfAwareActionInterface
         try {
             $fileId = $this->getRequest()->getParam('param_name', 'image');
 
-            // Hard executable deny-list — defense-in-depth on top of the
-            // explicit image allowlist below.
             if (isset($_FILES[$fileId]['name']) && is_string($_FILES[$fileId]['name'])) {
                 $this->uploadExtensionPolicy->assertSafeExtension($_FILES[$fileId]['name']);
             }
@@ -91,7 +62,6 @@ class Upload extends Action implements CsrfAwareActionInterface
             $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
             $destinationPath = $mediaDirectory->getAbsolutePath('panth/megamenu/');
 
-            // Create directory if it doesn't exist
             $mediaDirectoryWrite = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
             if (!$mediaDirectoryWrite->isDirectory('panth/megamenu')) {
                 $mediaDirectoryWrite->create('panth/megamenu');
@@ -120,17 +90,11 @@ class Upload extends Action implements CsrfAwareActionInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
         return null;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         return true;

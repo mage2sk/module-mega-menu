@@ -1,31 +1,14 @@
 <?php
-/**
- * Panth MegaMenu Display Mode Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Model\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
 class DisplayMode implements OptionSourceInterface
 {
-    /**
-     * Display mode constants
-     */
     const MODE_DROPDOWN = 'dropdown';
     const MODE_MEGA = 'mega';
     const MODE_FLYOUT = 'flyout';
 
-    /**
-     * Get options
-     *
-     * @return array
-     */
     public function toOptionArray()
     {
         return [

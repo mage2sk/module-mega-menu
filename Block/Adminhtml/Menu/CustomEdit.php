@@ -72,15 +72,12 @@ class CustomEdit extends Template
             return json_encode([]);
         }
 
-        // Get items from JSON column
         $itemsJson = $menu->getItemsJson();
 
-        // If JSON exists, return it; otherwise return empty array
         if ($itemsJson) {
             return $itemsJson;
         }
 
-        // Backward compatibility: check if items exist in separate table
         $collection = $this->itemCollectionFactory->create();
         $collection->addFieldToFilter('menu_id', $menuId);
         $collection->setOrder('position', 'ASC');

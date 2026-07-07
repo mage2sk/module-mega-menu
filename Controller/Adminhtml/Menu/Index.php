@@ -1,12 +1,4 @@
 <?php
-/**
- * Panth Mega Menu Admin Controller - Menu Index
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Controller\Adminhtml\Menu;
@@ -22,17 +14,8 @@ class Index extends Action implements HttpGetActionInterface
 {
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var PageFactory
-     */
     protected $resultPageFactory;
 
-    /**
-     * Constructor
-     *
-     * @param Context $context
-     * @param PageFactory $resultPageFactory
-     */
     public function __construct(
         Context $context,
         PageFactory $resultPageFactory
@@ -41,11 +24,6 @@ class Index extends Action implements HttpGetActionInterface
         $this->resultPageFactory = $resultPageFactory;
     }
 
-    /**
-     * Execute action to render the grid UI Component
-     *
-     * @return ResultInterface|ResponseInterface
-     */
     public function execute()
     {
         $resultPage = $this->resultPageFactory->create();

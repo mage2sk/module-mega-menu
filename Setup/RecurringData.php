@@ -1,13 +1,4 @@
 <?php
-/**
- * Setup/RecurringData runs on every `bin/magento setup:upgrade`.
- * That gives us a hook to detect install + upgrade transitions —
- * the InstallReporter itself dedups per-version via Magento\Framework\Flag,
- * so re-running setup:upgrade on the same version is a silent no-op.
- *
- * Magento auto-discovers Setup/RecurringData when it implements
- * InstallDataInterface; no DI configuration needed.
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Setup;

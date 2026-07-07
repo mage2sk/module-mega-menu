@@ -1,12 +1,4 @@
 <?php
-/**
- * Panth Mega Menu Grid Actions Column
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) 2025 Panth
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Ui\Component\Listing\Column;
@@ -23,20 +15,8 @@ class MenuActions extends Column
     const URL_PATH_EXPORT = 'panth_menu/menu/export';
     const URL_PATH_DELETE = 'panth_menu/menu/delete';
 
-    /**
-     * @var UrlInterface
-     */
     protected $urlBuilder;
 
-    /**
-     * Constructor
-     *
-     * @param ContextInterface $context
-     * @param UiComponentFactory $uiComponentFactory
-     * @param UrlInterface $urlBuilder
-     * @param array $components
-     * @param array $data
-     */
     public function __construct(
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
@@ -48,12 +28,6 @@ class MenuActions extends Column
         parent::__construct($context, $uiComponentFactory, $components, $data);
     }
 
-    /**
-     * Prepare Data Source
-     *
-     * @param array $dataSource
-     * @return array
-     */
     public function prepareDataSource(array $dataSource)
     {
         if (isset($dataSource['data']['items'])) {
@@ -67,7 +41,7 @@ class MenuActions extends Column
                         ),
                         'label' => __('Edit')
                     ];
-                    // Duplicate action removed - requires JavaScript prompt implementation
+
                     $item[$name]['export'] = [
                         'href' => $this->urlBuilder->getUrl(
                             static::URL_PATH_EXPORT,

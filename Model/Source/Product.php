@@ -1,13 +1,4 @@
 <?php
-/**
- * Panth MegaMenu Product Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Model\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
@@ -17,41 +8,14 @@ use Magento\Catalog\Model\Product\Visibility;
 
 class Product implements OptionSourceInterface
 {
-    /**
-     * Product collection factory
-     *
-     * @var CollectionFactory
-     */
     private $productCollectionFactory;
 
-    /**
-     * Product status
-     *
-     * @var Status
-     */
     private $productStatus;
 
-    /**
-     * Product visibility
-     *
-     * @var Visibility
-     */
     private $productVisibility;
 
-    /**
-     * Options array
-     *
-     * @var array
-     */
     private $options;
 
-    /**
-     * Constructor
-     *
-     * @param CollectionFactory $productCollectionFactory
-     * @param Status $productStatus
-     * @param Visibility $productVisibility
-     */
     public function __construct(
         CollectionFactory $productCollectionFactory,
         Status $productStatus,
@@ -62,14 +26,6 @@ class Product implements OptionSourceInterface
         $this->productVisibility = $productVisibility;
     }
 
-    /**
-     * Get options
-     * Note: This is a simplified implementation
-     * In a production environment, you might want to use a search/autocomplete approach
-     * rather than loading all products
-     *
-     * @return array
-     */
     public function toOptionArray()
     {
         if ($this->options !== null) {
@@ -84,7 +40,7 @@ class Product implements OptionSourceInterface
                 ->addAttributeToFilter('status', ['in' => $this->productStatus->getVisibleStatusIds()])
                 ->addAttributeToFilter('visibility', ['in' => $this->productVisibility->getVisibleInSiteIds()])
                 ->setOrder('name', 'ASC')
-                ->setPageSize(100); // Limit to 100 products for performance
+                ->setPageSize(100);
 
             foreach ($collection as $product) {
                 $this->options[] = [
@@ -93,7 +49,6 @@ class Product implements OptionSourceInterface
                 ];
             }
         } catch (\Exception $e) {
-            // Return empty options on error
             $this->options = [];
         }
 

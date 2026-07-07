@@ -1,13 +1,4 @@
 <?php
-/**
- * Item Renderer ViewModel - Theme-Agnostic Item Rendering
- *
- * Provides rendering logic for menu items that works with both Hyva (Alpine.js) and Luma (KnockoutJS) themes.
- * This ViewModel handles the presentation layer for individual menu items.
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\ViewModel;
@@ -22,53 +13,22 @@ use Psr\Log\LoggerInterface;
 
 class ItemRenderer implements ArgumentInterface
 {
-    /**
-     * Theme constants
-     */
     const THEME_HYVA = 'hyva';
     const THEME_LUMA = 'luma';
     const THEME_AUTO = 'auto';
 
-    /**
-     * @var MenuHelper
-     */
     private $menuHelper;
 
-    /**
-     * @var FilterProvider
-     */
     private $filterProvider;
 
-    /**
-     * @var StoreManagerInterface
-     */
     private $storeManager;
 
-    /**
-     * @var Escaper
-     */
     private $escaper;
 
-    /**
-     * @var LoggerInterface
-     */
     private $logger;
 
-    /**
-     * @var Menu
-     */
     private $menuViewModel;
 
-    /**
-     * Constructor
-     *
-     * @param MenuHelper $menuHelper
-     * @param FilterProvider $filterProvider
-     * @param StoreManagerInterface $storeManager
-     * @param Escaper $escaper
-     * @param LoggerInterface $logger
-     * @param Menu $menuViewModel
-     */
     public function __construct(
         MenuHelper $menuHelper,
         FilterProvider $filterProvider,
@@ -85,13 +45,6 @@ class ItemRenderer implements ArgumentInterface
         $this->menuViewModel = $menuViewModel;
     }
 
-    /**
-     * Render complete menu item HTML
-     *
-     * @param ItemInterface $item
-     * @param string $theme
-     * @return string
-     */
     public function render(ItemInterface $item, string $theme = self::THEME_AUTO): string
     {
         if (!$this->menuViewModel->isItemVisible($item)) {
@@ -104,14 +57,12 @@ class ItemRenderer implements ArgumentInterface
         $html .= $this->renderItemAttributes($item, $theme);
         $html .= '>';
 
-        // Render link or content wrapper
         if ($this->menuViewModel->shouldShowContent($item)) {
             $html .= $this->renderContentWrapper($item, $theme);
         } else {
             $html .= $this->renderLink($item, $theme);
         }
 
-        // Render children if any
         if ($this->menuViewModel->hasChildren($item)) {
             $html .= $this->renderChildrenContainer($item, $theme);
         }
@@ -121,12 +72,6 @@ class ItemRenderer implements ArgumentInterface
         return $html;
     }
 
-    /**
-     * Render menu item icon
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function renderIcon(ItemInterface $item): string
     {
         if (!$this->menuHelper->showIcons()) {
@@ -144,21 +89,13 @@ class ItemRenderer implements ArgumentInterface
         );
     }
 
-    /**
-     * Render menu item badge
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function renderBadge(ItemInterface $item): string
     {
-        // Check if item has badge data in content or custom attribute
         $content = $item->getContent();
         if (!$content) {
             return '';
         }
 
-        // Look for badge markup in content
         if (preg_match('/<badge>(.*?)<\/badge>/i', $content, $matches)) {
             $badgeText = $this->escaper->escapeHtml(trim($matches[1]));
             return sprintf(
@@ -167,17 +104,14 @@ class ItemRenderer implements ArgumentInterface
             );
         }
 
-        // Look for new badge indicator
         if (stripos($content, '[NEW]') !== false || stripos($content, '[new]') !== false) {
             return '<span class="megamenu-badge badge bg-success text-white">New</span>';
         }
 
-        // Look for hot badge indicator
         if (stripos($content, '[HOT]') !== false || stripos($content, '[hot]') !== false) {
             return '<span class="megamenu-badge badge bg-danger text-white">Hot</span>';
         }
 
-        // Look for sale badge indicator
         if (stripos($content, '[SALE]') !== false || stripos($content, '[sale]') !== false) {
             return '<span class="megamenu-badge badge bg-warning text-dark">Sale</span>';
         }
@@ -185,12 +119,6 @@ class ItemRenderer implements ArgumentInterface
         return '';
     }
 
-    /**
-     * Render menu item image
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function renderImage(ItemInterface $item): string
     {
         if (!$this->menuHelper->showImages()) {
@@ -227,12 +155,6 @@ class ItemRenderer implements ArgumentInterface
         return $html;
     }
 
-    /**
-     * Render menu item description
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function renderDescription(ItemInterface $item): string
     {
         $content = $item->getContent();
@@ -240,7 +162,6 @@ class ItemRenderer implements ArgumentInterface
             return '';
         }
 
-        // Look for description markup in content
         if (preg_match('/<description>(.*?)<\/description>/is', $content, $matches)) {
             $description = trim($matches[1]);
 
@@ -250,7 +171,6 @@ class ItemRenderer implements ArgumentInterface
                 $filter->setStoreId($storeId);
                 $description = $filter->filter($description);
             } catch (\Exception $e) {
-                // Silently handle errors
             }
 
             return sprintf(
@@ -262,13 +182,6 @@ class ItemRenderer implements ArgumentInterface
         return '';
     }
 
-    /**
-     * Render complete link with icon, title, badge, and description
-     *
-     * @param ItemInterface $item
-     * @param string $theme
-     * @return string
-     */
     public function renderLink(ItemInterface $item, string $theme = self::THEME_AUTO): string
     {
         $theme = $this->detectTheme($theme);
@@ -286,7 +199,6 @@ class ItemRenderer implements ArgumentInterface
             $html .= sprintf(' rel="%s"', $this->escaper->escapeHtmlAttr($rel));
         }
 
-        // Add theme-specific attributes
         if ($theme === self::THEME_HYVA && $this->menuViewModel->hasChildren($item)) {
             $html .= ' @click.prevent="toggleSubmenu($event)"';
         } elseif ($theme === self::THEME_LUMA && $this->menuViewModel->hasChildren($item)) {
@@ -295,14 +207,12 @@ class ItemRenderer implements ArgumentInterface
 
         $html .= '>';
 
-        // Render components
         $html .= $this->renderImage($item);
         $html .= '<span class="megamenu-link-content">';
         $html .= $this->renderIcon($item);
         $html .= '<span class="megamenu-title">' . $this->escaper->escapeHtml($item->getTitle() ?? '') . '</span>';
         $html .= $this->renderBadge($item);
 
-        // Add dropdown indicator for items with children
         if ($this->menuViewModel->hasChildren($item)) {
             $html .= $this->renderDropdownIndicator($item, $theme);
         }
@@ -314,13 +224,6 @@ class ItemRenderer implements ArgumentInterface
         return $html;
     }
 
-    /**
-     * Render dropdown indicator
-     *
-     * @param ItemInterface $item
-     * @param string $theme
-     * @return string
-     */
     public function renderDropdownIndicator(ItemInterface $item, string $theme = self::THEME_AUTO): string
     {
         $theme = $this->detectTheme($theme);
@@ -340,13 +243,6 @@ class ItemRenderer implements ArgumentInterface
         }
     }
 
-    /**
-     * Render content wrapper for content-type items
-     *
-     * @param ItemInterface $item
-     * @param string $theme
-     * @return string
-     */
     private function renderContentWrapper(ItemInterface $item, string $theme): string
     {
         $html = '<div class="megamenu-content-wrapper"';
@@ -369,13 +265,6 @@ class ItemRenderer implements ArgumentInterface
         return $html;
     }
 
-    /**
-     * Render children container
-     *
-     * @param ItemInterface $item
-     * @param string $theme
-     * @return string
-     */
     private function renderChildrenContainer(ItemInterface $item, string $theme): string
     {
         $children = $this->menuViewModel->getChildren($item);
@@ -405,18 +294,10 @@ class ItemRenderer implements ArgumentInterface
         return $html;
     }
 
-    /**
-     * Render item attributes
-     *
-     * @param ItemInterface $item
-     * @param string $theme
-     * @return string
-     */
     private function renderItemAttributes(ItemInterface $item, string $theme): string
     {
         $attributes = [];
 
-        // Data attributes
         $attributes[] = sprintf('data-item-id="%d"', $item->getItemId());
         $attributes[] = sprintf('data-level="%d"', $item->getLevel());
 
@@ -424,7 +305,6 @@ class ItemRenderer implements ArgumentInterface
             $attributes[] = 'data-has-children="true"';
         }
 
-        // Theme-specific attributes
         if ($theme === self::THEME_HYVA && $this->menuViewModel->hasChildren($item)) {
             $attributes[] = 'x-data="{ submenuOpen: false }"';
             $attributes[] = '@mouseenter="submenuOpen = true"';
@@ -436,36 +316,21 @@ class ItemRenderer implements ArgumentInterface
         return ' ' . implode(' ', $attributes);
     }
 
-    /**
-     * Get grid class based on columns
-     *
-     * @param int $columns
-     * @return string
-     */
     private function getGridClass(int $columns): string
     {
         if ($columns <= 1) {
             return '';
         }
 
-        // Return Tailwind grid classes
         return sprintf('grid grid-cols-%d gap-4', min($columns, 4));
     }
 
-    /**
-     * Detect theme automatically
-     *
-     * @param string $theme
-     * @return string
-     */
     private function detectTheme(string $theme): string
     {
         if ($theme !== self::THEME_AUTO) {
             return $theme;
         }
 
-        // Try to detect Hyva theme
-        // This is a simple detection - can be enhanced
         if (class_exists('\Hyva\Theme\ViewModel\HeroiconsSolid')) {
             return self::THEME_HYVA;
         }
@@ -473,12 +338,6 @@ class ItemRenderer implements ArgumentInterface
         return self::THEME_LUMA;
     }
 
-    /**
-     * Get item wrapper classes
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function getWrapperClasses(ItemInterface $item): string
     {
         $classes = ['megamenu-item-wrapper'];
@@ -497,12 +356,6 @@ class ItemRenderer implements ArgumentInterface
         return implode(' ', $classes);
     }
 
-    /**
-     * Check if item should render as mega dropdown
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function shouldRenderAsMegaDropdown(ItemInterface $item): bool
     {
         return $this->menuViewModel->isTopLevel($item)
@@ -510,12 +363,6 @@ class ItemRenderer implements ArgumentInterface
             && $item->getColumns() > 1;
     }
 
-    /**
-     * Get dropdown position classes
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function getDropdownPositionClasses(ItemInterface $item): string
     {
         $classes = ['megamenu-dropdown'];

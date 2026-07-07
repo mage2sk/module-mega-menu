@@ -1,12 +1,4 @@
 <?php
-/**
- * Panth MegaMenu - Configuration Helper
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Helper;
@@ -26,12 +18,6 @@ class Config extends AbstractHelper
     const XML_PATH_STICKY_MENU = 'panth_megamenu/general/sticky_menu';
     const XML_PATH_MOBILE_ENABLED = 'panth_megamenu/general/mobile_enabled';
 
-    /**
-     * Check if MegaMenu is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -41,12 +27,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Check if debug mode is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isDebugEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -56,12 +36,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Check if cache is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isCacheEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -71,12 +45,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Get cache lifetime
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getCacheLifetime(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -86,12 +54,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Get animation type
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getAnimationType(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -101,12 +63,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Get animation duration
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getAnimationDuration(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -116,12 +72,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Check if sticky menu is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyMenuEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -131,12 +81,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Check if mobile menu is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isMobileEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -146,13 +90,6 @@ class Config extends AbstractHelper
         );
     }
 
-    /**
-     * Get config value
-     *
-     * @param string $path
-     * @param int|null $storeId
-     * @return mixed
-     */
     public function getConfigValue(string $path, ?int $storeId = null)
     {
         return $this->scopeConfig->getValue(

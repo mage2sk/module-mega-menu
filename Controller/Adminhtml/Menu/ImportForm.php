@@ -1,10 +1,4 @@
 <?php
-/**
- * MegaMenu Import Form Controller
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Controller\Adminhtml\Menu;
@@ -17,17 +11,8 @@ class ImportForm extends Action
 {
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var PageFactory
-     */
     protected $resultPageFactory;
 
-    /**
-     * Constructor
-     *
-     * @param Context $context
-     * @param PageFactory $resultPageFactory
-     */
     public function __construct(
         Context $context,
         PageFactory $resultPageFactory
@@ -36,11 +21,6 @@ class ImportForm extends Action
         $this->resultPageFactory = $resultPageFactory;
     }
 
-    /**
-     * Execute action
-     *
-     * @return \Magento\Framework\View\Result\Page
-     */
     public function execute()
     {
         $resultPage = $this->resultPageFactory->create();

@@ -1,10 +1,4 @@
 <?php
-/**
- * Menu Search Results Implementation
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model;

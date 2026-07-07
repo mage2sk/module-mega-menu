@@ -39,7 +39,6 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
         try {
             $createdBlocks = [];
 
-            // Demo Block 1: Featured Products
             $block1 = $this->createBlock(
                 'panth_menu_demo_featured',
                 'Panth Menu Demo - Featured Products',
@@ -52,7 +51,6 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
                 ];
             }
 
-            // Demo Block 2: Promotional Banner
             $block2 = $this->createBlock(
                 'panth_menu_demo_promo',
                 'Panth Menu Demo - Promotional Banner',
@@ -65,7 +63,6 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
                 ];
             }
 
-            // Demo Block 3: Newsletter Signup
             $block3 = $this->createBlock(
                 'panth_menu_demo_newsletter',
                 'Panth Menu Demo - Newsletter',
@@ -83,7 +80,6 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
                 'blocks' => $createdBlocks,
                 'message' => count($createdBlocks) . ' demo CMS blocks created successfully'
             ]);
-
         } catch (\Exception $e) {
             return $result->setData([
                 'success' => false,
@@ -95,7 +91,6 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
     protected function createBlock($identifier, $title, $content)
     {
         try {
-            // Check if block already exists using direct SQL query
             $connection = $this->resourceConnection->getConnection();
             $tableName = $this->resourceConnection->getTableName('cms_block');
 
@@ -106,7 +101,6 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
 
             $blockId = $connection->fetchOne($select);
 
-            // If exists, update it
             if ($blockId) {
                 $block = $this->blockFactory->create();
                 $this->blockResource->load($block, $blockId);
@@ -117,17 +111,15 @@ class CreateDemoBlocks extends Action implements CsrfAwareActionInterface
                 return $block;
             }
 
-            // Create new block only if none exists
             $block = $this->blockFactory->create();
             $block->setIdentifier($identifier)
                   ->setTitle($title)
                   ->setContent($content)
                   ->setIsActive(1)
-                  ->setStores([0]); // All store views
+                  ->setStores([0]);
 
             $this->blockResource->save($block);
             return $block;
-
         } catch (\Exception $e) {
             return null;
         }

@@ -13,32 +13,14 @@ use Panth\MegaMenu\Model\ResourceModel\Menu as MenuResource;
 
 class Validate extends Action implements HttpPostActionInterface
 {
-    /**
-     * Authorization level
-     */
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var JsonFactory
-     */
     protected $resultJsonFactory;
 
-    /**
-     * @var MenuFactory
-     */
     protected $menuFactory;
 
-    /**
-     * @var MenuResource
-     */
     protected $menuResource;
 
-    /**
-     * @param Context $context
-     * @param JsonFactory $resultJsonFactory
-     * @param MenuFactory $menuFactory
-     * @param MenuResource $menuResource
-     */
     public function __construct(
         Context $context,
         JsonFactory $resultJsonFactory,
@@ -51,17 +33,11 @@ class Validate extends Action implements HttpPostActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * Validate action
-     *
-     * @return ResultInterface
-     */
     public function execute(): ResultInterface
     {
         $response = ['error' => false, 'messages' => []];
         $data = $this->getRequest()->getPostValue();
 
-        // Validate required fields
         if (empty($data['title'])) {
             $response['error'] = true;
             $response['messages'][] = __('Menu Title is required.');
@@ -74,7 +50,6 @@ class Validate extends Action implements HttpPostActionInterface
             $response['error'] = true;
             $response['messages'][] = __('Identifier can only contain lowercase letters, numbers, and underscores.');
         } else {
-            // Check if identifier already exists
             $menuId = $this->getRequest()->getParam('menu_id');
             $existingMenu = $this->menuFactory->create();
             $this->menuResource->load($existingMenu, $data['identifier'], 'identifier');

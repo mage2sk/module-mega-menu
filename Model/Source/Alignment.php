@@ -1,26 +1,12 @@
 <?php
-/**
- * Alignment Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
-/**
- * Alignment options
- */
 class Alignment implements OptionSourceInterface
 {
-    /**
-     * Get options
-     *
-     * @return array
-     */
     public function toOptionArray(): array
     {
         return [

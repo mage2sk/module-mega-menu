@@ -39,27 +39,23 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
         $this->getResponse()->setHeader('Content-Type', 'application/json', true);
 
         try {
-            $maxLevel = $this->getRequest()->getParam('max_level', 0); // 0 = all levels
+            $maxLevel = $this->getRequest()->getParam('max_level', 0);
 
-            // Get category URL suffix from config
             $categoryUrlSuffix = $this->scopeConfig->getValue(
                 'catalog/seo/category_url_suffix',
                 ScopeInterface::SCOPE_STORE
             );
 
-            // Get all active categories
             $collection = $this->categoryCollectionFactory->create();
             $collection->addAttributeToSelect(['name', 'url_key', 'url_path', 'level', 'parent_id', 'position'])
                 ->addIsActiveFilter()
                 ->addOrderField('level')
                 ->addOrderField('position');
 
-            // Build category tree structure
             $categoryData = [];
             $categoryChildren = [];
 
             foreach ($collection as $category) {
-                // Skip root and default category (level 0 and 1)
                 if ($category->getLevel() <= 1) {
                     continue;
                 }
@@ -78,24 +74,20 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                     'url_key' => $category->getUrlKey()
                 ];
 
-                // Group children by parent
                 if (!isset($categoryChildren[$parentId])) {
                     $categoryChildren[$parentId] = [];
                 }
                 $categoryChildren[$parentId][] = $catId;
             }
 
-            // Determine root categories to import
             $rootCategories = [];
             if ($maxLevel > 0) {
-                // Import categories at specific level as roots
                 foreach ($categoryData as $catId => $cat) {
                     if ($cat['level'] == ($maxLevel - 1)) {
                         $rootCategories[] = $catId;
                     }
                 }
             } else {
-                // Import all top-level categories (level 0)
                 foreach ($categoryData as $catId => $cat) {
                     if ($cat['level'] == 0) {
                         $rootCategories[] = $catId;
@@ -103,12 +95,10 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                 }
             }
 
-            // Sort roots by position
             usort($rootCategories, function($a, $b) use ($categoryData) {
                 return $categoryData[$a]['position'] - $categoryData[$b]['position'];
             });
 
-            // Build items array recursively to maintain parent-child order
             $items = [];
             $position = 0;
 
@@ -119,7 +109,6 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                     return;
                 }
 
-                // Sort children by position
                 $children = $categoryChildren[$parentCatId];
                 usort($children, function($a, $b) use ($categoryData) {
                     return $categoryData[$a]['position'] - $categoryData[$b]['position'];
@@ -129,7 +118,6 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                     $cat = $categoryData[$catId];
                     $tempId = 'cat_' . $catId;
 
-                    // Build relative URL with suffix from config
                     $relativeUrl = '';
                     if ($cat['url_path']) {
                         $relativeUrl = '/' . ltrim($cat['url_path'], '/');
@@ -137,7 +125,6 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                         $relativeUrl = '/' . ltrim($cat['url_key'], '/');
                     }
 
-                    // Append category URL suffix if configured
                     if ($relativeUrl && $categoryUrlSuffix) {
                         $relativeUrl .= $categoryUrlSuffix;
                     }
@@ -162,17 +149,14 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                         'hover_effect' => 'fade'
                     ];
 
-                    // Recursively process children
                     $buildTree($catId, $tempId, $currentLevel + 1);
                 }
             };
 
-            // Process each root category and its descendants
             foreach ($rootCategories as $rootCatId) {
                 $cat = $categoryData[$rootCatId];
                 $tempId = 'cat_' . $rootCatId;
 
-                // Build relative URL with suffix from config
                 $relativeUrl = '';
                 if ($cat['url_path']) {
                     $relativeUrl = '/' . ltrim($cat['url_path'], '/');
@@ -180,7 +164,6 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                     $relativeUrl = '/' . ltrim($cat['url_key'], '/');
                 }
 
-                // Append category URL suffix if configured
                 if ($relativeUrl && $categoryUrlSuffix) {
                     $relativeUrl .= $categoryUrlSuffix;
                 }
@@ -205,7 +188,6 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                     'hover_effect' => 'fade'
                 ];
 
-                // Recursively build children
                 $buildTree($rootCatId, $tempId, 1);
             }
 
@@ -215,7 +197,6 @@ class ImportCategories extends Action implements CsrfAwareActionInterface
                 'count' => count($items),
                 'message' => 'Successfully imported ' . count($items) . ' categories'
             ]);
-
         } catch (\Exception $e) {
             return $result->setData([
                 'success' => false,

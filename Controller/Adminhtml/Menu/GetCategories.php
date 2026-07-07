@@ -113,20 +113,17 @@ class GetCategories extends Action implements CsrfAwareActionInterface
                 'meta_title',
                 'meta_description'
             ])
-            // REMOVED addIsActiveFilter() to import ALL categories (active and inactive)
-            ->addAttributeToFilter('level', ['gt' => 1]) // Filter out root and default category
+
+            ->addAttributeToFilter('level', ['gt' => 1])
             ->addOrderField('level')
             ->addOrderField('position');
 
-        // Add search filter if provided
         if (!empty($search)) {
             $collection->addAttributeToFilter('name', ['like' => '%' . $search . '%']);
         }
 
-        // Get total count before pagination
         $totalCount = $collection->getSize();
 
-        // Apply pagination
         $collection->setPageSize($pageSize);
         $collection->setCurPage($page);
 
@@ -135,25 +132,21 @@ class GetCategories extends Action implements CsrfAwareActionInterface
         foreach ($collection as $category) {
             $adjustedLevel = (int)$category->getLevel() - 2;
 
-            // Use Magento's proper URL generation with rewrites and .html suffix
             $categoryUrl = $category->getUrl();
 
-            // Convert to relative URL by removing base URL
             $storeUrl = $this->storeManager->getStore()->getBaseUrl();
             if (strpos($categoryUrl, $storeUrl) === 0) {
                 $categoryUrl = '/' . ltrim(substr($categoryUrl, strlen($storeUrl)), '/');
             }
 
-            // Get category image URL if available
             $categoryImage = '';
             if ($category->getImage()) {
                 $categoryImage = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/category/' . $category->getImage();
             }
 
-            // Get include_in_menu value - default to 1 if not set
             $includeInMenu = $category->getData('include_in_menu');
             if ($includeInMenu === null) {
-                $includeInMenu = 1; // Default to enabled if not set
+                $includeInMenu = 1;
             }
 
             $categoryData = [
@@ -184,13 +177,11 @@ class GetCategories extends Action implements CsrfAwareActionInterface
         $tree = [];
         $lookup = [];
 
-        // First pass: index by ID
         foreach ($categories as $category) {
             $lookup[$category['id']] = $category;
             $lookup[$category['id']]['children'] = [];
         }
 
-        // Second pass: build tree
         foreach ($lookup as $id => $category) {
             if ($category['parent_id'] && isset($lookup[$category['parent_id']])) {
                 $lookup[$category['parent_id']]['children'][] = &$lookup[$id];
@@ -207,7 +198,6 @@ class GetCategories extends Action implements CsrfAwareActionInterface
         $collection = $this->pageCollectionFactory->create();
         $collection->addFieldToFilter('is_active', 1);
 
-        // Add search filter if provided
         if (!empty($search)) {
             $collection->addFieldToFilter(
                 ['title', 'identifier'],
@@ -218,10 +208,8 @@ class GetCategories extends Action implements CsrfAwareActionInterface
             );
         }
 
-        // Get total count before pagination
         $totalCount = $collection->getSize();
 
-        // Apply pagination
         $collection->setPageSize($pageSize);
         $collection->setCurPage($page);
 
@@ -245,7 +233,6 @@ class GetCategories extends Action implements CsrfAwareActionInterface
         $collection = $this->blockCollectionFactory->create();
         $collection->addFieldToFilter('is_active', 1);
 
-        // Add search filter if provided
         if (!empty($search)) {
             $collection->addFieldToFilter(
                 ['title', 'identifier'],
@@ -256,10 +243,8 @@ class GetCategories extends Action implements CsrfAwareActionInterface
             );
         }
 
-        // Get total count before pagination
         $totalCount = $collection->getSize();
 
-        // Apply pagination
         $collection->setPageSize($pageSize);
         $collection->setCurPage($page);
 
@@ -285,7 +270,6 @@ class GetCategories extends Action implements CsrfAwareActionInterface
             ->addAttributeToFilter('status', \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED)
             ->addAttributeToFilter('visibility', ['neq' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE]);
 
-        // Add search filter if provided
         if (!empty($search)) {
             $collection->addAttributeToFilter(
                 [
@@ -295,19 +279,15 @@ class GetCategories extends Action implements CsrfAwareActionInterface
             );
         }
 
-        // Get total count before pagination
         $totalCount = $collection->getSize();
 
-        // Apply pagination
         $collection->setPageSize($pageSize);
         $collection->setCurPage($page);
 
         $products = [];
         foreach ($collection as $product) {
-            // Get product URL
             $productUrl = $product->getProductUrl();
 
-            // Convert to relative URL by removing base URL
             $storeUrl = $this->storeManager->getStore()->getBaseUrl();
             if (strpos($productUrl, $storeUrl) === 0) {
                 $productUrl = '/' . ltrim(substr($productUrl, strlen($storeUrl)), '/');

@@ -1,12 +1,4 @@
 <?php
-/**
- * One-Time Initialization Flag Model
- *
- * Tracks whether module initialization has been run
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model;
@@ -20,26 +12,12 @@ class InitFlag
     const XML_PATH_INIT_FLAG = 'panth_megamenu/system/initialized';
     const XML_PATH_INIT_DATE = 'panth_megamenu/system/init_date';
 
-    /**
-     * @var WriterInterface
-     */
     private $configWriter;
 
-    /**
-     * @var ScopeConfigInterface
-     */
     private $scopeConfig;
 
-    /**
-     * @var DateTime
-     */
     private $dateTime;
 
-    /**
-     * @param WriterInterface $configWriter
-     * @param ScopeConfigInterface $scopeConfig
-     * @param DateTime $dateTime
-     */
     public function __construct(
         WriterInterface $configWriter,
         ScopeConfigInterface $scopeConfig,
@@ -50,11 +28,6 @@ class InitFlag
         $this->dateTime = $dateTime;
     }
 
-    /**
-     * Check if module has been initialized
-     *
-     * @return bool
-     */
     public function isInitialized(): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -63,11 +36,6 @@ class InitFlag
         );
     }
 
-    /**
-     * Mark module as initialized
-     *
-     * @return void
-     */
     public function markAsInitialized(): void
     {
         $this->configWriter->save(
@@ -85,11 +53,6 @@ class InitFlag
         );
     }
 
-    /**
-     * Get initialization date
-     *
-     * @return string|null
-     */
     public function getInitDate(): ?string
     {
         return $this->scopeConfig->getValue(
@@ -98,11 +61,6 @@ class InitFlag
         );
     }
 
-    /**
-     * Reset initialization flag (for testing)
-     *
-     * @return void
-     */
     public function reset(): void
     {
         $this->configWriter->delete(

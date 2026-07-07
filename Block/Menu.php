@@ -1,10 +1,4 @@
 <?php
-/**
- * Menu Block
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Block;
@@ -26,73 +20,28 @@ use Psr\Log\LoggerInterface;
 
 class Menu extends Template implements IdentityInterface
 {
-    /**
-     * @var MenuRepositoryInterface
-     */
     protected $menuRepository;
 
-    /**
-     * @var ItemRepositoryInterface
-     */
     protected $itemRepository;
 
-    /**
-     * @var StoreManagerInterface
-     */
     protected $storeManager;
 
-    /**
-     * @var MenuHelper
-     */
     protected $menuHelper;
 
-    /**
-     * @var MenuViewModel
-     */
     protected $menuViewModel;
 
-    /**
-     * @var LoggerInterface
-     */
     protected $logger;
 
-    /**
-     * @var ThemeHelper
-     */
     protected $themeHelper;
 
-    /**
-     * @var MenuRenderer
-     */
     protected $menuRenderer;
 
-    /**
-     * @var MenuInterface|null
-     */
     protected $menu;
 
-    /**
-     * @var array|null
-     */
     protected $menuTree;
 
-    /**
-     * @var string
-     */
     protected $_template = 'Panth_MegaMenu::menu.phtml';
 
-    /**
-     * @param Context $context
-     * @param MenuRepositoryInterface $menuRepository
-     * @param ItemRepositoryInterface $itemRepository
-     * @param StoreManagerInterface $storeManager
-     * @param MenuHelper $menuHelper
-     * @param MenuViewModel $menuViewModel
-     * @param LoggerInterface $logger
-     * @param ThemeHelper $themeHelper
-     * @param MenuRenderer $menuRenderer
-     * @param array $data
-     */
     public function __construct(
         Context $context,
         MenuRepositoryInterface $menuRepository,
@@ -116,12 +65,6 @@ class Menu extends Template implements IdentityInterface
         $this->menuRenderer = $menuRenderer;
     }
 
-    /**
-     * Get menu by identifier
-     *
-     * @param string $identifier
-     * @return MenuInterface|null
-     */
     public function getMenu(string $identifier): ?MenuInterface
     {
         if ($this->menu !== null && $this->menu->getIdentifier() === $identifier) {
@@ -129,7 +72,6 @@ class Menu extends Template implements IdentityInterface
         }
 
         try {
-            // Pass null for store_id to avoid joining with store table (which may not exist)
             $this->menu = $this->menuRepository->getByIdentifier($identifier, null);
 
             if (!$this->menu->getIsActive()) {
@@ -144,12 +86,6 @@ class Menu extends Template implements IdentityInterface
         }
     }
 
-    /**
-     * Get menu tree
-     *
-     * @param int|string $menuIdentifier Menu ID or identifier
-     * @return array
-     */
     public function getMenuTree($menuIdentifier): array
     {
         if ($this->menuTree !== null) {
@@ -157,7 +93,6 @@ class Menu extends Template implements IdentityInterface
         }
 
         try {
-            // If identifier is string, load menu first
             if (is_string($menuIdentifier)) {
                 $menu = $this->getMenu($menuIdentifier);
                 if (!$menu) {
@@ -170,7 +105,6 @@ class Menu extends Template implements IdentityInterface
                 }
             }
 
-            // Get items from JSON field
             $itemsJson = $menu->getItemsJson();
 
             if (empty($itemsJson)) {
@@ -183,14 +117,10 @@ class Menu extends Template implements IdentityInterface
                 return [];
             }
 
-            // Filter items by show_on_frontend (default to true if not set)
             $filteredItems = array_filter($itemsData, function($item) {
-                // If show_on_frontend is not set, default to true (show the item)
-                // Only hide if explicitly set to false/0
                 return !isset($item['show_on_frontend']) || !empty($item['show_on_frontend']);
             });
 
-            // Build tree structure from flat array
             $this->menuTree = $this->buildTree($filteredItems);
 
             return $this->menuTree;
@@ -199,39 +129,23 @@ class Menu extends Template implements IdentityInterface
         }
     }
 
-    /**
-     * Build tree structure from flat array of items
-     *
-     * Items are stored FLAT with:
-     * - item_id: "cat_24" (unique identifier)
-     * - parent_id: "cat_24" or 0 (references another item's item_id)
-     *
-     * @param array $items Flat array of menu items
-     * @param string|int|null $parentId Parent item_id to match
-     * @return array Nested tree structure
-     */
     protected function buildTree(array $items, $parentId = null): array
     {
         $tree = [];
         $rootItemsFound = 0;
 
         foreach ($items as $item) {
-            // Get this item's parent_id and item_id
             $itemParentId = $item['parent_id'] ?? null;
             $itemId = $item['item_id'] ?? null;
 
-            // Determine if this item belongs at this level
             $shouldInclude = false;
 
             if ($parentId === null) {
-                // Root level: match items with parent_id = 0 (integer or string)
                 if ($itemParentId === 0 || $itemParentId === '0' || $itemParentId === null || $itemParentId === '') {
                     $shouldInclude = true;
                     $rootItemsFound++;
                 }
             } else {
-                // Child level: match items where parent_id equals the given parentId
-                // Use loose comparison to handle string/int variations
                 if ($itemParentId == $parentId) {
                     $shouldInclude = true;
                 }
@@ -241,7 +155,6 @@ class Menu extends Template implements IdentityInterface
                 continue;
             }
 
-            // Recursively build children using this item's item_id
             if ($itemId) {
                 $children = $this->buildTree($items, $itemId);
                 if (!empty($children)) {
@@ -255,12 +168,6 @@ class Menu extends Template implements IdentityInterface
         return $tree;
     }
 
-    /**
-     * Filter inactive items from tree
-     *
-     * @param array $items
-     * @return array
-     */
     protected function filterInactiveItems(array $items): array
     {
         $filtered = [];
@@ -281,13 +188,6 @@ class Menu extends Template implements IdentityInterface
         return $filtered;
     }
 
-    /**
-     * Render single menu item
-     *
-     * @param ItemInterface $item
-     * @param int $level
-     * @return string
-     */
     public function renderItem(ItemInterface $item, int $level = 0): string
     {
         if (!$item->getIsActive()) {
@@ -296,14 +196,12 @@ class Menu extends Template implements IdentityInterface
 
         $html = '<li class="' . $this->escapeHtmlAttr($this->menuViewModel->getItemClass($item)) . '">';
 
-        // Render link or content
         if ($this->menuViewModel->shouldShowContent($item)) {
             $html .= $this->renderContent($item);
         } else {
             $html .= $this->renderLink($item);
         }
 
-        // Render children if any
         if ($item->hasChildren()) {
             $html .= $this->renderChildren($item, $level + 1);
         }
@@ -313,12 +211,6 @@ class Menu extends Template implements IdentityInterface
         return $html;
     }
 
-    /**
-     * Render item link
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     protected function renderLink(ItemInterface $item): string
     {
         $url = $this->menuViewModel->getItemUrl($item);
@@ -348,12 +240,6 @@ class Menu extends Template implements IdentityInterface
         return $html;
     }
 
-    /**
-     * Render item content
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     protected function renderContent(ItemInterface $item): string
     {
         $content = $this->menuViewModel->processItemContent($item);
@@ -362,13 +248,6 @@ class Menu extends Template implements IdentityInterface
         return '<div class="menu-content ' . $columnClass . '">' . $content . '</div>';
     }
 
-    /**
-     * Render children items
-     *
-     * @param ItemInterface $item
-     * @param int $level
-     * @return string
-     */
     protected function renderChildren(ItemInterface $item, int $level): string
     {
         $children = $item->getChildren();
@@ -388,13 +267,6 @@ class Menu extends Template implements IdentityInterface
         return $html;
     }
 
-    /**
-     * Get full rendered menu HTML
-     *
-     * @param string $identifier
-     * @param string $cssClass
-     * @return string
-     */
     public function getMenuHtml(string $identifier, string $cssClass = ''): string
     {
         if (!$this->menuHelper->isEnabled()) {
@@ -431,11 +303,6 @@ class Menu extends Template implements IdentityInterface
         return $html;
     }
 
-    /**
-     * Get cache key info
-     *
-     * @return array
-     */
     public function getCacheKeyInfo()
     {
         $identifier = $this->getData('menu_identifier');
@@ -445,15 +312,10 @@ class Menu extends Template implements IdentityInterface
             $this->storeManager->getStore()->getId(),
             $identifier ?: 'default',
             $this->_design->getDesignTheme()->getId(),
-            $this->getCustomerId() // Include customer ID for personalized caching
+            $this->getCustomerId()
         ];
     }
 
-    /**
-     * Get identities
-     *
-     * @return array
-     */
     public function getIdentities()
     {
         $identities = [];
@@ -468,11 +330,6 @@ class Menu extends Template implements IdentityInterface
         return $identities;
     }
 
-    /**
-     * Get cache lifetime
-     *
-     * @return int|null
-     */
     protected function getCacheLifetime()
     {
         if ($this->menuHelper->isCacheEnabled()) {
@@ -481,32 +338,22 @@ class Menu extends Template implements IdentityInterface
         return null;
     }
 
-    /**
-     * Before rendering html process
-     *
-     * @return $this
-     */
     protected function _beforeToHtml()
     {
-        // Pass theme helper to template for dual-theme compatibility
         $this->setData('theme_helper', $this->themeHelper);
 
-        // Only load menu if MegaMenu is enabled
         $isEnabled = $this->menuHelper->isEnabled();
 
         if (!$isEnabled) {
             return parent::_beforeToHtml();
         }
 
-        // Get menu identifier from layout argument or config
         $identifier = $this->getData('menu_identifier');
 
-        // If not set in layout, get from config
         if (!$identifier) {
             $identifier = $this->menuHelper->getMenuIdentifier();
         }
 
-        // Load menu if identifier is set
         if ($identifier) {
             $this->menu = $this->getMenu($identifier);
             $this->menuTree = $this->getMenuTree($identifier);
@@ -515,71 +362,36 @@ class Menu extends Template implements IdentityInterface
         return parent::_beforeToHtml();
     }
 
-    /**
-     * Get menu helper
-     *
-     * @return MenuHelper
-     */
     public function getMenuHelper(): MenuHelper
     {
         return $this->menuHelper;
     }
 
-    /**
-     * Get menu view model
-     *
-     * @return MenuViewModel
-     */
     public function getMenuViewModel(): MenuViewModel
     {
         return $this->menuViewModel;
     }
 
-    /**
-     * Get view model (alias for getMenuViewModel)
-     *
-     * @return MenuViewModel
-     */
     public function getViewModel(): MenuViewModel
     {
         return $this->menuViewModel;
     }
 
-    /**
-     * Get theme helper
-     *
-     * @return ThemeHelper
-     */
     public function getThemeHelper(): ThemeHelper
     {
         return $this->themeHelper;
     }
 
-    /**
-     * Get current menu
-     *
-     * @return MenuInterface|null
-     */
     public function getCurrentMenu(): ?MenuInterface
     {
         return $this->menu;
     }
 
-    /**
-     * Get current menu tree
-     *
-     * @return array
-     */
     public function getCurrentMenuTree(): array
     {
         return $this->menuTree ?? [];
     }
 
-    /**
-     * Check if menu should be rendered
-     *
-     * @return bool
-     */
     public function shouldRender(): bool
     {
         if (!$this->menuHelper->isEnabled()) {
@@ -597,39 +409,22 @@ class Menu extends Template implements IdentityInterface
         return $menu !== null && !empty($this->getMenuTree($identifier));
     }
 
-    /**
-     * Check if MegaMenu is enabled
-     *
-     * @return bool
-     */
     public function isEnabled(): bool
     {
         return $this->menuHelper->isEnabled();
     }
 
-    /**
-     * Get menu data for JavaScript
-     *
-     * @return array
-     */
     public function getMenuData(): array
     {
         return $this->menuViewModel->getMenuData();
     }
 
-    /**
-     * Get menu items for the current menu
-     *
-     * @return array
-     */
     public function getMenuItems(): array
     {
-        // If tree is already loaded in _beforeToHtml, return it
         if ($this->menuTree !== null) {
             return $this->menuTree;
         }
 
-        // Otherwise try to load from identifier
         $identifier = $this->getData('menu_identifier');
         if (!$identifier) {
             $identifier = $this->menuHelper->getMenuIdentifier();
@@ -643,21 +438,11 @@ class Menu extends Template implements IdentityInterface
         return $tree;
     }
 
-    /**
-     * Get menu data as JSON
-     *
-     * @return string
-     */
     public function getMenuDataJson(): string
     {
         return json_encode($this->getMenuData());
     }
 
-    /**
-     * Get store ID
-     *
-     * @return int
-     */
     public function getStoreId(): int
     {
         try {
@@ -667,52 +452,26 @@ class Menu extends Template implements IdentityInterface
         }
     }
 
-    /**
-     * Get customer ID
-     *
-     * @return int
-     */
     public function getCustomerId(): int
     {
-        return 0; // Implement customer session logic if needed
+        return 0;
     }
 
-    /**
-     * Check if cache is enabled (for templates)
-     *
-     * @return bool
-     */
     public function isCacheEnabled(): bool
     {
         return $this->menuHelper->isCacheEnabled();
     }
 
-    /**
-     * Check if lazy load is enabled
-     *
-     * @return bool
-     */
     public function isLazyLoadEnabled(): bool
     {
         return $this->menuHelper->isLazyLoadEnabled();
     }
 
-    /**
-     * Get mobile breakpoint
-     *
-     * @return int
-     */
     public function getMobileBreakpoint(): int
     {
         return $this->menuHelper->getMobileBreakpoint();
     }
 
-    /**
-     * Check if sticky menu is enabled
-     * Checks menu entity first, falls back to global config
-     *
-     * @return bool
-     */
     public function isStickyEnabled(): bool
     {
         if ($this->menu && method_exists($this->menu, 'getIsSticky')) {
@@ -724,79 +483,42 @@ class Menu extends Template implements IdentityInterface
         return $this->menuHelper->isStickyEnabled();
     }
 
-    /**
-     * Get sticky offset
-     *
-     * @return int
-     */
     public function getStickyOffset(): int
     {
         return $this->menuHelper->getStickyOffset();
     }
 
-    /**
-     * Get hover delay
-     *
-     * @return int
-     */
     public function getHoverDelay(): int
     {
         return $this->menuHelper->getHoverIntentDelay();
     }
 
-    /**
-     * Get animation speed
-     *
-     * @return int
-     */
     public function getAnimationSpeed(): int
     {
         return $this->menuHelper->getAnimationDuration();
     }
 
-    /**
-     * Check if close on click is enabled
-     *
-     * @return bool
-     */
     public function isCloseOnClick(): bool
     {
-        return true; // Default behavior
+        return true;
     }
 
-    /**
-     * Check if icons should be shown
-     *
-     * @return bool
-     */
     public function showIcons(): bool
     {
         return $this->menuHelper->showIcons();
     }
 
-    /**
-     * Check if RTL is enabled
-     *
-     * @return bool
-     */
     public function isRtl(): bool
     {
-        return false; // Implement RTL detection if needed
+        return false;
     }
 
-    /**
-     * Get current menu CSS class
-     *
-     * @return string
-     */
     public function getMenuCssClass(): string
     {
-        // If menu is already loaded in _beforeToHtml, use it
         if ($this->menu) {
             return $this->menu->getCssClass() ?? '';
         }
 
-        // Otherwise try to load from identifier
         $identifier = $this->getData('menu_identifier');
         if (!$identifier) {
             $identifier = $this->menuHelper->getMenuIdentifier();
@@ -814,19 +536,12 @@ class Menu extends Template implements IdentityInterface
         return $menu->getCssClass() ?? '';
     }
 
-    /**
-     * Get current menu custom CSS
-     *
-     * @return string
-     */
     public function getMenuCustomCss(): string
     {
-        // If menu is already loaded in _beforeToHtml, use it
         if ($this->menu) {
             return $this->menu->getCustomCss() ?? '';
         }
 
-        // Otherwise try to load from identifier
         $identifier = $this->getData('menu_identifier');
         if (!$identifier) {
             $identifier = $this->menuHelper->getMenuIdentifier();
@@ -844,19 +559,12 @@ class Menu extends Template implements IdentityInterface
         return $menu->getCustomCss() ?? '';
     }
 
-    /**
-     * Get current menu mobile layout
-     *
-     * @return string
-     */
     public function getMobileLayout(): string
     {
-        // If menu is already loaded in _beforeToHtml, use it
         if ($this->menu) {
             return $this->menu->getMobileLayout() ?? 'accordion';
         }
 
-        // Otherwise try to load from identifier
         $identifier = $this->getData('menu_identifier');
         if (!$identifier) {
             $identifier = $this->menuHelper->getMenuIdentifier();
@@ -874,31 +582,16 @@ class Menu extends Template implements IdentityInterface
         return $menu->getMobileLayout() ?? 'accordion';
     }
 
-    /**
-     * Get menu renderer helper
-     *
-     * @return MenuRenderer
-     */
     public function getMenuRenderer(): MenuRenderer
     {
         return $this->menuRenderer;
     }
 
-    /**
-     * Check if debug mode is enabled
-     *
-     * @return bool
-     */
     public function isDebugEnabled(): bool
     {
         return $this->menuHelper->isDebugEnabled();
     }
 
-    /**
-     * Get complete menu config array for Alpine.js components
-     *
-     * @return array
-     */
     public function getMenuConfig(): array
     {
         $helper = $this->menuHelper;
@@ -931,11 +624,6 @@ class Menu extends Template implements IdentityInterface
         ];
     }
 
-    /**
-     * Get menu config as JSON for embedding in templates
-     *
-     * @return string
-     */
     public function getMenuConfigJson(): string
     {
         return json_encode($this->getMenuConfig());

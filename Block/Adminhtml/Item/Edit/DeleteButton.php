@@ -1,13 +1,4 @@
 <?php
-/**
- * Panth MegaMenu Item Delete Button
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Block\Adminhtml\Item\Edit;
 
 use Magento\Backend\Block\Widget\Context;
@@ -15,26 +6,13 @@ use Magento\Framework\View\Element\UiComponent\Control\ButtonProviderInterface;
 
 class DeleteButton implements ButtonProviderInterface
 {
-    /**
-     * @var Context
-     */
     protected $context;
 
-    /**
-     * Constructor
-     *
-     * @param Context $context
-     */
     public function __construct(Context $context)
     {
         $this->context = $context;
     }
 
-    /**
-     * Get button data
-     *
-     * @return array
-     */
     public function getButtonData()
     {
         $data = [];
@@ -56,11 +34,6 @@ class DeleteButton implements ButtonProviderInterface
         return $data;
     }
 
-    /**
-     * Get delete URL
-     *
-     * @return string
-     */
     public function getDeleteUrl()
     {
         $itemId = $this->context->getRequest()->getParam('item_id');

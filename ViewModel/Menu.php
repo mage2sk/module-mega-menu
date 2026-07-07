@@ -1,13 +1,4 @@
 <?php
-/**
- * Enhanced Menu ViewModel - Theme-Agnostic Data Provider
- *
- * Provides menu data and item management for both Hyva (Alpine.js) and Luma (KnockoutJS) themes.
- * This ViewModel serves as the primary data interface for menu rendering in templates.
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\ViewModel;
@@ -38,149 +29,54 @@ use Psr\Log\LoggerInterface;
 
 class Menu implements ArgumentInterface
 {
-    /**
-     * @var MenuRepositoryInterface
-     */
     private $menuRepository;
 
-    /**
-     * @var ItemRepositoryInterface
-     */
     private $itemRepository;
 
-    /**
-     * @var CategoryRepositoryInterface
-     */
     private $categoryRepository;
 
-    /**
-     * @var CategoryCollectionFactory
-     */
     private $categoryCollectionFactory;
 
-    /**
-     * @var ProductRepositoryInterface
-     */
     private $productRepository;
 
-    /**
-     * @var PageRepositoryInterface
-     */
     private $pageRepository;
 
-    /**
-     * @var UrlInterface
-     */
     private $urlBuilder;
 
-    /**
-     * @var StoreManagerInterface
-     */
     private $storeManager;
 
-    /**
-     * @var CustomerSession
-     */
     private $customerSession;
 
-    /**
-     * @var CategoryHelper
-     */
     private $categoryHelper;
 
-    /**
-     * @var PageHelper
-     */
     private $pageHelper;
 
-    /**
-     * @var FilterProvider
-     */
     private $filterProvider;
 
-    /**
-     * @var MenuHelper
-     */
     private $menuHelper;
 
-    /**
-     * @var AssetRepository
-     */
     private $assetRepository;
 
-    /**
-     * @var DateTime
-     */
     private $dateTime;
 
-    /**
-     * @var Json
-     */
     private $jsonSerializer;
 
-    /**
-     * @var SearchCriteriaBuilder
-     */
     private $searchCriteriaBuilder;
 
-    /**
-     * @var LoggerInterface
-     */
     private $logger;
 
-    /**
-     * @var \Magento\Cms\Block\BlockFactory
-     */
     private $cmsBlockFactory;
 
-    /**
-     * @var \Panth\MegaMenu\Helper\MenuRenderer
-     */
     private $menuRenderer;
 
-    /**
-     * @var array
-     */
     private $categoryCache = [];
 
-    /**
-     * @var array
-     */
     private $pageCache = [];
 
-    /**
-     * @var array
-     */
     private $menuTreeCache = [];
 
-    /**
-     * @var MenuInterface|null
-     */
     private $currentMenu = null;
 
-    /**
-     * Constructor
-     *
-     * @param MenuRepositoryInterface $menuRepository
-     * @param ItemRepositoryInterface $itemRepository
-     * @param CategoryRepositoryInterface $categoryRepository
-     * @param CategoryCollectionFactory $categoryCollectionFactory
-     * @param PageRepositoryInterface $pageRepository
-     * @param UrlInterface $urlBuilder
-     * @param StoreManagerInterface $storeManager
-     * @param CustomerSession $customerSession
-     * @param CategoryHelper $categoryHelper
-     * @param PageHelper $pageHelper
-     * @param FilterProvider $filterProvider
-     * @param MenuHelper $menuHelper
-     * @param AssetRepository $assetRepository
-     * @param DateTime $dateTime
-     * @param Json $jsonSerializer
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param LoggerInterface $logger
-     * @param \Magento\Cms\Block\BlockFactory $cmsBlockFactory
-     * @param \Panth\MegaMenu\Helper\MenuRenderer $menuRenderer
-     */
     public function __construct(
         MenuRepositoryInterface $menuRepository,
         ItemRepositoryInterface $itemRepository,
@@ -225,15 +121,6 @@ class Menu implements ArgumentInterface
         $this->menuRenderer = $menuRenderer;
     }
 
-    /**
-     * Helper method to get value from item (handles both array and object)
-     *
-     * @param ItemInterface|array $item
-     * @param string $key Array key
-     * @param string|null $method Object method name
-     * @param mixed $default Default value
-     * @return mixed
-     */
     private function getItemValue($item, string $key, ?string $method = null, $default = null)
     {
         if (is_array($item)) {
@@ -242,12 +129,6 @@ class Menu implements ArgumentInterface
         return $method && method_exists($item, $method) ? $item->$method() : $default;
     }
 
-    /**
-     * Get menu data as array
-     *
-     * @param MenuInterface $menu
-     * @return array
-     */
     public function getMenuData(MenuInterface $menu): array
     {
         return [
@@ -261,12 +142,6 @@ class Menu implements ArgumentInterface
         ];
     }
 
-    /**
-     * Get menu items as hierarchical tree
-     *
-     * @param string|null $menuIdentifier
-     * @return array
-     */
     public function getMenuItems(?string $menuIdentifier = null): array
     {
         try {
@@ -278,18 +153,14 @@ class Menu implements ArgumentInterface
 
             $menuId = $menu->getMenuId();
 
-            // Check cache
             if (isset($this->menuTreeCache[$menuId])) {
                 return $this->menuTreeCache[$menuId];
             }
 
-            // Get menu tree
             $items = $this->itemRepository->getMenuTree($menuId);
 
-            // Filter visible items
             $visibleItems = $this->filterVisibleItems($items);
 
-            // Cache result
             $this->menuTreeCache[$menuId] = $visibleItems;
 
             return $visibleItems;
@@ -298,12 +169,6 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get menu by identifier
-     *
-     * @param string|null $identifier
-     * @return MenuInterface|null
-     */
     public function getMenu(?string $identifier = null): ?MenuInterface
     {
         if ($this->currentMenu !== null && ($identifier === null || $this->currentMenu->getIdentifier() === $identifier)) {
@@ -326,12 +191,6 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get item URL
-     *
-     * @param ItemInterface|array $item
-     * @return string
-     */
     public function getItemUrl($item): string
     {
         $isActive = $this->getItemValue($item, 'is_active', 'getIsActive', true);
@@ -339,15 +198,12 @@ class Menu implements ArgumentInterface
             return '#';
         }
 
-        // First, try to get URL directly from the item
         $url = $this->getItemValue($item, 'url', 'getUrl', '');
 
-        // If URL is valid and not just '#', return it
         if (!empty($url) && $url !== '#') {
             return $url;
         }
 
-        // If URL is '#' or empty, try to generate based on item type
         $itemType = $this->getItemValue($item, 'item_type', 'getItemType', 'link');
 
         try {
@@ -379,23 +235,15 @@ class Menu implements ArgumentInterface
                 case 'cms_block':
                 case 'widget':
                 default:
-                    // For dropdown, custom_html, cms_block, widget - return # (not clickable)
-                    // For link - should have URL already
+
                     return '#';
             }
         } catch (\Exception $e) {
-            // Silently handle errors
         }
 
         return '#';
     }
 
-    /**
-     * Check if item has children
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function hasChildren($item): bool
     {
         if (is_array($item)) {
@@ -404,12 +252,6 @@ class Menu implements ArgumentInterface
         return $item->hasChildren() && !empty($this->getChildren($item));
     }
 
-    /**
-     * Get item children
-     *
-     * @param ItemInterface $item
-     * @return array
-     */
     public function getChildren($item): array
     {
         if (is_array($item)) {
@@ -424,12 +266,6 @@ class Menu implements ArgumentInterface
         return $this->filterVisibleItems($item->getChildren());
     }
 
-    /**
-     * Render item content (process CMS content, widgets, etc.)
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function renderItemContent($item): string
     {
         $content = $this->getItemValue($item, 'content', 'getContent', '');
@@ -449,17 +285,10 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Process item content (with CMS block support)
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function processItemContent($item): string
     {
         $cmsBlock = $this->getItemValue($item, 'cms_block', 'getCmsBlock', '');
 
-        // If CMS block is specified, load and render it
         if ($cmsBlock) {
             try {
                 $blockHtml = '';
@@ -471,11 +300,9 @@ class Menu implements ArgumentInterface
                     return $blockHtml;
                 }
             } catch (\Exception $e) {
-                // Silently handle errors
             }
         }
 
-        // Otherwise, return custom content
         $content = $this->getItemValue($item, 'custom_content', 'getCustomContent', '');
 
         if (!$content) {
@@ -497,23 +324,14 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get image URL for item
-     *
-     * @param ItemInterface $item
-     * @param string $type
-     * @return string
-     */
     public function getImageUrl(ItemInterface $item, string $type = 'thumbnail'): string
     {
         try {
-            // Check if item has custom image in content
             $content = $item->getContent();
             if ($content && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $content, $matches)) {
                 return $matches[1];
             }
 
-            // For category items, get category image
             if ($item->getLinkType() === ItemInterface::LINK_CATEGORY && $item->getLinkValue()) {
                 return $this->getCategoryImageUrl((int)$item->getLinkValue(), $type);
             }
@@ -524,43 +342,31 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Check if item is visible (based on dates, customer groups, etc.)
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function isItemVisible($item): bool
     {
-        // Check if active
         $isActive = $this->getItemValue($item, 'is_active', 'getIsActive', true);
         if (!$isActive) {
             return false;
         }
 
-        // Check max depth
         $maxDepth = $this->menuHelper->getMaxDepth();
         $level = $this->getItemValue($item, 'level', 'getLevel', 0);
         if ($maxDepth > 0 && $level >= $maxDepth) {
             return false;
         }
 
-        // Check schedule visibility (start/end dates)
         if (!$this->isVisibleBySchedule($item)) {
             return false;
         }
 
-        // Check store view visibility
         if (!$this->isVisibleInCurrentStore($item)) {
             return false;
         }
 
-        // Check customer group restrictions
         if (!$this->isVisibleForCustomerGroup($item)) {
             return false;
         }
 
-        // Check device visibility (if all devices are hidden, item is not visible)
         if (!$this->isVisibleOnCurrentDevice($item)) {
             return false;
         }
@@ -568,82 +374,59 @@ class Menu implements ArgumentInterface
         return true;
     }
 
-    /**
-     * Check if item is visible based on schedule (start/end dates)
-     *
-     * @param mixed $item
-     * @return bool
-     */
     private function isVisibleBySchedule($item): bool
     {
         $startDate = $this->getItemValue($item, 'start_date', 'getStartDate', null);
         $endDate = $this->getItemValue($item, 'end_date', 'getEndDate', null);
 
         if (!$startDate && !$endDate) {
-            return true; // No schedule restrictions
+            return true;
         }
 
         $currentTimestamp = $this->dateTime->gmtTimestamp();
 
-        // Check start date
         if ($startDate) {
             $startTimestamp = strtotime($startDate);
             if ($currentTimestamp < $startTimestamp) {
-                return false; // Not yet visible
+                return false;
             }
         }
 
-        // Check end date
         if ($endDate) {
             $endTimestamp = strtotime($endDate . ' 23:59:59');
             if ($currentTimestamp > $endTimestamp) {
-                return false; // No longer visible
+                return false;
             }
         }
 
         return true;
     }
 
-    /**
-     * Check if item is visible in current store view
-     *
-     * @param mixed $item
-     * @return bool
-     */
     private function isVisibleInCurrentStore($item): bool
     {
         $storeIds = $this->getItemValue($item, 'store_ids', 'getStoreIds', null);
 
         if (empty($storeIds)) {
-            return true; // Visible in all stores
+            return true;
         }
 
-        // Convert to array if it's a string
         if (is_string($storeIds)) {
             $storeIds = explode(',', $storeIds);
         }
 
         $currentStoreId = $this->storeManager->getStore()->getId();
 
-        // Check if current store or "all stores" (0) is in the list
         return in_array($currentStoreId, $storeIds) || in_array(0, $storeIds);
     }
 
-    /**
-     * Check if item is visible for current customer group
-     *
-     * @param mixed $item
-     * @return bool
-     */
     private function isVisibleForCustomerGroup($item): bool
     {
         $customerGroupIds = $this->getItemValue($item, 'customer_group_ids', 'getCustomerGroupIds', null);
 
         if (empty($customerGroupIds)) {
-            return true; // Visible for all customer groups
+            return true;
         }
 
-        // Convert to array if it's a string
         if (is_string($customerGroupIds)) {
             $customerGroupIds = explode(',', $customerGroupIds);
         }
@@ -653,12 +436,6 @@ class Menu implements ArgumentInterface
         return in_array($currentCustomerGroupId, $customerGroupIds);
     }
 
-    /**
-     * Get menu as JSON for JavaScript initialization
-     *
-     * @param string|null $menuIdentifier
-     * @return string
-     */
     public function getMenuJson(?string $menuIdentifier = null): string
     {
         try {
@@ -681,13 +458,6 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get item CSS class
-     *
-     * @param ItemInterface $item
-     * @param string $additionalClasses
-     * @return string
-     */
     public function getItemClass(ItemInterface $item, string $additionalClasses = ''): string
     {
         $classes = $this->menuHelper->getItemClasses($item);
@@ -699,13 +469,6 @@ class Menu implements ArgumentInterface
         return $classes;
     }
 
-    /**
-     * Check if item is active/current
-     *
-     * @param ItemInterface $item
-     * @param string|null $currentUrl
-     * @return bool
-     */
     public function isActive(ItemInterface $item, ?string $currentUrl = null): bool
     {
         if (!$item->getIsActive()) {
@@ -722,31 +485,18 @@ class Menu implements ArgumentInterface
             return false;
         }
 
-        // Normalize URLs for comparison
         $currentUrl = rtrim($currentUrl, '/');
         $itemUrl = rtrim($itemUrl, '/');
 
         return $currentUrl === $itemUrl;
     }
 
-    /**
-     * Get link target attribute
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function getLinkTarget($item): string
     {
         $openNewTab = $this->getItemValue($item, 'open_new_tab', 'getOpenNewTab', false);
         return $openNewTab ? '_blank' : '_self';
     }
 
-    /**
-     * Get link rel attribute
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function getLinkRel($item): string
     {
         $openNewTab = $this->getItemValue($item, 'open_new_tab', 'getOpenNewTab', false);
@@ -757,12 +507,6 @@ class Menu implements ArgumentInterface
         return '';
     }
 
-    /**
-     * Get column width class based on columns count
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function getColumnWidthClass($item): string
     {
         $columns = $this->getItemValue($item, 'columns', 'getColumns', 1);
@@ -771,7 +515,6 @@ class Menu implements ArgumentInterface
             $columns = 1;
         }
 
-        // Calculate Tailwind grid column span
         $gridMap = [
             1 => 'col-span-12',
             2 => 'col-span-6',
@@ -784,12 +527,6 @@ class Menu implements ArgumentInterface
         return $gridMap[$columns] ?? 'col-span-12';
     }
 
-    /**
-     * Check if item should show content
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function shouldShowContent($item): bool
     {
         $itemType = $this->getItemValue($item, 'item_type', 'getItemType');
@@ -798,23 +535,11 @@ class Menu implements ArgumentInterface
             && !empty($content);
     }
 
-    /**
-     * Get item depth level
-     *
-     * @param ItemInterface $item
-     * @return int
-     */
     public function getItemDepth($item): int
     {
         return $this->getItemValue($item, 'level', 'getLevel', 0);
     }
 
-    /**
-     * Check if item is top level
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function isTopLevel($item): bool
     {
         $level = $this->getItemValue($item, 'level', 'getLevel', 0);
@@ -822,13 +547,6 @@ class Menu implements ArgumentInterface
         return $level === 0 || $parentId === null;
     }
 
-    /**
-     * Get breadcrumb trail for item
-     *
-     * @param ItemInterface $item
-     * @param array $allItems
-     * @return array
-     */
     public function getBreadcrumbTrail(ItemInterface $item, array $allItems): array
     {
         $trail = [$item];
@@ -846,12 +564,6 @@ class Menu implements ArgumentInterface
         return $trail;
     }
 
-    /**
-     * Get category URL
-     *
-     * @param int $categoryId
-     * @return string
-     */
     private function getCategoryUrl(int $categoryId): string
     {
         if (isset($this->categoryCache[$categoryId]['url'])) {
@@ -879,13 +591,6 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get category image URL
-     *
-     * @param int $categoryId
-     * @param string $type
-     * @return string
-     */
     private function getCategoryImageUrl(int $categoryId, string $type = 'thumbnail'): string
     {
         try {
@@ -912,12 +617,6 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get CMS page URL
-     *
-     * @param string $pageIdentifier
-     * @return string
-     */
     private function getCmsPageUrl(string $pageIdentifier): string
     {
         if (isset($this->pageCache[$pageIdentifier])) {
@@ -934,12 +633,6 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get product URL
-     *
-     * @param int $productId
-     * @return string
-     */
     private function getProductUrl(int $productId): string
     {
         try {
@@ -958,34 +651,19 @@ class Menu implements ArgumentInterface
         }
     }
 
-    /**
-     * Get custom URL
-     *
-     * @param string $url
-     * @return string
-     */
     private function getCustomUrl(string $url): string
     {
-        // If URL starts with http:// or https://, return as is
         if (preg_match('/^https?:\/\//', $url)) {
             return $url;
         }
 
-        // If URL starts with /, treat as absolute path
         if (strpos($url, '/') === 0) {
             return $this->urlBuilder->getBaseUrl() . ltrim($url, '/');
         }
 
-        // Otherwise, build URL relative to base
         return $this->urlBuilder->getUrl($url);
     }
 
-    /**
-     * Filter visible items
-     *
-     * @param array $items
-     * @return array
-     */
     private function filterVisibleItems(array $items): array
     {
         $visibleItems = [];
@@ -999,12 +677,6 @@ class Menu implements ArgumentInterface
         return $visibleItems;
     }
 
-    /**
-     * Convert items to array for JSON serialization
-     *
-     * @param array $items
-     * @return array
-     */
     private function convertItemsToArray(array $items): array
     {
         $result = [];
@@ -1035,13 +707,6 @@ class Menu implements ArgumentInterface
         return $result;
     }
 
-    /**
-     * Find item by ID in array
-     *
-     * @param int $itemId
-     * @param array $items
-     * @return ItemInterface|null
-     */
     private function findItemById(int $itemId, array $items): ?ItemInterface
     {
         foreach ($items as $item) {
@@ -1060,12 +725,6 @@ class Menu implements ArgumentInterface
         return null;
     }
 
-    /**
-     * Get item title with icon
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getItemTitleWithIcon($item): string
     {
         $title = $this->getItemValue($item, 'title', 'getTitle', '');
@@ -1086,12 +745,6 @@ class Menu implements ArgumentInterface
         return $html;
     }
 
-    /**
-     * Get badge HTML for item
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getBadgeHtml($item): string
     {
         $badge = $this->getItemValue($item, 'badge', 'getBadge', '');
@@ -1106,17 +759,10 @@ class Menu implements ArgumentInterface
         return '<span class="pmenu-badge badge-' . $badge . '">' . $displayText . '</span>';
     }
 
-    /**
-     * Get inline styles for item
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getItemInlineStyles($item): string
     {
         $styles = [];
 
-        // Background and text colors
         $bgColor = $this->getItemValue($item, 'bg_color', 'getBgColor', '');
         $textColor = $this->getItemValue($item, 'text_color', 'getTextColor', '');
 
@@ -1127,7 +773,6 @@ class Menu implements ArgumentInterface
             $styles[] = 'color:' . $textColor;
         }
 
-        // Typography
         $fontFamily = $this->getItemValue($item, 'font_family', 'getFontFamily', '');
         $fontSize = $this->getItemValue($item, 'font_size', 'getFontSize', '');
         $fontWeight = $this->getItemValue($item, 'font_weight', 'getFontWeight', '');
@@ -1146,7 +791,6 @@ class Menu implements ArgumentInterface
             $styles[] = 'text-transform:' . $textTransform;
         }
 
-        // Spacing
         $padding = $this->getItemValue($item, 'padding', 'getPadding', '');
         $margin = $this->getItemValue($item, 'margin', 'getMargin', '');
         $gap = $this->getItemValue($item, 'gap', 'getGap', '');
@@ -1161,7 +805,6 @@ class Menu implements ArgumentInterface
             $styles[] = 'gap:' . $gap;
         }
 
-        // Border and effects
         $borderRadius = $this->getItemValue($item, 'border_radius', 'getBorderRadius', '');
         $boxShadow = $this->getItemValue($item, 'box_shadow', 'getBoxShadow', '');
         $textShadow = $this->getItemValue($item, 'text_shadow', 'getTextShadow', '');
@@ -1183,12 +826,6 @@ class Menu implements ArgumentInterface
         return !empty($styles) ? implode(';', $styles) : '';
     }
 
-    /**
-     * Get custom data attributes as array
-     *
-     * @param mixed $item
-     * @return array
-     */
     public function getCustomDataAttributes($item): array
     {
         $customDataAttributes = $this->getItemValue($item, 'custom_data_attributes', 'getCustomDataAttributes', '');
@@ -1203,18 +840,11 @@ class Menu implements ArgumentInterface
                 return $dataAttrs;
             }
         } catch (\Exception $e) {
-            // Silently handle errors
         }
 
         return [];
     }
 
-    /**
-     * Get hover data attributes
-     *
-     * @param mixed $item
-     * @return array
-     */
     public function getHoverDataAttributes($item): array
     {
         $attributes = [];
@@ -1236,12 +866,6 @@ class Menu implements ArgumentInterface
         return $attributes;
     }
 
-    /**
-     * Get animation CSS class
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getAnimationClass($item): string
     {
         $animation = $this->getItemValue($item, 'animation', 'getAnimation', '');
@@ -1253,19 +877,12 @@ class Menu implements ArgumentInterface
         return 'animate__animated animate__' . $animation;
     }
 
-    /**
-     * Check if item should be visible on current device
-     *
-     * @param mixed $item
-     * @return bool
-     */
     public function isVisibleOnCurrentDevice($item): bool
     {
         $showOnDesktop = $this->getItemValue($item, 'show_on_desktop', 'getShowOnDesktop', true);
         $showOnTablet = $this->getItemValue($item, 'show_on_tablet', 'getShowOnTablet', true);
         $showOnMobile = $this->getItemValue($item, 'show_on_mobile', 'getShowOnMobile', true);
 
-        // Convert string values to boolean
         if (is_string($showOnDesktop)) {
             $showOnDesktop = $showOnDesktop !== '0';
         }
@@ -1276,21 +893,13 @@ class Menu implements ArgumentInterface
             $showOnMobile = $showOnMobile !== '0';
         }
 
-        // If all devices are hidden, return false
         if (!$showOnDesktop && !$showOnTablet && !$showOnMobile) {
             return false;
         }
 
-        // Otherwise, let CSS handle the visibility
         return true;
     }
 
-    /**
-     * Get device visibility CSS classes
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getDeviceVisibilityClasses($item): string
     {
         $classes = [];
@@ -1299,7 +908,6 @@ class Menu implements ArgumentInterface
         $showOnTablet = $this->getItemValue($item, 'show_on_tablet', 'getShowOnTablet', true);
         $showOnMobile = $this->getItemValue($item, 'show_on_mobile', 'getShowOnMobile', true);
 
-        // Convert string values to boolean
         if (is_string($showOnDesktop)) {
             $showOnDesktop = $showOnDesktop !== '0';
         }
@@ -1323,52 +931,27 @@ class Menu implements ArgumentInterface
         return implode(' ', $classes);
     }
 
-    /**
-     * Get tooltip text
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getTooltipText($item): string
     {
         return $this->getItemValue($item, 'tooltip_text', 'getTooltipText', '');
     }
 
-    /**
-     * Get custom click action JavaScript
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getCustomClickAction($item): string
     {
         return $this->getItemValue($item, 'custom_click_action', 'getCustomClickAction', '');
     }
 
-    /**
-     * Get ARIA label
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getAriaLabel($item): string
     {
         $ariaLabel = $this->getItemValue($item, 'aria_label', 'getAriaLabel', '');
 
         if (!$ariaLabel) {
-            // Fallback to title
             $ariaLabel = $this->getItemValue($item, 'title', 'getTitle', '');
         }
 
         return $ariaLabel;
     }
 
-    /**
-     * Get ARIA role
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getAriaRole($item): string
     {
         $ariaRole = $this->getItemValue($item, 'aria_role', 'getAriaRole', '');
@@ -1380,22 +963,11 @@ class Menu implements ArgumentInterface
         return $ariaRole;
     }
 
-    /**
-     * Get column width for mega menu
-     *
-     * @param mixed $item
-     * @return string
-     */
     public function getColumnWidth($item): string
     {
         return $this->getItemValue($item, 'column_width', 'getColumnWidth', 'auto');
     }
 
-    /**
-     * Get the MenuRenderer helper instance
-     *
-     * @return \Panth\MegaMenu\Helper\MenuRenderer
-     */
     public function getMenuRenderer(): \Panth\MegaMenu\Helper\MenuRenderer
     {
         return $this->menuRenderer;

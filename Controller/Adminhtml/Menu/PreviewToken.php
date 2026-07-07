@@ -11,25 +11,13 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 
-/**
- * Admin controller to generate a single-use preview token.
- *
- * The token is stored in the shared Magento cache so the frontend
- * Preview controller can validate it without needing admin session access.
- */
 class PreviewToken extends Action implements CsrfAwareActionInterface
 {
     const CACHE_PREFIX = 'megamenu_preview_token_';
-    const TOKEN_LIFETIME = 300; // 5 minutes
+    const TOKEN_LIFETIME = 300;
 
-    /**
-     * @var JsonFactory
-     */
     private $jsonFactory;
 
-    /**
-     * @var CacheInterface
-     */
     private $cache;
 
     public function __construct(
@@ -42,9 +30,6 @@ class PreviewToken extends Action implements CsrfAwareActionInterface
         $this->cache = $cache;
     }
 
-    /**
-     * Generate a preview token for the given menu_id
-     */
     public function execute()
     {
         $result = $this->jsonFactory->create();
@@ -54,10 +39,8 @@ class PreviewToken extends Action implements CsrfAwareActionInterface
             return $result->setData(['success' => false, 'message' => 'Missing menu_id']);
         }
 
-        // Generate a unique token
         $token = bin2hex(random_bytes(32));
 
-        // Store in cache: token -> menu_id mapping (expires in 5 minutes)
         $this->cache->save(
             (string) $menuId,
             self::CACHE_PREFIX . $token,
@@ -71,25 +54,16 @@ class PreviewToken extends Action implements CsrfAwareActionInterface
         ]);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
         return null;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         return true;
     }
 
-    /**
-     * @inheritDoc
-     */
     protected function _isAllowed()
     {
         return $this->_authorization->isAllowed('Panth_MegaMenu::menu');

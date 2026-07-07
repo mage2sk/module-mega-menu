@@ -1,13 +1,4 @@
 <?php
-/**
- * Panth MegaMenu Parent Items Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Model\Source;
 
 use Magento\Framework\App\RequestInterface;
@@ -16,22 +7,10 @@ use Panth\MegaMenu\Model\ResourceModel\Item\CollectionFactory;
 
 class ParentItems implements OptionSourceInterface
 {
-    /**
-     * @var CollectionFactory
-     */
     protected $itemCollectionFactory;
 
-    /**
-     * @var RequestInterface
-     */
     protected $request;
 
-    /**
-     * Constructor
-     *
-     * @param CollectionFactory $itemCollectionFactory
-     * @param RequestInterface $request
-     */
     public function __construct(
         CollectionFactory $itemCollectionFactory,
         RequestInterface $request
@@ -40,11 +19,6 @@ class ParentItems implements OptionSourceInterface
         $this->request = $request;
     }
 
-    /**
-     * Get options for parent items
-     *
-     * @return array
-     */
     public function toOptionArray()
     {
         $options = [
@@ -63,7 +37,6 @@ class ParentItems implements OptionSourceInterface
         $collection->setOrder('position', 'ASC');
 
         foreach ($collection as $item) {
-            // Don't allow an item to be its own parent
             if ($currentItemId && $item->getId() == $currentItemId) {
                 continue;
             }
@@ -77,12 +50,6 @@ class ParentItems implements OptionSourceInterface
         return $options;
     }
 
-    /**
-     * Get item label with hierarchy indication
-     *
-     * @param \Panth\MegaMenu\Model\Item $item
-     * @return string
-     */
     protected function getItemLabel($item)
     {
         $level = $item->getLevel();

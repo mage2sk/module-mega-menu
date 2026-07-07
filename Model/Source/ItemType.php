@@ -1,22 +1,10 @@
 <?php
-/**
- * Panth MegaMenu Item Type Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Model\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
 class ItemType implements OptionSourceInterface
 {
-    /**
-     * Item type constants
-     */
     const TYPE_CATEGORY = 'category';
     const TYPE_CMS_PAGE = 'cms_page';
     const TYPE_CUSTOM_URL = 'custom_url';
@@ -25,11 +13,6 @@ class ItemType implements OptionSourceInterface
     const TYPE_WIDGET = 'widget';
     const TYPE_SEPARATOR = 'separator';
 
-    /**
-     * Get options
-     *
-     * @return array
-     */
     public function toOptionArray()
     {
         return [

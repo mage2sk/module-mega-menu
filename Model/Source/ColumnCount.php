@@ -1,24 +1,10 @@
 <?php
-/**
- * Panth MegaMenu Column Count Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Model\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
 class ColumnCount implements OptionSourceInterface
 {
-    /**
-     * Get options
-     *
-     * @return array
-     */
     public function toOptionArray()
     {
         return [

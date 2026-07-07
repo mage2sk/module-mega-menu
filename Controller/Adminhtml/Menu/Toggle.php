@@ -9,9 +9,6 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 
-/**
- * Toggle Menu Enable/Disable
- */
 class Toggle extends Action implements CsrfAwareActionInterface
 {
     protected $jsonFactory;
@@ -59,7 +56,6 @@ class Toggle extends Action implements CsrfAwareActionInterface
                 'success' => true,
                 'message' => 'Menu ' . ($isActive ? 'enabled' : 'disabled') . ' successfully'
             ]);
-
         } catch (\Exception $e) {
             return $result->setData([
                 'success' => false,

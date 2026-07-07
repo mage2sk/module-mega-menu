@@ -1,10 +1,4 @@
 <?php
-/**
- * Menu Version Repository Implementation
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model;
@@ -24,43 +18,18 @@ use Panth\MegaMenu\Model\ResourceModel\MenuVersion\CollectionFactory;
 
 class MenuVersionRepository implements MenuVersionRepositoryInterface
 {
-    /**
-     * @var MenuVersionResource
-     */
     private $resource;
 
-    /**
-     * @var MenuVersionInterfaceFactory
-     */
     private $versionFactory;
 
-    /**
-     * @var CollectionFactory
-     */
     private $collectionFactory;
 
-    /**
-     * @var MenuVersionSearchResultsInterfaceFactory
-     */
     private $searchResultsFactory;
 
-    /**
-     * @var CollectionProcessorInterface
-     */
     private $collectionProcessor;
 
-    /**
-     * @var array
-     */
     private $instances = [];
 
-    /**
-     * @param MenuVersionResource $resource
-     * @param MenuVersionInterfaceFactory $versionFactory
-     * @param CollectionFactory $collectionFactory
-     * @param MenuVersionSearchResultsInterfaceFactory $searchResultsFactory
-     * @param CollectionProcessorInterface $collectionProcessor
-     */
     public function __construct(
         MenuVersionResource $resource,
         MenuVersionInterfaceFactory $versionFactory,
@@ -75,9 +44,6 @@ class MenuVersionRepository implements MenuVersionRepositoryInterface
         $this->collectionProcessor = $collectionProcessor;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function save(MenuVersionInterface $version): MenuVersionInterface
     {
         try {
@@ -93,9 +59,6 @@ class MenuVersionRepository implements MenuVersionRepositoryInterface
         return $version;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getById(int $versionId): MenuVersionInterface
     {
         if (!isset($this->instances[$versionId])) {
@@ -114,9 +77,6 @@ class MenuVersionRepository implements MenuVersionRepositoryInterface
         return $this->instances[$versionId];
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getByMenuId(int $menuId): array
     {
         $collection = $this->collectionFactory->create();
@@ -126,9 +86,6 @@ class MenuVersionRepository implements MenuVersionRepositoryInterface
         return $collection->getItems();
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getList(SearchCriteriaInterface $searchCriteria): MenuVersionSearchResultsInterface
     {
         $collection = $this->collectionFactory->create();
@@ -142,9 +99,6 @@ class MenuVersionRepository implements MenuVersionRepositoryInterface
         return $searchResults;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function delete(MenuVersionInterface $version): bool
     {
         try {
@@ -161,9 +115,6 @@ class MenuVersionRepository implements MenuVersionRepositoryInterface
         return true;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function deleteById(int $versionId): bool
     {
         return $this->delete($this->getById($versionId));

@@ -15,38 +15,16 @@ use Panth\MegaMenu\Api\MenuRepositoryInterface;
 
 class Save extends Action implements HttpPostActionInterface
 {
-    /**
-     * Authorization level
-     */
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var DataPersistorInterface
-     */
     protected $dataPersistor;
 
-    /**
-     * @var MenuFactory
-     */
     protected $menuFactory;
 
-    /**
-     * @var MenuResource
-     */
     protected $menuResource;
 
-    /**
-     * @var MenuRepositoryInterface
-     */
     protected $menuRepository;
 
-    /**
-     * @param Context $context
-     * @param DataPersistorInterface $dataPersistor
-     * @param MenuFactory $menuFactory
-     * @param MenuResource $menuResource
-     * @param MenuRepositoryInterface $menuRepository
-     */
     public function __construct(
         Context $context,
         DataPersistorInterface $dataPersistor,
@@ -61,11 +39,6 @@ class Save extends Action implements HttpPostActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * Save action
-     *
-     * @return ResultInterface
-     */
     public function execute(): ResultInterface
     {
         $resultRedirect = $this->resultRedirectFactory->create();
@@ -84,7 +57,6 @@ class Save extends Action implements HttpPostActionInterface
                         return $resultRedirect->setPath('*/*/');
                     }
                 } else {
-                    // Check if identifier already exists for new menu
                     if (!empty($data['identifier'])) {
                         $existingMenu = $this->menuFactory->create();
                         $this->menuResource->load($existingMenu, $data['identifier'], 'identifier');
@@ -96,7 +68,6 @@ class Save extends Action implements HttpPostActionInterface
                     }
                 }
 
-                // Set menu data
                 $menu->setData([
                     'title' => $data['title'] ?? '',
                     'identifier' => $data['identifier'] ?? '',
@@ -116,23 +87,18 @@ class Save extends Action implements HttpPostActionInterface
                     'container_box_shadow' => $data['container_box_shadow'] ?? '',
                 ]);
 
-                // If menu_id exists, preserve it
                 if ($menuId) {
                     $menu->setId($menuId);
                 }
 
-                // Save through repository to trigger versioning
                 $this->menuRepository->save($menu);
                 $savedMenuId = $menu->getId();
 
-                // Save store relation (default to all stores)
                 $connection = $this->menuResource->getConnection();
                 $storeTable = $this->menuResource->getTable('panth_megamenu_store');
 
-                // Delete existing store relations
                 $connection->delete($storeTable, ['menu_id = ?' => $savedMenuId]);
 
-                // Insert default store (0 = all stores)
                 $connection->insert($storeTable, [
                     'menu_id' => $savedMenuId,
                     'store_id' => 0

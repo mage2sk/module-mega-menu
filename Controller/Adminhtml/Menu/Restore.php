@@ -1,10 +1,4 @@
 <?php
-/**
- * Restore Menu from Version Controller
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Controller\Adminhtml\Menu;
@@ -22,44 +16,18 @@ use Panth\MegaMenu\Model\ResourceModel\MenuVersion as MenuVersionResource;
 
 class Restore extends Action implements HttpPostActionInterface
 {
-    /**
-     * Authorization level for restore action
-     */
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu_version_restore';
 
-    /**
-     * @var MenuFactory
-     */
     protected $menuFactory;
 
-    /**
-     * @var MenuVersionFactory
-     */
     protected $menuVersionFactory;
 
-    /**
-     * @var MenuResource
-     */
     protected $menuResource;
 
-    /**
-     * @var MenuVersionResource
-     */
     protected $menuVersionResource;
 
-    /**
-     * @var Session
-     */
     protected $authSession;
 
-    /**
-     * @param Context $context
-     * @param MenuFactory $menuFactory
-     * @param MenuVersionFactory $menuVersionFactory
-     * @param MenuResource $menuResource
-     * @param MenuVersionResource $menuVersionResource
-     * @param Session $authSession
-     */
     public function __construct(
         Context $context,
         MenuFactory $menuFactory,
@@ -76,11 +44,6 @@ class Restore extends Action implements HttpPostActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * Restore menu from version
-     *
-     * @return ResultInterface
-     */
     public function execute(): ResultInterface
     {
         $resultRedirect = $this->resultRedirectFactory->create();
@@ -92,7 +55,6 @@ class Restore extends Action implements HttpPostActionInterface
         }
 
         try {
-            // Load the version
             $version = $this->menuVersionFactory->create();
             $this->menuVersionResource->load($version, $versionId);
 
@@ -102,7 +64,6 @@ class Restore extends Action implements HttpPostActionInterface
 
             $menuId = $version->getMenuId();
 
-            // Load the current menu
             $menu = $this->menuFactory->create();
             $this->menuResource->load($menu, $menuId);
 
@@ -110,10 +71,8 @@ class Restore extends Action implements HttpPostActionInterface
                 throw new LocalizedException(__('Menu no longer exists and cannot be restored.'));
             }
 
-            // Store old version number for the comment
             $oldVersionNumber = $version->getVersionNumber();
 
-            // Restore all fields from version to current menu
             $menu->setTitle($version->getTitle());
             $menu->setIdentifier($version->getIdentifier());
             $menu->setItemsJson($version->getItemsJson());
@@ -129,20 +88,16 @@ class Restore extends Action implements HttpPostActionInterface
             $menu->setData('container_box_shadow', $version->getContainerBoxShadow());
             $menu->setIsActive($version->getIsActive());
 
-            // Handle store IDs
             if ($version->getStoreIds()) {
                 $storeIds = explode(',', $version->getStoreIds());
                 $menu->setStoreIds($storeIds);
             }
 
-            // Save the menu
             $this->menuResource->save($menu);
 
-            // Create a new version entry after restore
             $newVersion = $this->menuVersionFactory->create();
             $nextVersionNumber = $this->menuVersionResource->getNextVersionNumber($menuId);
 
-            // Copy all data from current menu to new version
             $newVersion->setMenuId($menuId);
             $newVersion->setVersionNumber($nextVersionNumber);
             $newVersion->setTitle($menu->getTitle());
@@ -160,29 +115,24 @@ class Restore extends Action implements HttpPostActionInterface
             $newVersion->setContainerBoxShadow($menu->getData('container_box_shadow'));
             $newVersion->setIsActive($menu->getIsActive());
 
-            // Store IDs
             if ($menu->getStoreIds()) {
                 $storeIds = is_array($menu->getStoreIds()) ? $menu->getStoreIds() : [$menu->getStoreIds()];
                 $newVersion->setStoreIds(implode(',', $storeIds));
             }
 
-            // Set version comment
             $versionComment = sprintf('Restored from version #%d', $oldVersionNumber);
             $newVersion->setVersionComment($versionComment);
 
-            // Set created by (current admin user)
             $user = $this->authSession->getUser();
             if ($user) {
                 $newVersion->setCreatedBy($user->getUserName());
             }
 
-            // Calculate item count
             $itemsJson = $menu->getItemsJson();
             $items = json_decode($itemsJson, true);
             $itemCount = is_array($items) ? count($items) : 0;
             $newVersion->setItemCount($itemCount);
 
-            // Save the new version
             $this->menuVersionResource->save($newVersion);
 
             $this->messageManager->addSuccessMessage(
@@ -193,7 +143,6 @@ class Restore extends Action implements HttpPostActionInterface
             );
 
             return $resultRedirect->setPath('*/*/edit', ['menu_id' => $menuId]);
-
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
         } catch (\Exception $e) {

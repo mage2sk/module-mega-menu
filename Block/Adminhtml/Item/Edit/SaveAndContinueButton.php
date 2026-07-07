@@ -1,24 +1,10 @@
 <?php
-/**
- * Panth MegaMenu Item Save and Continue Button
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
-
 namespace Panth\MegaMenu\Block\Adminhtml\Item\Edit;
 
 use Magento\Framework\View\Element\UiComponent\Control\ButtonProviderInterface;
 
 class SaveAndContinueButton implements ButtonProviderInterface
 {
-    /**
-     * Get button data
-     *
-     * @return array
-     */
     public function getButtonData()
     {
         return [

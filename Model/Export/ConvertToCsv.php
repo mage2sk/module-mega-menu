@@ -1,10 +1,4 @@
 <?php
-/**
- * Convert Grid Data to CSV
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model\Export;
@@ -20,27 +14,12 @@ use Magento\Ui\Model\Export\MetadataProvider;
 
 class ConvertToCsv
 {
-    /**
-     * @var DirectoryList
-     */
     protected $directory;
 
-    /**
-     * @var MetadataProvider
-     */
     protected $metadataProvider;
 
-    /**
-     * @var Filter
-     */
     protected $filter;
 
-    /**
-     * @param Filesystem $filesystem
-     * @param Filter $filter
-     * @param MetadataProvider $metadataProvider
-     * @throws FileSystemException
-     */
     public function __construct(
         Filesystem $filesystem,
         Filter $filter,
@@ -51,13 +30,6 @@ class ConvertToCsv
         $this->metadataProvider = $metadataProvider;
     }
 
-    /**
-     * Returns CSV file
-     *
-     * @param string $component
-     * @return array
-     * @throws LocalizedException
-     */
     public function getCsvFile(string $component): array
     {
         $component = $this->filter->getComponent();
@@ -100,7 +72,7 @@ class ConvertToCsv
         return [
             'type' => 'filename',
             'value' => $file,
-            'rm' => true  // can delete file after use
+            'rm' => true
         ];
     }
 }

@@ -1,10 +1,4 @@
 <?php
-/**
- * Hover Effect Source Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model\Config\Source;
@@ -13,11 +7,6 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 class HoverEffect implements OptionSourceInterface
 {
-    /**
-     * Get hover effect options
-     *
-     * @return array
-     */
     public function toOptionArray(): array
     {
         return [
@@ -31,11 +20,6 @@ class HoverEffect implements OptionSourceInterface
         ];
     }
 
-    /**
-     * Get options as key-value pairs
-     *
-     * @return array
-     */
     public function toArray(): array
     {
         return [

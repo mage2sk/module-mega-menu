@@ -1,10 +1,4 @@
 <?php
-/**
- * Menu DataProvider for UI Grid Component
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Ui\Component\DataProvider;
@@ -19,29 +13,10 @@ use Panth\MegaMenu\Model\ResourceModel\Menu\CollectionFactory;
 
 class MenuDataProvider extends DataProvider
 {
-    /**
-     * @var CollectionFactory
-     */
     private CollectionFactory $collectionFactory;
 
-    /**
-     * @var ResourceConnection
-     */
     private ResourceConnection $resourceConnection;
 
-    /**
-     * @param string $name
-     * @param string $primaryFieldName
-     * @param string $requestFieldName
-     * @param ReportingInterface $reporting
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param RequestInterface $request
-     * @param FilterBuilder $filterBuilder
-     * @param CollectionFactory $collectionFactory
-     * @param ResourceConnection $resourceConnection
-     * @param array $meta
-     * @param array $data
-     */
     public function __construct(
         $name,
         $primaryFieldName,
@@ -71,11 +46,6 @@ class MenuDataProvider extends DataProvider
         $this->resourceConnection = $resourceConnection;
     }
 
-    /**
-     * Get data for UI Grid
-     *
-     * @return array
-     */
     public function getData(): array
     {
         if (!$this->getCollection()->isLoaded()) {
@@ -89,7 +59,6 @@ class MenuDataProvider extends DataProvider
         foreach ($this->getCollection() as $menu) {
             $menuData = $menu->getData();
 
-            // Count items for this menu
             $select = $connection->select()
                 ->from($itemTable, ['COUNT(*)'])
                 ->where('menu_id = ?', $menu->getId());
@@ -108,11 +77,6 @@ class MenuDataProvider extends DataProvider
         return $data;
     }
 
-    /**
-     * Get collection
-     *
-     * @return \Panth\MegaMenu\Model\ResourceModel\Menu\Collection
-     */
     public function getCollection()
     {
         if (!isset($this->_collection)) {

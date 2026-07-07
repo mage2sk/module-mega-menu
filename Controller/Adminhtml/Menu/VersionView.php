@@ -1,10 +1,4 @@
 <?php
-/**
- * View Menu Version Details Controller
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Controller\Adminhtml\Menu;
@@ -21,44 +15,18 @@ use Panth\MegaMenu\Model\ResourceModel\MenuVersion as MenuVersionResource;
 
 class VersionView extends Action implements HttpGetActionInterface
 {
-    /**
-     * Authorization level for version view action
-     */
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu_version_view';
 
-    /**
-     * @var JsonFactory
-     */
     protected $jsonFactory;
 
-    /**
-     * @var MenuVersionFactory
-     */
     protected $menuVersionFactory;
 
-    /**
-     * @var MenuVersionResource
-     */
     protected $menuVersionResource;
 
-    /**
-     * @var MenuFactory
-     */
     protected $menuFactory;
 
-    /**
-     * @var MenuResource
-     */
     protected $menuResource;
 
-    /**
-     * @param Context $context
-     * @param JsonFactory $jsonFactory
-     * @param MenuVersionFactory $menuVersionFactory
-     * @param MenuVersionResource $menuVersionResource
-     * @param MenuFactory $menuFactory
-     * @param MenuResource $menuResource
-     */
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
@@ -75,11 +43,6 @@ class VersionView extends Action implements HttpGetActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * View version details
-     *
-     * @return \Magento\Framework\Controller\Result\Json
-     */
     public function execute()
     {
         $result = $this->jsonFactory->create();
@@ -94,7 +57,6 @@ class VersionView extends Action implements HttpGetActionInterface
         }
 
         try {
-            // Load the version
             $version = $this->menuVersionFactory->create();
             $this->menuVersionResource->load($version, $versionId);
 
@@ -102,7 +64,6 @@ class VersionView extends Action implements HttpGetActionInterface
                 throw new LocalizedException(__('Version not found.'));
             }
 
-            // Prepare version data
             $versionData = [
                 'version_id' => $version->getVersionId(),
                 'menu_id' => $version->getMenuId(),
@@ -127,7 +88,6 @@ class VersionView extends Action implements HttpGetActionInterface
                 'version_comment' => $version->getVersionComment(),
             ];
 
-            // Format items preview
             $itemsJson = $version->getItemsJson();
             $items = json_decode($itemsJson, true);
             if (is_array($items)) {
@@ -143,7 +103,6 @@ class VersionView extends Action implements HttpGetActionInterface
                 'version' => $versionData
             ];
 
-            // Include comparison with current version if requested
             if ($includeComparison) {
                 $menu = $this->menuFactory->create();
                 $this->menuResource->load($menu, $version->getMenuId());
@@ -156,13 +115,11 @@ class VersionView extends Action implements HttpGetActionInterface
                         'is_active' => $menu->getIsActive(),
                     ];
 
-                    // Calculate differences
                     $responseData['differences'] = $this->calculateDifferences($version, $menu);
                 }
             }
 
             return $result->setData($responseData);
-
         } catch (LocalizedException $e) {
             return $result->setData([
                 'success' => false,
@@ -176,18 +133,11 @@ class VersionView extends Action implements HttpGetActionInterface
         }
     }
 
-    /**
-     * Format items for preview
-     *
-     * @param array $items
-     * @param int $maxDepth
-     * @return array
-     */
     protected function formatItemsPreview(array $items, int $maxDepth = 3): array
     {
         $preview = [];
         $count = 0;
-        $maxItems = 10; // Show first 10 items
+        $maxItems = 10;
 
         foreach ($items as $item) {
             if ($count >= $maxItems) {
@@ -209,18 +159,10 @@ class VersionView extends Action implements HttpGetActionInterface
         return $preview;
     }
 
-    /**
-     * Calculate differences between version and current menu
-     *
-     * @param \Panth\MegaMenu\Model\MenuVersion $version
-     * @param \Panth\MegaMenu\Model\Menu $menu
-     * @return array
-     */
     protected function calculateDifferences($version, $menu): array
     {
         $differences = [];
 
-        // Compare basic fields
         $fieldsToCompare = [
             'title',
             'identifier',
@@ -241,7 +183,6 @@ class VersionView extends Action implements HttpGetActionInterface
             }
         }
 
-        // Compare items
         $versionItems = json_decode($version->getItemsJson(), true);
         $currentItems = json_decode($menu->getItemsJson(), true);
 

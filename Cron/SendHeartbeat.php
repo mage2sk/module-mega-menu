@@ -1,9 +1,4 @@
 <?php
-/**
- * Daily heartbeat cron for Panth_MegaMenu. Skips if Panth_Core is
- * enabled, because Core handles the heartbeat for the whole site (and
- * we don't want every sibling module's cron stampeding the receiver).
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Cron;

@@ -1,8 +1,4 @@
 <?php
-/**
- * Add default store relations to menus that don't have any
- * This fixes the issue where menus without store relations are not visible in admin
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Setup\Patch\Data;
@@ -13,20 +9,10 @@ use Psr\Log\LoggerInterface;
 
 class AddDefaultStoreRelations implements DataPatchInterface
 {
-    /**
-     * @var ModuleDataSetupInterface
-     */
     private $moduleDataSetup;
 
-    /**
-     * @var LoggerInterface
-     */
     private $logger;
 
-    /**
-     * @param ModuleDataSetupInterface $moduleDataSetup
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
         LoggerInterface $logger
@@ -35,9 +21,6 @@ class AddDefaultStoreRelations implements DataPatchInterface
         $this->logger = $logger;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function apply()
     {
         $this->moduleDataSetup->getConnection()->startSetup();
@@ -47,7 +30,6 @@ class AddDefaultStoreRelations implements DataPatchInterface
             $menuTable = $this->moduleDataSetup->getTable('panth_megamenu_menu');
             $storeTable = $this->moduleDataSetup->getTable('panth_megamenu_store');
 
-            // Get all menus
             $menus = $connection->fetchAll(
                 $connection->select()->from($menuTable, ['menu_id'])
             );
@@ -57,14 +39,12 @@ class AddDefaultStoreRelations implements DataPatchInterface
             foreach ($menus as $menu) {
                 $menuId = $menu['menu_id'];
 
-                // Check if menu has store relations
                 $relationCount = $connection->fetchOne(
                     $connection->select()
                         ->from($storeTable, ['COUNT(*)'])
                         ->where('menu_id = ?', $menuId)
                 );
 
-                // If no store relations exist, add default relation for all stores (store_id = 0)
                 if (!$relationCount) {
                     $connection->insert($storeTable, [
                         'menu_id' => $menuId,
@@ -73,9 +53,7 @@ class AddDefaultStoreRelations implements DataPatchInterface
                     $fixedCount++;
                 }
             }
-
         } catch (\Exception $e) {
-            // Silently handle errors
         }
 
         $this->moduleDataSetup->getConnection()->endSetup();
@@ -83,17 +61,11 @@ class AddDefaultStoreRelations implements DataPatchInterface
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
     public static function getDependencies()
     {
         return [];
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getAliases()
     {
         return [];

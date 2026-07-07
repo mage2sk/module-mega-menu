@@ -1,10 +1,4 @@
 <?php
-/**
- * Item Repository Implementation
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model;
@@ -24,43 +18,18 @@ use Panth\MegaMenu\Model\ResourceModel\Item\CollectionFactory;
 
 class ItemRepository implements ItemRepositoryInterface
 {
-    /**
-     * @var ItemResource
-     */
     private $resource;
 
-    /**
-     * @var ItemInterfaceFactory
-     */
     private $itemFactory;
 
-    /**
-     * @var CollectionFactory
-     */
     private $collectionFactory;
 
-    /**
-     * @var ItemSearchResultsInterfaceFactory
-     */
     private $searchResultsFactory;
 
-    /**
-     * @var CollectionProcessorInterface
-     */
     private $collectionProcessor;
 
-    /**
-     * @var array
-     */
     private $instances = [];
 
-    /**
-     * @param ItemResource $resource
-     * @param ItemInterfaceFactory $itemFactory
-     * @param CollectionFactory $collectionFactory
-     * @param ItemSearchResultsInterfaceFactory $searchResultsFactory
-     * @param CollectionProcessorInterface $collectionProcessor
-     */
     public function __construct(
         ItemResource $resource,
         ItemInterfaceFactory $itemFactory,
@@ -75,13 +44,9 @@ class ItemRepository implements ItemRepositoryInterface
         $this->collectionProcessor = $collectionProcessor;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function save(ItemInterface $item): ItemInterface
     {
         try {
-            // Set position if not set
             if (!$item->getId() && !$item->getPosition()) {
                 $maxPosition = $this->resource->getMaxPosition(
                     $item->getMenuId(),
@@ -102,9 +67,6 @@ class ItemRepository implements ItemRepositoryInterface
         return $item;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getById(int $itemId): ItemInterface
     {
         if (!isset($this->instances[$itemId])) {
@@ -123,9 +85,6 @@ class ItemRepository implements ItemRepositoryInterface
         return $this->instances[$itemId];
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getList(SearchCriteriaInterface $searchCriteria): ItemSearchResultsInterface
     {
         $collection = $this->collectionFactory->create();
@@ -139,9 +98,6 @@ class ItemRepository implements ItemRepositoryInterface
         return $searchResults;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function delete(ItemInterface $item): bool
     {
         try {
@@ -158,32 +114,22 @@ class ItemRepository implements ItemRepositoryInterface
         return true;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function deleteById(int $itemId): bool
     {
         return $this->delete($this->getById($itemId));
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getMenuTree(int $menuId, ?int $parentId = null): array
     {
         $collection = $this->collectionFactory->create();
         return $collection->loadMenuTree($menuId, $parentId, true);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function moveItem(int $itemId, ?int $parentId, int $position): bool
     {
         try {
             $item = $this->getById($itemId);
 
-            // Prevent moving item under itself or its children
             if ($parentId !== null) {
                 $childrenIds = $this->resource->getChildrenIds($itemId, true);
                 if (in_array($parentId, $childrenIds)) {

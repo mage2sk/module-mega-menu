@@ -9,28 +9,14 @@ use Magento\Framework\App\RequestInterface;
 use Panth\MegaMenu\Model\MenuVersionFactory;
 use Panth\MegaMenu\Model\ResourceModel\MenuVersion as MenuVersionResource;
 
-/**
- * Export Menu Version as JSON
- */
 class Export extends Action implements CsrfAwareActionInterface
 {
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var MenuVersionFactory
-     */
     protected $menuVersionFactory;
 
-    /**
-     * @var MenuVersionResource
-     */
     protected $menuVersionResource;
 
-    /**
-     * @param Context $context
-     * @param MenuVersionFactory $menuVersionFactory
-     * @param MenuVersionResource $menuVersionResource
-     */
     public function __construct(
         Context $context,
         MenuVersionFactory $menuVersionFactory,
@@ -41,9 +27,6 @@ class Export extends Action implements CsrfAwareActionInterface
         $this->menuVersionResource = $menuVersionResource;
     }
 
-    /**
-     * Export version as JSON
-     */
     public function execute()
     {
         try {
@@ -62,7 +45,6 @@ class Export extends Action implements CsrfAwareActionInterface
                 return $this->_redirect('*/*/index');
             }
 
-            // Prepare export data
             $exportData = [
                 'menu' => [
                     'menu_id' => $version->getMenuId(),
@@ -97,7 +79,6 @@ class Export extends Action implements CsrfAwareActionInterface
             $jsonContent = json_encode($exportData, JSON_PRETTY_PRINT);
             $fileName = 'menu_' . $version->getIdentifier() . '_version_' . $version->getVersionNumber() . '_' . date('Ymd_His') . '.json';
 
-            // Download the file
             $this->getResponse()
                 ->setHttpResponseCode(200)
                 ->setHeader('Pragma', 'public', true)
@@ -109,7 +90,6 @@ class Export extends Action implements CsrfAwareActionInterface
 
             $this->getResponse()->setBody($jsonContent);
             return $this->getResponse();
-
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('Error: %1', $e->getMessage()));
             return $this->_redirect('*/*/index');

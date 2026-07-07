@@ -1,8 +1,4 @@
 <?php
-/**
- * Menu Version Grid Actions Column
- * Provides action links for version history (restore, view details, delete)
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Ui\Component\Listing\Column;
@@ -18,20 +14,8 @@ class VersionActions extends Column
     const URL_PATH_EXPORT = 'panth_menu/version/export';
     const URL_PATH_DELETE = 'panth_menu/version/delete';
 
-    /**
-     * @var UrlInterface
-     */
     protected $urlBuilder;
 
-    /**
-     * Constructor
-     *
-     * @param ContextInterface $context
-     * @param UiComponentFactory $uiComponentFactory
-     * @param UrlInterface $urlBuilder
-     * @param array $components
-     * @param array $data
-     */
     public function __construct(
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
@@ -43,19 +27,12 @@ class VersionActions extends Column
         parent::__construct($context, $uiComponentFactory, $components, $data);
     }
 
-    /**
-     * Prepare Data Source
-     *
-     * @param array $dataSource
-     * @return array
-     */
     public function prepareDataSource(array $dataSource)
     {
         if (isset($dataSource['data']['items'])) {
             foreach ($dataSource['data']['items'] as &$item) {
                 $name = $this->getData('name');
                 if (isset($item['version_id'])) {
-                    // Export JSON action
                     $item[$name]['export'] = [
                         'href' => $this->urlBuilder->getUrl(
                             static::URL_PATH_EXPORT,
@@ -65,7 +42,6 @@ class VersionActions extends Column
                         'target' => '_blank'
                     ];
 
-                    // Restore action with confirmation modal
                     $item[$name]['restore'] = [
                         'href' => $this->urlBuilder->getUrl(
                             static::URL_PATH_RESTORE,
@@ -79,7 +55,6 @@ class VersionActions extends Column
                         'post' => true
                     ];
 
-                    // Delete action
                     $item[$name]['delete'] = [
                         'href' => $this->urlBuilder->getUrl(
                             static::URL_PATH_DELETE,
@@ -99,12 +74,6 @@ class VersionActions extends Column
         return $dataSource;
     }
 
-    /**
-     * Get confirmation message for restore action
-     *
-     * @param array $item
-     * @return \Magento\Framework\Phrase
-     */
     protected function getRestoreConfirmMessage(array $item): \Magento\Framework\Phrase
     {
         $versionNumber = $item['version_number'] ?? 'this version';

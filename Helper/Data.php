@@ -1,10 +1,4 @@
 <?php
-/**
- * MegaMenu Helper Data
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Helper;
@@ -18,9 +12,6 @@ use Panth\MegaMenu\Api\Data\ItemInterface;
 
 class Data extends AbstractHelper
 {
-    /**
-     * Configuration paths
-     */
     const XML_PATH_ENABLED = 'panth_megamenu/general/enabled';
     const XML_PATH_MENU_IDENTIFIER = 'panth_megamenu/general/menu_identifier';
     const XML_PATH_CACHE_ENABLED = 'panth_megamenu/performance/cache_enabled';
@@ -38,18 +29,14 @@ class Data extends AbstractHelper
     const XML_PATH_DEBUG_MODE = 'panth_megamenu/advanced/enable_debug';
     const XML_PATH_CUSTOM_CSS = 'panth_megamenu/styling/custom_css';
     const XML_PATH_CUSTOM_JS = 'panth_megamenu/advanced/custom_js';
-    // Color constants removed — colors are now in theme-config.json under header.menu
 
-    // MegaMenuBasic paths (category-based menu)
     const XML_PATH_SHOW_CATEGORY_COUNT = 'panth_megamenu/display/show_category_count';
 
-    // MegaMenuPro paths (advanced features)
     const XML_PATH_COLUMNS = 'panth_megamenu/display/columns';
     const XML_PATH_ENABLE_CUSTOM_BLOCKS = 'panth_megamenu/display/enable_custom_blocks';
     const XML_PATH_HOVER_EFFECT = 'panth_megamenu/styling/hover_effect';
     const XML_PATH_IMAGE_SIZE = 'panth_megamenu/styling/image_size';
 
-    // MobileMegaMenu paths
     const XML_PATH_MOBILE_POSITION = 'panth_megamenu/mobile/position';
     const XML_PATH_MOBILE_OVERLAY = 'panth_megamenu/mobile/overlay_enabled';
     const XML_PATH_MOBILE_SWIPE = 'panth_megamenu/mobile/swipe_enabled';
@@ -57,7 +44,6 @@ class Data extends AbstractHelper
     const XML_PATH_MOBILE_ANIMATION_SPEED = 'panth_megamenu/mobile/animation_speed';
     const XML_PATH_MOBILE_SHOW_ICONS = 'panth_megamenu/mobile/show_category_icons';
 
-    // StickyMenu paths
     const XML_PATH_STICKY_OFFSET = 'panth_megamenu/sticky/offset';
     const XML_PATH_STICKY_HIDE_ON_SCROLL_DOWN = 'panth_megamenu/sticky/hide_on_scroll_down';
     const XML_PATH_STICKY_SHOW_ON_SCROLL_UP = 'panth_megamenu/sticky/show_on_scroll_up';
@@ -65,26 +51,12 @@ class Data extends AbstractHelper
     const XML_PATH_STICKY_ANIMATION_SPEED = 'panth_megamenu/sticky/animation_speed';
     const XML_PATH_STICKY_SHOW_SHADOW = 'panth_megamenu/sticky/show_shadow';
 
-    /**
-     * Cache tags
-     */
     const CACHE_TAG = 'panth_megamenu';
 
-    /**
-     * @var TypeListInterface
-     */
     private $cacheTypeList;
 
-    /**
-     * @var Pool
-     */
     private $cacheFrontendPool;
 
-    /**
-     * @param Context $context
-     * @param TypeListInterface $cacheTypeList
-     * @param Pool $cacheFrontendPool
-     */
     public function __construct(
         Context $context,
         TypeListInterface $cacheTypeList,
@@ -95,12 +67,6 @@ class Data extends AbstractHelper
         $this->cacheFrontendPool = $cacheFrontendPool;
     }
 
-    /**
-     * Check if module is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -110,12 +76,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get menu identifier from configuration
-     *
-     * @param int|null $storeId
-     * @return string|null
-     */
     public function getMenuIdentifier(?int $storeId = null): ?string
     {
         $identifier = $this->scopeConfig->getValue(
@@ -127,12 +87,6 @@ class Data extends AbstractHelper
         return $identifier ? trim($identifier) : null;
     }
 
-    /**
-     * Check if cache is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isCacheEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -142,12 +96,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get cache lifetime
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getCacheLifetime(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -157,12 +105,6 @@ class Data extends AbstractHelper
         ) ?: 3600;
     }
 
-    /**
-     * Check if mobile menu is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isMobileEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -172,12 +114,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get mobile breakpoint
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getMobileBreakpoint(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -187,12 +123,6 @@ class Data extends AbstractHelper
         ) ?: 1024;
     }
 
-    /**
-     * Check if sticky menu is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyMenuEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -202,12 +132,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get animation type
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getAnimationType(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -217,12 +141,6 @@ class Data extends AbstractHelper
         ) ?: 'fade';
     }
 
-    /**
-     * Get animation duration
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getAnimationDuration(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -232,12 +150,6 @@ class Data extends AbstractHelper
         ) ?: 200;
     }
 
-    /**
-     * Get hover intent delay
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getHoverIntentDelay(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -247,12 +159,6 @@ class Data extends AbstractHelper
         ) ?: 150;
     }
 
-    /**
-     * Check if icons should be shown
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function showIcons(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -262,12 +168,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Check if images should be shown
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function showImages(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -277,12 +177,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get maximum menu depth
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getMaxDepth(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -292,12 +186,6 @@ class Data extends AbstractHelper
         ) ?: 5;
     }
 
-    /**
-     * Check if lazy load is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isLazyLoadEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -307,12 +195,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Check if debug mode is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isDebugEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -322,12 +204,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get custom CSS
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getCustomCss(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -337,12 +213,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get custom JavaScript
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getCustomJs(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -352,12 +222,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Clean menu cache
-     *
-     * @param int|null $menuId
-     * @return void
-     */
     public function cleanMenuCache(?int $menuId = null): void
     {
         $tags = [self::CACHE_TAG];
@@ -371,23 +235,12 @@ class Data extends AbstractHelper
         }
     }
 
-    /**
-     * Flush all menu cache
-     *
-     * @return void
-     */
     public function flushMenuCache(): void
     {
         $this->cacheTypeList->cleanType(\Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER);
         $this->cacheTypeList->cleanType(\Magento\Framework\App\Cache\Type\Block::TYPE_IDENTIFIER);
     }
 
-    /**
-     * Get cache tags for menu
-     *
-     * @param int $menuId
-     * @return array
-     */
     public function getMenuCacheTags(int $menuId): array
     {
         return [
@@ -396,78 +249,36 @@ class Data extends AbstractHelper
         ];
     }
 
-    /**
-     * Check if item is category type
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function isCategoryItem(ItemInterface $item): bool
     {
         return $item->getItemType() === ItemInterface::TYPE_CATEGORY;
     }
 
-    /**
-     * Check if item is link type
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function isLinkItem(ItemInterface $item): bool
     {
         return $item->getItemType() === ItemInterface::TYPE_LINK;
     }
 
-    /**
-     * Check if item is content type
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function isContentItem(ItemInterface $item): bool
     {
         return $item->getItemType() === ItemInterface::TYPE_CONTENT;
     }
 
-    /**
-     * Check if item has category link
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function hasCategoryLink(ItemInterface $item): bool
     {
         return $item->getLinkType() === ItemInterface::LINK_CATEGORY;
     }
 
-    /**
-     * Check if item has CMS page link
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function hasCmsPageLink(ItemInterface $item): bool
     {
         return $item->getLinkType() === ItemInterface::LINK_CMS_PAGE;
     }
 
-    /**
-     * Check if item has custom URL link
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     public function hasCustomUrlLink(ItemInterface $item): bool
     {
         return $item->getLinkType() === ItemInterface::LINK_CUSTOM_URL;
     }
 
-    /**
-     * Get item CSS classes
-     *
-     * @param ItemInterface $item
-     * @return string
-     */
     public function getItemClasses(ItemInterface $item): string
     {
         $classes = ['menu-item'];
@@ -489,13 +300,6 @@ class Data extends AbstractHelper
         return implode(' ', $classes);
     }
 
-    /**
-     * Get configuration value
-     *
-     * @param string $path
-     * @param int|null $storeId
-     * @return mixed
-     */
     public function getConfigValue(string $path, ?int $storeId = null)
     {
         return $this->scopeConfig->getValue(
@@ -505,13 +309,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get configuration flag
-     *
-     * @param string $path
-     * @param int|null $storeId
-     * @return bool
-     */
     public function getConfigFlag(string $path, ?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -521,57 +318,31 @@ class Data extends AbstractHelper
         );
     }
 
-    // ===== Deprecated color methods (colors now in theme-config.json) =====
-    // Kept as stubs for backward compatibility with ViewModel/Config and Luma templates.
-
-    /**
-     * @deprecated Colors are now in theme-config.json. Returns empty string.
-     */
     public function getMenuBackgroundColor(?int $storeId = null): string
     {
         return '';
     }
 
-    /**
-     * @deprecated Colors are now in theme-config.json. Returns empty string.
-     */
     public function getMenuTextColor(?int $storeId = null): string
     {
         return '';
     }
 
-    /**
-     * @deprecated Colors are now in theme-config.json. Returns empty string.
-     */
     public function getMenuHoverColor(?int $storeId = null): string
     {
         return '';
     }
 
-    /**
-     * @deprecated Colors are now in theme-config.json. Returns empty string.
-     */
     public function getDropdownBackgroundColor(?int $storeId = null): string
     {
         return '';
     }
 
-    /**
-     * @deprecated Colors are now in theme-config.json. Returns empty string.
-     */
     public function getDropdownBorderColor(?int $storeId = null): string
     {
         return '';
     }
 
-    // ===== MegaMenuBasic methods =====
-
-    /**
-     * Check if category count should be shown
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function showCategoryCount(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -581,14 +352,6 @@ class Data extends AbstractHelper
         );
     }
 
-    // ===== MegaMenuPro methods =====
-
-    /**
-     * Get number of columns for dropdown
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getColumns(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -598,12 +361,6 @@ class Data extends AbstractHelper
         ) ?: 4;
     }
 
-    /**
-     * Check if custom blocks are enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isCustomBlocksEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -613,12 +370,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get hover effect type
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getHoverEffect(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -628,12 +379,6 @@ class Data extends AbstractHelper
         ) ?: 'underline';
     }
 
-    /**
-     * Get image size
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getImageSize(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -643,14 +388,6 @@ class Data extends AbstractHelper
         ) ?: 'thumbnail';
     }
 
-    // ===== MobileMegaMenu methods =====
-
-    /**
-     * Get mobile menu position
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getMobilePosition(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
@@ -660,12 +397,6 @@ class Data extends AbstractHelper
         ) ?: 'left';
     }
 
-    /**
-     * Check if mobile overlay is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isMobileOverlayEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -675,12 +406,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Check if mobile swipe is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isMobileSwipeEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -690,12 +415,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Check if mobile accordion is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isMobileAccordionEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -705,12 +424,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get mobile animation speed
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getMobileAnimationSpeed(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -720,12 +433,6 @@ class Data extends AbstractHelper
         ) ?: 300;
     }
 
-    /**
-     * Check if mobile category icons should be shown
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function showMobileCategoryIcons(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -735,12 +442,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get configuration as JSON
-     *
-     * @param int|null $storeId
-     * @return string
-     */
     public function getConfigJson(?int $storeId = null): string
     {
         return json_encode([
@@ -777,14 +478,6 @@ class Data extends AbstractHelper
         ]);
     }
 
-    // ===== StickyMenu methods =====
-
-    /**
-     * Get sticky menu scroll offset
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getStickyOffset(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -794,12 +487,6 @@ class Data extends AbstractHelper
         ) ?: 100;
     }
 
-    /**
-     * Check if sticky menu should hide on scroll down
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function hideOnScrollDown(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -809,12 +496,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Check if sticky menu should show on scroll up
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function showOnScrollUp(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -824,12 +505,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Check if sticky menu compact mode is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyCompactMode(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -839,12 +514,6 @@ class Data extends AbstractHelper
         );
     }
 
-    /**
-     * Get sticky menu animation speed
-     *
-     * @param int|null $storeId
-     * @return int
-     */
     public function getStickyAnimationSpeed(?int $storeId = null): int
     {
         return (int)$this->scopeConfig->getValue(
@@ -854,12 +523,6 @@ class Data extends AbstractHelper
         ) ?: 300;
     }
 
-    /**
-     * Check if sticky menu shadow should be shown
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function showStickyShadow(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -869,72 +532,33 @@ class Data extends AbstractHelper
         );
     }
 
-    // ===== Alias methods for template/block compatibility =====
-
-    /**
-     * Alias for isCustomBlocksEnabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function enableCustomBlocks(?int $storeId = null): bool
     {
         return $this->isCustomBlocksEnabled($storeId);
     }
 
-    /**
-     * Alias for isStickyMenuEnabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyEnabled(?int $storeId = null): bool
     {
         return $this->isStickyMenuEnabled($storeId);
     }
 
-    /**
-     * Alias for isMobileAccordionEnabled
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isAccordionEnabled(?int $storeId = null): bool
     {
         return $this->isMobileAccordionEnabled($storeId);
     }
 
-    /**
-     * Alias for hideOnScrollDown
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyHideOnScrollDown(?int $storeId = null): bool
     {
         return $this->hideOnScrollDown($storeId);
     }
 
-    /**
-     * Alias for showOnScrollUp
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyShowOnScrollUp(?int $storeId = null): bool
     {
         return $this->showOnScrollUp($storeId);
     }
 
-    /**
-     * Alias for showStickyShadow
-     *
-     * @param int|null $storeId
-     * @return bool
-     */
     public function isStickyShowShadow(?int $storeId = null): bool
     {
         return $this->showStickyShadow($storeId);
     }
-
 }

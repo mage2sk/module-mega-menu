@@ -13,32 +13,14 @@ use Panth\MegaMenu\Model\ResourceModel\Menu as MenuResource;
 
 class Edit extends Action implements HttpGetActionInterface
 {
-    /**
-     * Authorization level
-     */
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var PageFactory
-     */
     protected $resultPageFactory;
 
-    /**
-     * @var MenuFactory
-     */
     protected $menuFactory;
 
-    /**
-     * @var MenuResource
-     */
     protected $menuResource;
 
-    /**
-     * @param Context $context
-     * @param PageFactory $resultPageFactory
-     * @param MenuFactory $menuFactory
-     * @param MenuResource $menuResource
-     */
     public function __construct(
         Context $context,
         PageFactory $resultPageFactory,
@@ -51,11 +33,6 @@ class Edit extends Action implements HttpGetActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * Edit action
-     *
-     * @return ResultInterface
-     */
     public function execute(): ResultInterface
     {
         $menuId = $this->getRequest()->getParam('menu_id');

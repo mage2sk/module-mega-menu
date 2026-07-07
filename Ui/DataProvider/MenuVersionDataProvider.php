@@ -1,8 +1,4 @@
 <?php
-/**
- * Menu Version DataProvider for UI Component
- * Provides version history data for the version listing grid
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Ui\DataProvider;
@@ -16,28 +12,10 @@ use Panth\MegaMenu\Model\ResourceModel\MenuVersion\CollectionFactory;
 
 class MenuVersionDataProvider extends DataProvider
 {
-    /**
-     * @var CollectionFactory
-     */
     protected $collectionFactory;
 
-    /**
-     * @var RequestInterface
-     */
     protected $request;
 
-    /**
-     * @param string $name
-     * @param string $primaryFieldName
-     * @param string $requestFieldName
-     * @param ReportingInterface $reporting
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param RequestInterface $request
-     * @param FilterBuilder $filterBuilder
-     * @param CollectionFactory $collectionFactory
-     * @param array $meta
-     * @param array $data
-     */
     public function __construct(
         $name,
         $primaryFieldName,
@@ -65,20 +43,13 @@ class MenuVersionDataProvider extends DataProvider
         $this->request = $request;
     }
 
-    /**
-     * Get data for the grid
-     *
-     * @return array
-     */
     public function getData()
     {
         try {
             $collection = $this->collectionFactory->create();
 
-            // Filter by menu_id if provided in request
             $menuId = $this->request->getParam('menu_id');
             if (!$menuId) {
-                // Return empty result if no menu_id provided
                 return [
                     'totalRecords' => 0,
                     'items' => []
@@ -87,8 +58,6 @@ class MenuVersionDataProvider extends DataProvider
 
             $collection->addFieldToFilter('menu_id', $menuId);
 
-            // Add item count calculation from items_json
-            // Note: created_by already stores username directly, no join needed
             $collection->getSelect()->columns([
                 'item_count' => new \Zend_Db_Expr(
                     "CASE
@@ -99,10 +68,8 @@ class MenuVersionDataProvider extends DataProvider
                 )
             ]);
 
-            // Order by version number descending
             $collection->setOrder('version_number', 'DESC');
 
-            // Apply search criteria filters
             $this->prepareUpdateUrl();
 
             $items = $collection->getItems();
@@ -111,7 +78,6 @@ class MenuVersionDataProvider extends DataProvider
             foreach ($items as $item) {
                 $itemData = $item->getData();
 
-                // Truncate version_comment for preview (will be handled by TruncatedText component)
                 if (isset($itemData['version_comment'])) {
                     $itemData['version_comment_full'] = $itemData['version_comment'];
                 }
@@ -124,7 +90,6 @@ class MenuVersionDataProvider extends DataProvider
                 'items' => $data
             ];
         } catch (\Exception $e) {
-            // Log error and return empty result
             return [
                 'totalRecords' => 0,
                 'items' => [],
@@ -133,17 +98,11 @@ class MenuVersionDataProvider extends DataProvider
         }
     }
 
-    /**
-     * Get collection
-     *
-     * @return \Panth\MegaMenu\Model\ResourceModel\MenuVersion\Collection
-     */
     public function getCollection()
     {
         if (!$this->collection) {
             $this->collection = $this->collectionFactory->create();
 
-            // Filter by menu_id if provided
             $menuId = $this->request->getParam('menu_id');
             if ($menuId) {
                 $this->collection->addFieldToFilter('menu_id', $menuId);

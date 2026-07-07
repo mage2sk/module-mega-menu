@@ -1,10 +1,4 @@
 <?php
-/**
- * MegaMenu Sticky Menu Block
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 namespace Panth\MegaMenu\Block;
 
 use Magento\Framework\View\Element\Template;
@@ -15,28 +9,12 @@ use Panth\MegaMenu\Helper\Data as ConfigHelper;
 
 class StickyMenu extends Template
 {
-    /**
-     * @var Logo
-     */
     private $logo;
 
-    /**
-     * @var StoreManagerInterface
-     */
     private $storeManager;
 
-    /**
-     * @var ConfigHelper
-     */
     private $configHelper;
 
-    /**
-     * @param Context $context
-     * @param Logo $logo
-     * @param StoreManagerInterface $storeManager
-     * @param ConfigHelper $configHelper
-     * @param array $data
-     */
     public function __construct(
         Context $context,
         Logo $logo,
@@ -50,31 +28,16 @@ class StickyMenu extends Template
         parent::__construct($context, $data);
     }
 
-    /**
-     * Get logo source URL
-     *
-     * @return string
-     */
     public function getLogoSrc(): string
     {
         return $this->logo->getLogoSrc();
     }
 
-    /**
-     * Get logo alt text
-     *
-     * @return string
-     */
     public function getLogoAlt(): string
     {
         return $this->logo->getLogoAlt();
     }
 
-    /**
-     * Get store name
-     *
-     * @return string
-     */
     public function getStoreName(): string
     {
         return $this->_scopeConfig->getValue(
@@ -83,11 +46,6 @@ class StickyMenu extends Template
         );
     }
 
-    /**
-     * Get cache key info
-     *
-     * @return array
-     */
     public function getCacheKeyInfo()
     {
         return [

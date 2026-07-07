@@ -1,10 +1,4 @@
 <?php
-/**
- * Menu Resource Model
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model\ResourceModel;
@@ -15,15 +9,8 @@ use Magento\Framework\Model\ResourceModel\Db\Context;
 
 class Menu extends AbstractDb
 {
-    /**
-     * Store relation table
-     */
     const STORE_TABLE = 'panth_megamenu_store';
 
-    /**
-     * @param Context $context
-     * @param string|null $connectionName
-     */
     public function __construct(
         Context $context,
         $connectionName = null
@@ -31,25 +18,13 @@ class Menu extends AbstractDb
         parent::__construct($context, $connectionName);
     }
 
-    /**
-     * Initialize resource model
-     *
-     * @return void
-     */
     protected function _construct()
     {
         $this->_init('panth_megamenu_menu', 'menu_id');
     }
 
-    /**
-     * Process menu data before save
-     *
-     * @param AbstractModel $object
-     * @return $this
-     */
     protected function _beforeSave(AbstractModel $object)
     {
-        // Convert store IDs array to string for storage
         if ($object->hasData('store_ids') && is_array($object->getData('store_ids'))) {
             $object->setData('store_ids', implode(',', $object->getData('store_ids')));
         }
@@ -57,48 +32,24 @@ class Menu extends AbstractDb
         return parent::_beforeSave($object);
     }
 
-    /**
-     * Save store relation
-     *
-     * @param AbstractModel $object
-     * @return $this
-     */
     protected function _afterSave(AbstractModel $object)
     {
         $this->saveStoreRelation($object);
         return parent::_afterSave($object);
     }
 
-    /**
-     * Load store relation
-     *
-     * @param AbstractModel $object
-     * @return $this
-     */
     protected function _afterLoad(AbstractModel $object)
     {
         $this->loadStoreRelation($object);
         return parent::_afterLoad($object);
     }
 
-    /**
-     * Delete store relation on menu delete
-     *
-     * @param AbstractModel $object
-     * @return $this
-     */
     protected function _beforeDelete(AbstractModel $object)
     {
         $this->deleteStoreRelation($object);
         return parent::_beforeDelete($object);
     }
 
-    /**
-     * Save store relation
-     *
-     * @param AbstractModel $object
-     * @return void
-     */
     protected function saveStoreRelation(AbstractModel $object)
     {
         $menuId = $object->getId();
@@ -111,10 +62,8 @@ class Menu extends AbstractDb
         $connection = $this->getConnection();
         $table = $this->getTable(self::STORE_TABLE);
 
-        // Delete old relations
         $connection->delete($table, ['menu_id = ?' => $menuId]);
 
-        // Insert new relations
         if (!empty($storeIds)) {
             $data = [];
             foreach ($storeIds as $storeId) {
@@ -127,12 +76,6 @@ class Menu extends AbstractDb
         }
     }
 
-    /**
-     * Load store relation
-     *
-     * @param AbstractModel $object
-     * @return void
-     */
     protected function loadStoreRelation(AbstractModel $object)
     {
         $menuId = $object->getId();
@@ -147,12 +90,6 @@ class Menu extends AbstractDb
         $object->setData('store_ids', $storeIds);
     }
 
-    /**
-     * Delete store relation
-     *
-     * @param AbstractModel $object
-     * @return void
-     */
     protected function deleteStoreRelation(AbstractModel $object)
     {
         $menuId = $object->getId();
@@ -162,13 +99,6 @@ class Menu extends AbstractDb
         $connection->delete($table, ['menu_id = ?' => $menuId]);
     }
 
-    /**
-     * Load menu by identifier and store
-     *
-     * @param string $identifier
-     * @param int|null $storeId
-     * @return array
-     */
     public function loadByIdentifier(string $identifier, ?int $storeId = null): array
     {
         $connection = $this->getConnection();

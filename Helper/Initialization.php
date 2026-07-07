@@ -1,8 +1,4 @@
 <?php
-/**
- * One-time Initialization Helper
- * Runs setup tasks only once when module is first enabled
- */
 namespace Panth\MegaMenu\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
@@ -17,44 +13,18 @@ class Initialization extends AbstractHelper
 {
     const FLAG_CODE = 'panth_megamenu_initialized';
 
-    /**
-     * @var FlagFactory
-     */
     protected $flagFactory;
 
-    /**
-     * @var FlagResource
-     */
     protected $flagResource;
 
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
     protected $logger;
 
-    /**
-     * @var ResourceConnection
-     */
     protected $resourceConnection;
 
-    /**
-     * @var WriterInterface
-     */
     protected $configWriter;
 
-    /**
-     * @var TypeListInterface
-     */
     protected $cacheTypeList;
 
-    /**
-     * @param Context $context
-     * @param FlagFactory $flagFactory
-     * @param FlagResource $flagResource
-     * @param ResourceConnection $resourceConnection
-     * @param WriterInterface $configWriter
-     * @param TypeListInterface $cacheTypeList
-     */
     public function __construct(
         Context $context,
         FlagFactory $flagFactory,
@@ -72,11 +42,6 @@ class Initialization extends AbstractHelper
         parent::__construct($context);
     }
 
-    /**
-     * Check if module has been initialized
-     *
-     * @return bool
-     */
     public function isInitialized(): bool
     {
         $flag = $this->flagFactory->create(['data' => ['flag_code' => self::FLAG_CODE]]);
@@ -85,12 +50,6 @@ class Initialization extends AbstractHelper
         return (bool) $flag->getFlagData();
     }
 
-    /**
-     * Run one-time setup tasks
-     * Only runs if not already initialized
-     *
-     * @return bool
-     */
     public function runOneTimeSetup(): bool
     {
         if ($this->isInitialized()) {
@@ -98,30 +57,20 @@ class Initialization extends AbstractHelper
         }
 
         try {
-            // 1. Create default menu if none exists
             $this->createDefaultMenuIfNeeded();
 
-            // 2. Set default configuration values
             $this->setDefaultConfig();
 
-            // 3. Clear relevant caches
             $this->clearCaches();
 
-            // Mark as initialized
             $this->markAsInitialized();
 
             return true;
-
         } catch (\Exception $e) {
             return false;
         }
     }
 
-    /**
-     * Create default menu if database is empty
-     *
-     * @return void
-     */
     protected function createDefaultMenuIfNeeded()
     {
         $connection = $this->resourceConnection->getConnection();
@@ -132,21 +81,13 @@ class Initialization extends AbstractHelper
 
         if ($count == 0) {
             try {
-                // Default menu will be created on first admin access
             } catch (\Exception $e) {
-                // Silently handle error
             }
         }
     }
 
-    /**
-     * Set default configuration values
-     *
-     * @return void
-     */
     protected function setDefaultConfig()
     {
-        // Set default values if not already set
         $defaults = [
             'panth_megamenu/general/mobile_breakpoint' => '768',
             'panth_megamenu/performance/cache_enabled' => '1',
@@ -161,11 +102,6 @@ class Initialization extends AbstractHelper
         }
     }
 
-    /**
-     * Clear relevant caches
-     *
-     * @return void
-     */
     protected function clearCaches()
     {
         $types = ['config', 'layout', 'block_html', 'full_page'];
@@ -174,11 +110,6 @@ class Initialization extends AbstractHelper
         }
     }
 
-    /**
-     * Mark module as initialized
-     *
-     * @return void
-     */
     protected function markAsInitialized()
     {
         $flag = $this->flagFactory->create(['data' => ['flag_code' => self::FLAG_CODE]]);
@@ -191,11 +122,6 @@ class Initialization extends AbstractHelper
         $this->flagResource->save($flag);
     }
 
-    /**
-     * Reset initialization flag (for testing/debugging)
-     *
-     * @return void
-     */
     public function resetInitialization()
     {
         $flag = $this->flagFactory->create(['data' => ['flag_code' => self::FLAG_CODE]]);

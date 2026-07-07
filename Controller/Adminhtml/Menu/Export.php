@@ -9,9 +9,6 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 
-/**
- * Export Menu as JSON
- */
 class Export extends Action implements CsrfAwareActionInterface
 {
     protected $jsonFactory;
@@ -59,7 +56,6 @@ class Export extends Action implements CsrfAwareActionInterface
                 return $this->_redirect('*/*/index');
             }
 
-            // Prepare export data
             $exportData = [
                 'menu' => [
                     'title' => $menu->getTitle(),
@@ -85,7 +81,6 @@ class Export extends Action implements CsrfAwareActionInterface
             $jsonContent = json_encode($exportData, JSON_PRETTY_PRINT);
             $fileName = 'menu_' . $menu->getIdentifier() . '_' . date('Ymd_His') . '.json';
 
-            // If AJAX request, return data for JavaScript to handle
             if ($ajax) {
                 $result = $this->jsonFactory->create();
                 $this->getResponse()->setHeader('Content-Type', 'application/json', true);
@@ -96,7 +91,6 @@ class Export extends Action implements CsrfAwareActionInterface
                 ]);
             }
 
-            // Otherwise, download the file
             $this->getResponse()
                 ->setHttpResponseCode(200)
                 ->setHeader('Pragma', 'public', true)
@@ -108,7 +102,6 @@ class Export extends Action implements CsrfAwareActionInterface
 
             $this->getResponse()->setBody($jsonContent);
             return $this->getResponse();
-
         } catch (\Exception $e) {
             if ($this->getRequest()->getParam('ajax')) {
                 $result = $this->jsonFactory->create();

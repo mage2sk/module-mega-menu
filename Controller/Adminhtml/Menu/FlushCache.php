@@ -10,9 +10,6 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\PageCache\Model\Cache\Type as FpcType;
 
-/**
- * Flush FPC cache via AJAX for preview
- */
 class FlushCache extends Action
 {
     public const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
@@ -35,7 +32,6 @@ class FlushCache extends Action
         $result = $this->jsonFactory->create();
 
         try {
-            // Flush page cache and block HTML cache (where menu renders)
             $this->cacheTypeList->cleanType('full_page');
             $this->cacheTypeList->cleanType('block_html');
 

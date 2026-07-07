@@ -6,15 +6,6 @@ use Magento\Framework\App\RequestInterface;
 
 class DisableBackendValidation
 {
-    /**
-     * Disable validation for our custom JSON endpoints
-     *
-     * @param BackendValidator $subject
-     * @param callable $proceed
-     * @param RequestInterface $request
-     * @param \Magento\Framework\App\ActionInterface $action
-     * @return bool
-     */
     public function aroundValidate(
         BackendValidator $subject,
         callable $proceed,
@@ -23,7 +14,6 @@ class DisableBackendValidation
     ) {
         $actionName = get_class($action);
 
-        // Bypass validation for our custom controllers
         $allowedActions = [
             'Panth\MegaMenu\Controller\Adminhtml\Menu\CustomSave\Interceptor',
             'Panth\MegaMenu\Controller\Adminhtml\Menu\CustomSave',

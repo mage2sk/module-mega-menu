@@ -7,11 +7,6 @@ use Magento\Framework\View\Element\UiComponent\Control\ButtonProviderInterface;
 
 class Save implements ButtonProviderInterface
 {
-    /**
-     * Get button data
-     *
-     * @return array
-     */
     public function getButtonData(): array
     {
         return [

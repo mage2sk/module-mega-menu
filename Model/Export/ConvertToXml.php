@@ -1,10 +1,4 @@
 <?php
-/**
- * Convert Grid Data to XML
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model\Export;
@@ -20,33 +14,14 @@ use Magento\Ui\Model\Export\MetadataProvider;
 
 class ConvertToXml
 {
-    /**
-     * @var DirectoryList
-     */
     protected $directory;
 
-    /**
-     * @var MetadataProvider
-     */
     protected $metadataProvider;
 
-    /**
-     * @var ExcelFactory
-     */
     protected $excelFactory;
 
-    /**
-     * @var Filter
-     */
     protected $filter;
 
-    /**
-     * @param Filesystem $filesystem
-     * @param Filter $filter
-     * @param MetadataProvider $metadataProvider
-     * @param ExcelFactory $excelFactory
-     * @throws FileSystemException
-     */
     public function __construct(
         Filesystem $filesystem,
         Filter $filter,
@@ -59,13 +34,6 @@ class ConvertToXml
         $this->excelFactory = $excelFactory;
     }
 
-    /**
-     * Returns XML file
-     *
-     * @param string $component
-     * @return array
-     * @throws LocalizedException
-     */
     public function getXmlFile(string $component): array
     {
         $component = $this->filter->getComponent();
@@ -96,12 +64,6 @@ class ConvertToXml
         ];
     }
 
-    /**
-     * Get data iterator
-     *
-     * @param object $component
-     * @return \Generator
-     */
     protected function getDataIterator($component)
     {
         $dataProvider = $component->getContext()->getDataProvider();
@@ -128,11 +90,6 @@ class ConvertToXml
         }
     }
 
-    /**
-     * Get row callback
-     *
-     * @return array
-     */
     public function getRowCallback(): array
     {
         return [$this->metadataProvider, 'getHeaders'];

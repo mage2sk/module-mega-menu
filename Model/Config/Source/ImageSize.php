@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Panth Infotech. All rights reserved.
- */
-
 namespace Panth\MegaMenu\Model\Config\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;

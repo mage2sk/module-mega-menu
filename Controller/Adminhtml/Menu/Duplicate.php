@@ -9,9 +9,6 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 
-/**
- * Duplicate Menu with all items
- */
 class Duplicate extends Action implements CsrfAwareActionInterface
 {
     protected $jsonFactory;
@@ -59,24 +56,20 @@ class Duplicate extends Action implements CsrfAwareActionInterface
                 ]);
             }
 
-            // Create new menu with copied data
             $newMenu = $this->menuFactory->create();
             $newMenu->setTitle($newTitle);
 
-            // Generate unique identifier
             $newIdentifier = $this->generateUniqueIdentifier($newTitle);
             $newMenu->setIdentifier($newIdentifier);
 
-            // Copy other properties
             $newMenu->setMenuType($originalMenu->getMenuType());
-            $newMenu->setIsActive(0); // Set as inactive by default
+            $newMenu->setIsActive(0);
             $newMenu->setCssClass($originalMenu->getCssClass());
             $newMenu->setSortOrder($originalMenu->getSortOrder());
             $newMenu->setDescription($originalMenu->getDescription());
             $newMenu->setCustomCss($originalMenu->getCustomCss());
             $newMenu->setMobileLayout($originalMenu->getMobileLayout());
 
-            // Copy items_json (all menu items)
             $newMenu->setItemsJson($originalMenu->getItemsJson());
 
             $newMenu->save();
@@ -86,7 +79,6 @@ class Duplicate extends Action implements CsrfAwareActionInterface
                 'message' => 'Menu duplicated successfully',
                 'menu_id' => $newMenu->getId()
             ]);
-
         } catch (\Exception $e) {
             return $result->setData([
                 'success' => false,
@@ -95,16 +87,12 @@ class Duplicate extends Action implements CsrfAwareActionInterface
         }
     }
 
-    /**
-     * Generate unique identifier from title
-     */
     protected function generateUniqueIdentifier($title)
     {
         $identifier = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '_', $title)));
         $identifier = preg_replace('/_+/', '_', $identifier);
         $identifier = trim($identifier, '_');
 
-        // Check if identifier exists and append number if needed
         $originalIdentifier = $identifier;
         $counter = 1;
 
@@ -116,9 +104,6 @@ class Duplicate extends Action implements CsrfAwareActionInterface
         return $identifier;
     }
 
-    /**
-     * Check if identifier exists
-     */
     protected function identifierExists($identifier)
     {
         $menu = $this->menuFactory->create();

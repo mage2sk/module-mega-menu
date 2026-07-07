@@ -1,7 +1,4 @@
 <?php
-/**
- * Delete Menu Version Controller
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Controller\Adminhtml\Version;
@@ -16,26 +13,12 @@ use Panth\MegaMenu\Model\ResourceModel\MenuVersion as MenuVersionResource;
 
 class Delete extends Action implements HttpPostActionInterface
 {
-    /**
-     * Authorization level
-     */
     const ADMIN_RESOURCE = 'Panth_MegaMenu::menu';
 
-    /**
-     * @var MenuVersionFactory
-     */
     protected $menuVersionFactory;
 
-    /**
-     * @var MenuVersionResource
-     */
     protected $menuVersionResource;
 
-    /**
-     * @param Context $context
-     * @param MenuVersionFactory $menuVersionFactory
-     * @param MenuVersionResource $menuVersionResource
-     */
     public function __construct(
         Context $context,
         MenuVersionFactory $menuVersionFactory,
@@ -46,11 +29,6 @@ class Delete extends Action implements HttpPostActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * Delete version
-     *
-     * @return ResultInterface
-     */
     public function execute(): ResultInterface
     {
         $resultRedirect = $this->resultRedirectFactory->create();
@@ -62,7 +40,6 @@ class Delete extends Action implements HttpPostActionInterface
         }
 
         try {
-            // Load the version
             $version = $this->menuVersionFactory->create();
             $this->menuVersionResource->load($version, $versionId);
 
@@ -73,7 +50,6 @@ class Delete extends Action implements HttpPostActionInterface
             $menuId = $version->getMenuId();
             $versionNumber = $version->getVersionNumber();
 
-            // Delete the version
             $this->menuVersionResource->delete($version);
 
             $this->messageManager->addSuccessMessage(
@@ -81,7 +57,6 @@ class Delete extends Action implements HttpPostActionInterface
             );
 
             return $resultRedirect->setPath('panth_menu/menu/edit', ['menu_id' => $menuId]);
-
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
         } catch (\Exception $e) {

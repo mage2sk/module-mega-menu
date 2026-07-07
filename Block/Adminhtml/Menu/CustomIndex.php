@@ -24,10 +24,8 @@ class CustomIndex extends Template
 
     public function getMenusJson()
     {
-        // Use direct table query to avoid store join issues
         $collection = $this->menuCollectionFactory->create();
 
-        // Disable store table joining by setting the flag
         $collection->setFlag('store_table_joined', true);
 
         $collection->addFieldToSelect('*');
@@ -36,14 +34,12 @@ class CustomIndex extends Template
 
         $menus = [];
         foreach ($collection as $menu) {
-            // Get item count from JSON column
             $itemCount = 0;
             $itemsJson = $menu->getItemsJson();
             if ($itemsJson) {
                 $items = json_decode($itemsJson, true);
                 $itemCount = is_array($items) ? count($items) : 0;
             } else {
-                // Backward compatibility: check item table
                 $itemCount = $this->itemCollectionFactory->create()
                     ->addFieldToFilter('menu_id', $menu->getMenuId())
                     ->getSize();

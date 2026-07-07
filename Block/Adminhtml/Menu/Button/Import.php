@@ -7,9 +7,6 @@ use Magento\Framework\View\Element\UiComponent\Control\ButtonProviderInterface;
 
 class Import implements ButtonProviderInterface
 {
-    /**
-     * @return array
-     */
     public function getButtonData(): array
     {
         return [

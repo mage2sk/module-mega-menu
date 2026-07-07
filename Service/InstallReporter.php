@@ -1,23 +1,4 @@
 <?php
-/**
- * Standalone install + heartbeat reporter for Panth_MegaMenu.
- *
- * Self-contained — no dependency on any sibling Panth_* class — so that
- * install detection works even when sibling modules are disabled or absent.
- *
- * Sends two kinds of notifications to https://kishansavaliya.com:
- *   - reportInstall(): fires from Setup/Patch/Data/ReportInstall on
- *     setup:upgrade. Deduped via Magento\Framework\Flag so re-running
- *     setup:upgrade on the same module version is a no-op.
- *   - reportHeartbeat(): daily, fires from Cron/SendHeartbeat. Deduped
- *     locally with a flag including today's UTC date; receiver also
- *     dedups per (site, day).
- *
- * Failures are swallowed and logged; they MUST NOT block setup:upgrade
- * or cron execution. If the receiver is unreachable / DNS dies / the
- * site at kishansavaliya.com is down, the worst that happens is a
- * single warning line per attempt.
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Service;
@@ -35,17 +16,13 @@ use Psr\Log\LoggerInterface;
 
 class InstallReporter
 {
-    /** Magento module name reported to the receiver. */
     public const MAGENTO_MODULE = 'Panth_MegaMenu';
 
-    /** Composer package name reported to the receiver. */
     public const COMPOSER_PACKAGE = 'mage2kishan/module-mega-menu';
 
-    /** Receiver endpoints. */
     private const ENDPOINT_INSTALL   = 'https://kishansavaliya.com/panth/notifications/install';
     private const ENDPOINT_HEARTBEAT = 'https://kishansavaliya.com/panth/notifications/heartbeat';
 
-    /** Shared HTTP Basic credentials for the receiver. */
     private const AUTH_USER = 'Kishan';
     private const AUTH_PASS = 'kishan123#';
 
@@ -61,10 +38,6 @@ class InstallReporter
     ) {
     }
 
-    /**
-     * Fire a one-shot install/upgrade event for THIS module.
-     * Idempotent — re-running on the same version is a silent no-op.
-     */
     public function reportInstall(): void
     {
         try {
@@ -103,9 +76,6 @@ class InstallReporter
         }
     }
 
-    /**
-     * Daily heartbeat. Local flag short-circuits if today already pinged.
-     */
     public function reportHeartbeat(): void
     {
         try {
@@ -129,9 +99,6 @@ class InstallReporter
         }
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function basePayload(): array
     {
         $store = $this->storeManager->getDefaultStoreView();
@@ -154,15 +121,6 @@ class InstallReporter
         ];
     }
 
-    /**
-     * Snapshot of every currently-enabled Panth_* module.
-     *
-     * Receiver-side reconciliation requires composer_package + magento_module
-     * + version on every entry. composer_package isn't on ModuleListInterface
-     * so we read it from each module's composer.json on disk.
-     *
-     * @return list<array{composer_package:string, magento_module:string, version:string}>
-     */
     private function collectActivePanthModules(): array
     {
         $out = [];
@@ -209,12 +167,6 @@ class InstallReporter
         }
     }
 
-    /**
-     * Fire-and-forget cURL POST. ~3s timeout. Failures throw.
-     *
-     * @param string $url
-     * @param array<string, mixed> $payload
-     */
     private function post(string $url, array $payload): void
     {
         $body = json_encode($payload, JSON_UNESCAPED_SLASHES);

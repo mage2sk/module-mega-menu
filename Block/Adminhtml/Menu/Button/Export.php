@@ -9,20 +9,10 @@ use Magento\Framework\UrlInterface;
 
 class Export implements ButtonProviderInterface
 {
-    /**
-     * @var RequestInterface
-     */
     private $request;
 
-    /**
-     * @var UrlInterface
-     */
     private $urlBuilder;
 
-    /**
-     * @param RequestInterface $request
-     * @param UrlInterface $urlBuilder
-     */
     public function __construct(
         RequestInterface $request,
         UrlInterface $urlBuilder
@@ -31,9 +21,6 @@ class Export implements ButtonProviderInterface
         $this->urlBuilder = $urlBuilder;
     }
 
-    /**
-     * @return array
-     */
     public function getButtonData(): array
     {
         $menuId = (int) $this->request->getParam('menu_id');
@@ -52,12 +39,6 @@ class Export implements ButtonProviderInterface
         ];
     }
 
-    /**
-     * Get export URL
-     *
-     * @param int $menuId
-     * @return string
-     */
     private function getExportUrl(int $menuId): string
     {
         return $this->urlBuilder->getUrl('panth_menu/menu/export', ['menu_id' => $menuId]);

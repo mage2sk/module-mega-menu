@@ -49,7 +49,6 @@ class CustomSave extends Action implements CsrfAwareActionInterface
         $result = $this->jsonFactory->create();
 
         try {
-            // Get JSON data from request body
             $content = $this->getRequest()->getContent();
             $data = json_decode($content, true);
 
@@ -57,7 +56,6 @@ class CustomSave extends Action implements CsrfAwareActionInterface
                 return $result->setData(['success' => false, 'message' => 'Invalid data']);
             }
 
-            // Validate form key from JSON
             if (isset($data['form_key'])) {
                 $this->getRequest()->setParam('form_key', $data['form_key']);
             }
@@ -65,7 +63,6 @@ class CustomSave extends Action implements CsrfAwareActionInterface
             $menuData = $data['menu'];
             $itemsData = $data['items'] ?? [];
 
-            // Save menu
             $menu = $this->menuFactory->create();
             if (!empty($menuData['menu_id'])) {
                 $this->menuResource->load($menu, $menuData['menu_id']);
@@ -73,7 +70,6 @@ class CustomSave extends Action implements CsrfAwareActionInterface
                     return $result->setData(['success' => false, 'message' => 'Menu not found']);
                 }
             } else {
-                // Check if identifier already exists for new menu
                 $existingMenu = $this->menuFactory->create();
                 $this->menuResource->load($existingMenu, $menuData['identifier'], 'identifier');
                 if ($existingMenu->getId()) {
@@ -93,7 +89,6 @@ class CustomSave extends Action implements CsrfAwareActionInterface
             $menu->setDescription($menuData['description'] ?? '');
             $menu->setCustomCss($menuData['custom_css'] ?? '');
 
-            // Set container styling fields
             if (isset($menuData['container_bg_color'])) {
                 $menu->setData('container_bg_color', $menuData['container_bg_color']);
             }
@@ -119,35 +114,26 @@ class CustomSave extends Action implements CsrfAwareActionInterface
                 $menu->setData('container_box_shadow', $menuData['container_box_shadow']);
             }
 
-            // Store items as JSON
             $menu->setItemsJson(json_encode($itemsData));
 
-            // Save through repository to trigger versioning
             $this->menuRepository->save($menu);
             $menuId = $menu->getMenuId();
 
-            // Save store relation (default to all stores)
             $connection = $this->menuResource->getConnection();
             $storeTable = $this->menuResource->getTable('panth_megamenu_store');
 
-            // Delete existing store relations
             $connection->delete($storeTable, ['menu_id = ?' => $menuId]);
 
-            // Insert default store (0 = all stores)
             $connection->insert($storeTable, [
                 'menu_id' => $menuId,
                 'store_id' => 0
             ]);
-
-            // Items are now stored as JSON in the menu table
-            // No need to save to separate item table anymore
 
             return $result->setData([
                 'success' => true,
                 'message' => 'Menu saved successfully',
                 'menu_id' => $menuId
             ]);
-
         } catch (\Exception $e) {
             return $result->setData([
                 'success' => false,

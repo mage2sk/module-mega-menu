@@ -1,14 +1,4 @@
 <?php
-/**
- * Panth MegaMenu - Menu Source Model
- *
- * Provides list of available menus for dropdown options
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- * @author    Panth
- * @copyright Copyright (c) Panth
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Model\Source;
@@ -18,32 +8,16 @@ use Panth\MegaMenu\Model\ResourceModel\Menu\CollectionFactory;
 
 class Menu implements OptionSourceInterface
 {
-    /**
-     * @var CollectionFactory
-     */
     protected $menuCollectionFactory;
 
-    /**
-     * @var array|null
-     */
     protected $options;
 
-    /**
-     * Constructor
-     *
-     * @param CollectionFactory $menuCollectionFactory
-     */
     public function __construct(
         CollectionFactory $menuCollectionFactory
     ) {
         $this->menuCollectionFactory = $menuCollectionFactory;
     }
 
-    /**
-     * Get options as array
-     *
-     * @return array
-     */
     public function toOptionArray(): array
     {
         if ($this->options === null) {

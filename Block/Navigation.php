@@ -1,10 +1,4 @@
 <?php
-/**
- * Navigation Block
- *
- * @category  Panth
- * @package   Panth_MegaMenu
- */
 declare(strict_types=1);
 
 namespace Panth\MegaMenu\Block;
@@ -23,19 +17,10 @@ use Psr\Log\LoggerInterface;
 
 class Navigation extends Menu
 {
-    /**
-     * @var Http
-     */
     protected $request;
 
-    /**
-     * @var array
-     */
     protected $breadcrumbData = [];
 
-    /**
-     * @var string
-     */
     protected $_template = 'Panth_MegaMenu::navigation.phtml';
 
     public function __construct(
@@ -66,11 +51,6 @@ class Navigation extends Menu
         $this->request = $request;
     }
 
-    /**
-     * Check if device is mobile
-     *
-     * @return bool
-     */
     public function isMobile(): bool
     {
         $userAgent = $this->request->getHeader('User-Agent');
@@ -79,7 +59,6 @@ class Navigation extends Menu
             return false;
         }
 
-        // Basic mobile detection
         $mobileKeywords = [
             'Mobile', 'Android', 'iPhone', 'iPad', 'iPod',
             'BlackBerry', 'Windows Phone', 'webOS'
@@ -94,33 +73,16 @@ class Navigation extends Menu
         return false;
     }
 
-    /**
-     * Check if mobile menu should be shown
-     *
-     * @return bool
-     */
     public function shouldShowMobileMenu(): bool
     {
         return $this->menuHelper->isMobileEnabled() && $this->isMobile();
     }
 
-    /**
-     * Get mobile breakpoint
-     *
-     * @return int
-     */
     public function getMobileBreakpoint(): int
     {
         return $this->menuHelper->getMobileBreakpoint();
     }
 
-    /**
-     * Render navigation with mobile support
-     *
-     * @param string $identifier
-     * @param string $cssClass
-     * @return string
-     */
     public function getNavigationHtml(string $identifier, string $cssClass = ''): string
     {
         if (!$this->shouldRender()) {
@@ -150,12 +112,10 @@ class Navigation extends Menu
 
         $html = '<nav class="' . $this->escapeHtmlAttr(implode(' ', $classes)) . '" role="navigation" aria-label="Main navigation">';
 
-        // Add mobile toggle button
         if ($this->menuHelper->isMobileEnabled()) {
             $html .= $this->renderMobileToggle();
         }
 
-        // Render menu
         $html .= '<div class="menu-wrapper">';
         $html .= '<ul class="menu-root level-0" role="menubar">';
 
@@ -170,11 +130,6 @@ class Navigation extends Menu
         return $html;
     }
 
-    /**
-     * Render mobile toggle button
-     *
-     * @return string
-     */
     protected function renderMobileToggle(): string
     {
         $html = '<button type="button" class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">';
@@ -185,13 +140,6 @@ class Navigation extends Menu
         return $html;
     }
 
-    /**
-     * Render navigation item with accessibility attributes
-     *
-     * @param ItemInterface $item
-     * @param int $level
-     * @return string
-     */
     protected function renderNavigationItem(ItemInterface $item, int $level = 0): string
     {
         if (!$item->getIsActive()) {
@@ -207,14 +155,12 @@ class Navigation extends Menu
 
         $html = '<li class="' . $this->escapeHtmlAttr($classes) . '" role="none">';
 
-        // Render link with accessibility
         if ($this->menuViewModel->shouldShowContent($item)) {
             $html .= $this->renderContent($item);
         } else {
             $html .= $this->renderNavigationLink($item, $isActive);
         }
 
-        // Render children if any
         if ($item->hasChildren()) {
             $html .= $this->renderNavigationChildren($item, $level + 1);
         }
@@ -224,13 +170,6 @@ class Navigation extends Menu
         return $html;
     }
 
-    /**
-     * Render navigation link with accessibility
-     *
-     * @param ItemInterface $item
-     * @param bool $isActive
-     * @return string
-     */
     protected function renderNavigationLink(ItemInterface $item, bool $isActive = false): string
     {
         $url = $this->menuViewModel->getItemUrl($item);
@@ -270,13 +209,6 @@ class Navigation extends Menu
         return $html;
     }
 
-    /**
-     * Render navigation children with accessibility
-     *
-     * @param ItemInterface $item
-     * @param int $level
-     * @return string
-     */
     protected function renderNavigationChildren(ItemInterface $item, int $level): string
     {
         $children = $item->getChildren();
@@ -296,24 +228,12 @@ class Navigation extends Menu
         return $html;
     }
 
-    /**
-     * Check if item represents current page
-     *
-     * @param ItemInterface $item
-     * @return bool
-     */
     protected function isCurrentPage(ItemInterface $item): bool
     {
         $currentUrl = $this->_urlBuilder->getCurrentUrl();
         return $this->menuViewModel->isActive($item, $currentUrl);
     }
 
-    /**
-     * Get breadcrumb data
-     *
-     * @param string $identifier
-     * @return array
-     */
     public function getBreadcrumbData(string $identifier): array
     {
         if (isset($this->breadcrumbData[$identifier])) {
@@ -324,7 +244,6 @@ class Navigation extends Menu
         $currentUrl = $this->_urlBuilder->getCurrentUrl();
         $breadcrumbs = [];
 
-        // Find active item in tree
         $activeItem = $this->findActiveItem($menuTree, $currentUrl);
 
         if ($activeItem) {
@@ -336,13 +255,6 @@ class Navigation extends Menu
         return $breadcrumbs;
     }
 
-    /**
-     * Find active item in menu tree
-     *
-     * @param array $items
-     * @param string $currentUrl
-     * @return ItemInterface|null
-     */
     protected function findActiveItem(array $items, string $currentUrl): ?ItemInterface
     {
         foreach ($items as $item) {
@@ -361,12 +273,6 @@ class Navigation extends Menu
         return null;
     }
 
-    /**
-     * Render breadcrumb trail
-     *
-     * @param string $identifier
-     * @return string
-     */
     public function renderBreadcrumb(string $identifier): string
     {
         $breadcrumbs = $this->getBreadcrumbData($identifier);
@@ -405,11 +311,6 @@ class Navigation extends Menu
         return $html;
     }
 
-    /**
-     * Get navigation CSS classes
-     *
-     * @return string
-     */
     public function getNavigationClasses(): string
     {
         $classes = ['megamenu-navigation'];
@@ -426,11 +327,6 @@ class Navigation extends Menu
         return implode(' ', $classes);
     }
 
-    /**
-     * Get navigation data attributes for JavaScript
-     *
-     * @return array
-     */
     public function getNavigationDataAttributes(): array
     {
         return [
@@ -441,11 +337,6 @@ class Navigation extends Menu
         ];
     }
 
-    /**
-     * Get cache key info
-     *
-     * @return array
-     */
     public function getCacheKeyInfo()
     {
         $cacheKeyInfo = parent::getCacheKeyInfo();

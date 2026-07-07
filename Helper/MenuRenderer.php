@@ -7,11 +7,6 @@ use Magento\Cms\Model\Template\FilterProvider;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\View\Asset\Repository as AssetRepository;
 
-/**
- * Reusable Menu Renderer Helper
- * Used by BOTH admin preview and frontend template
- * Ensures admin and frontend look EXACTLY the same
- */
 class MenuRenderer
 {
     protected $escaper;
@@ -34,9 +29,6 @@ class MenuRenderer
         $this->assetRepository = $assetRepository;
     }
 
-    /**
-     * Get view file URL for static assets
-     */
     protected function getViewFileUrl($fileId)
     {
         try {
@@ -46,9 +38,6 @@ class MenuRenderer
         }
     }
 
-    /**
-     * Render icon HTML from raw icon value and library
-     */
     public function renderIcon($icon, $library = 'fontawesome')
     {
         if (!$icon) {
@@ -62,7 +51,6 @@ class MenuRenderer
         } elseif ($library === 'material') {
             return '<span class="material-symbols-outlined">' . $this->escaper->escapeHtml($icon) . '</span>';
         } elseif ($library === 'svg') {
-            // SVG icon value is expected to be a complete SVG string or a path
             if (strpos($icon, '<svg') !== false) {
                 return '<span class="menu-icon menu-icon-svg">' . $icon . '</span>';
             }
@@ -71,12 +59,6 @@ class MenuRenderer
         return '';
     }
 
-    /**
-     * Render icon HTML from a menu item array
-     *
-     * @param array $item Menu item data with 'icon' and 'icon_library' keys
-     * @return string
-     */
     public function renderItemIcon(array $item): string
     {
         $icon = $item['icon'] ?? '';
@@ -84,13 +66,6 @@ class MenuRenderer
         return $this->renderIcon($icon, $library);
     }
 
-    /**
-     * Render menu item image with proper sizing
-     *
-     * @param array $item Menu item data with 'image', 'image_alt', 'image_width', 'image_height' keys
-     * @param string $size Size preset: thumbnail, small, medium, large (default: thumbnail)
-     * @return string
-     */
     public function renderImage(array $item, string $size = 'thumbnail'): string
     {
         $imageUrl = $item['image'] ?? '';
@@ -100,7 +75,6 @@ class MenuRenderer
 
         $alt = $this->escaper->escapeHtmlAttr($item['image_alt'] ?? $item['title'] ?? '');
 
-        // Size presets (width x height)
         $sizes = [
             'thumbnail' => ['width' => 50, 'height' => 50],
             'small'     => ['width' => 100, 'height' => 100],
@@ -110,7 +84,6 @@ class MenuRenderer
 
         $dimensions = $sizes[$size] ?? $sizes['thumbnail'];
 
-        // Allow per-item overrides
         $width = (int)($item['image_width'] ?? $dimensions['width']);
         $height = (int)($item['image_height'] ?? $dimensions['height']);
 
@@ -123,20 +96,15 @@ class MenuRenderer
             . ' />';
     }
 
-    /**
-     * Render CMS block content
-     */
     public function renderCmsBlock($blockId, $isPreview = false)
     {
         $cmsBlock = $this->cmsBlock->load($blockId);
 
         if ($cmsBlock->getId() && $cmsBlock->isActive()) {
             if ($isPreview) {
-                // In admin preview, show placeholder
                 return '<div class="text-sm text-gray-500 dark:text-gray-400 italic mb-2">CMS Block Content (ID: ' . $this->escaper->escapeHtml((string)$blockId) . ')</div>' .
                        '<div class="text-gray-700 dark:text-gray-300">CMS block content will be displayed here on the frontend.</div>';
             } else {
-                // On frontend, render actual content
                 $storeId = $this->storeManager->getStore()->getId();
                 try {
                     $html = $this->filterProvider->getBlockFilter()->setStoreId($storeId)->filter($cmsBlock->getContent());
@@ -150,22 +118,16 @@ class MenuRenderer
         return '<div class="text-sm text-gray-500 italic">CMS block not found or inactive (ID: ' . $this->escaper->escapeHtml((string)$blockId) . ')</div>';
     }
 
-    /**
-     * Render desktop/tablet menu - EXACT same for admin preview and frontend
-     */
     public function renderDesktopMenu($items, $isPreview = false)
     {
-        // Outer wrapper - EXACTLY like backend preview
         $html = '<div id="panthMenuContent" class="panth-desktop" data-mobile-layout="accordion" x-data="{ preventScroll: true }" x-init="$nextTick(() => { document.documentElement.style.overflowX = \'hidden\'; document.body.style.overflowX = \'hidden\'; document.body.style.width = \'100%\'; document.body.style.maxWidth = \'100vw\'; })">';
 
-        // Load all icon libraries locally (no CDN)
         $html .= '<link rel="stylesheet" href="' . $this->getViewFileUrl('Panth_MegaMenu::css/fontawesome/all.min.css') . '">';
         $html .= '<link rel="stylesheet" href="' . $this->getViewFileUrl('Panth_MegaMenu::css/lineicons/lineicons.css') . '">';
         $html .= '<link rel="stylesheet" href="' . $this->getViewFileUrl('Panth_MegaMenu::css/material-icons/material-icons.css') . '">';
 
-        // Start with inline CSS - EXACTLY like backend preview
         $html .= '<style>';
-        // FontAwesome fix for Luma theme (overrides Luma's icon fonts)
+
         $html .= '.fa, .fas, .far, .fab, .fa-solid, .fa-regular, .fa-brands { font-family: "Font Awesome 6 Free" !important; }';
         $html .= '.fa-solid, .fas { font-weight: 900 !important; }';
         $html .= '.fa-regular, .far { font-weight: 400 !important; }';
@@ -193,7 +155,7 @@ class MenuRenderer
         $html .= '.group.menu-open > a .menu-arrow { transform: rotate(180deg); }';
         $html .= '.group:hover > a .menu-arrow { transform: rotate(180deg); }';
         $html .= '.has-dropdown > a { display: flex; align-items: center; }';
-        // Horizontal scroll for overflow menu items
+
         $html .= '.panth-menu-scroll-wrap { position: relative; }';
         $html .= '.panth-menu-scroll-wrap > nav { overflow-x: clip; overflow-y: visible; }';
         $html .= '.panth-menu-scroll-wrap > nav > ul { flex-wrap: nowrap !important; white-space: nowrap; transition: transform 0.3s ease; }';
@@ -210,7 +172,6 @@ class MenuRenderer
         $html .= '.panth-menu-scroll-fade.visible { opacity: 1; }';
         $html .= '</style>';
 
-        // Container wrapper - EXACTLY like backend
         $html .= '<div class="megamenu-container ultimate-menu">';
 
         $html .= '<div class="panth-menu-scroll-wrap" id="panthMenuScrollWrap">';
@@ -233,10 +194,9 @@ class MenuRenderer
         $html .= '<button type="button" class="panth-menu-scroll-btn scroll-right" id="panthMenuScrollRight" aria-label="Scroll menu right">';
         $html .= '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
         $html .= '</button>';
-        $html .= '</div>'; // Close panth-menu-scroll-wrap
-        $html .= '</div>'; // Close megamenu-container
+        $html .= '</div>';
+        $html .= '</div>';
 
-        // Add dynamic positioning script for nested dropdowns from level 3+
         $html .= '<script>';
         $html .= '(function() {';
         $html .= '  function checkDropdownPosition() {';
@@ -281,7 +241,6 @@ class MenuRenderer
         $html .= '})();';
         $html .= '</script>';
 
-        // Alpine.js menu hover controller
         $html .= '<script>';
         $html .= 'function panthMenuNav() {';
         $html .= '  return {';
@@ -325,7 +284,6 @@ class MenuRenderer
         $html .= '}';
         $html .= '</script>';
 
-        // Vanilla JS scroll controller for menu overflow (works for both Hyva and Luma)
         $html .= '<script>';
         $html .= '(function() {';
         $html .= '  function initMenuScroll() {';
@@ -363,13 +321,10 @@ class MenuRenderer
         $html .= '})();';
         $html .= '</script>';
 
-        $html .= '</div>'; // Close panthMenuContent
+        $html .= '</div>';
         return $html;
     }
 
-    /**
-     * Render root level item
-     */
     protected function renderRootItem($item, $isPreview = false)
     {
         $title = $this->escaper->escapeHtml($item['title'] ?? '');
@@ -384,7 +339,6 @@ class MenuRenderer
         $itemType = $item['item_type'] ?? 'custom';
         $cmsBlockId = $item['cms_block_id'] ?? null;
 
-        // Build item style
         $itemStyle = '';
         if ($bgColor) {
             $itemStyle .= 'background-color: ' . $this->escaper->escapeHtmlAttr($bgColor) . '; ';
@@ -393,17 +347,13 @@ class MenuRenderer
             $itemStyle .= 'color: ' . $this->escaper->escapeHtmlAttr($textColor) . ';';
         }
 
-        // Get children
         $children = $this->getChildren($item);
         $hasChildren = count($children) > 0;
 
-        // Hover effect class
         $hoverClass = 'hover-' . $this->escaper->escapeHtmlAttr($hoverEffect);
 
-        // Icon HTML
         $iconHtml = $this->renderIcon($icon, $iconLibrary);
 
-        // Determine tag and attributes
         $hasUrl = $url && trim($url) !== '' && $url !== '#';
         $tagName = ($itemType === 'cms_block' && !$hasUrl) ? 'span' : 'a';
         $hrefAttr = $tagName === 'a' ? 'href="' . $url . '" target="' . $target . '"' : '';
@@ -423,43 +373,37 @@ class MenuRenderer
         }
         $html .= $title;
         $html .= '</span>';
-        // Add down arrow for items with children
+
         if ($hasChildren) {
             $html .= '<span class="menu-arrow">▼</span>';
         }
         $html .= '</' . $tagName . '>';
 
-        // Render children dropdown
         if ($hasChildren) {
             $submenuCols = $item['submenu_columns'] ?? 1;
             $minWidthPx = $submenuCols > 1 ? min($submenuCols * 250, 1200) : 250;
 
-            // If CMS block AND children: show CMS block above, then children below
             if ($itemType === 'cms_block' && $cmsBlockId) {
-                // Outer dropdown wrapper
                 $html .= '<div class="panth-dropdown absolute left-0 top-full mt-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-4 border-2 border-gray-200 dark:border-gray-700" @mouseenter="cancelClose()" style="min-width: ' . $minWidthPx . 'px; max-width: 1200px;">';
 
-                // CMS block section with grid layout
                 $cmsGridClass = $submenuCols > 1 ? 'grid grid-cols-' . $submenuCols . ' gap-6' : '';
                 $html .= '<div class="cms-block-section mb-4 pb-4 border-b-2 border-gray-300 dark:border-gray-600 ' . $cmsGridClass . '">';
                 $html .= $this->renderCmsBlock($cmsBlockId, $isPreview);
                 $html .= '</div>';
 
-                // Children section - visible and clear
                 $html .= '<div class="children-section">';
                 $html .= '<div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Browse Categories</div>';
                 $childGridClass = $submenuCols > 1 ? 'grid grid-cols-' . $submenuCols . ' gap-4' : 'flex flex-col gap-2';
                 $html .= '<div class="' . $childGridClass . '">';
 
                 foreach ($children as $child) {
-                    $html .= $this->renderChildItem($child, $isPreview, false); // Don't wrap in <li>
+                    $html .= $this->renderChildItem($child, $isPreview, false);
                 }
 
-                $html .= '</div>'; // Close children grid
-                $html .= '</div>'; // Close children-section
-                $html .= '</div>'; // Close outer dropdown
+                $html .= '</div>';
+                $html .= '</div>';
+                $html .= '</div>';
             } else {
-                // No CMS block, use grid for children if needed
                 $gridClass = $submenuCols > 1 ? 'grid grid-cols-' . $submenuCols . ' gap-4' : '';
                 $html .= '<ul class="panth-dropdown absolute left-0 top-full mt-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-3 border-2 border-gray-200 dark:border-gray-700 ' . $gridClass . '" @mouseenter="cancelClose()" style="min-width: ' . $minWidthPx . 'px;">';
 
@@ -470,8 +414,6 @@ class MenuRenderer
                 $html .= '</ul>';
             }
         } elseif ($itemType === 'cms_block' && $cmsBlockId) {
-            // Show CMS block content in dropdown if no children
-            // Apply column layout to CMS block wrapper if submenu_columns > 1
             $submenuCols = $item['submenu_columns'] ?? 1;
             $cmsGridClass = $submenuCols > 1 ? 'grid grid-cols-' . $submenuCols . ' gap-4' : '';
             $cmsMinWidthPx = $submenuCols > 1 ? min($submenuCols * 250, 1200) : 300;
@@ -484,9 +426,6 @@ class MenuRenderer
         return $html;
     }
 
-    /**
-     * Render child item (recursive for nested items)
-     */
     protected function renderChildItem($child, $isPreview = false, $wrapInLi = true)
     {
         $title = $this->escaper->escapeHtml($child['title'] ?? '');
@@ -501,7 +440,6 @@ class MenuRenderer
         $itemType = $child['item_type'] ?? 'custom';
         $cmsBlockId = $child['cms_block_id'] ?? null;
 
-        // Build item style
         $itemStyle = '';
         if ($bgColor) {
             $itemStyle .= 'background-color: ' . $this->escaper->escapeHtmlAttr($bgColor) . '; ';
@@ -510,17 +448,13 @@ class MenuRenderer
             $itemStyle .= 'color: ' . $this->escaper->escapeHtmlAttr($textColor) . ';';
         }
 
-        // Get grandchildren
         $grandchildren = $this->getChildren($child);
         $hasGrandchildren = count($grandchildren) > 0;
 
-        // Hover effect class
         $hoverClass = 'hover-' . $this->escaper->escapeHtmlAttr($hoverEffect);
 
-        // Icon HTML
         $iconHtml = $this->renderIcon($icon, $iconLibrary);
 
-        // Determine tag and attributes
         $hasUrl = $url && trim($url) !== '' && $url !== '#';
         $tagName = ($itemType === 'cms_block' && !$hasUrl) ? 'span' : 'a';
         $hrefAttr = $tagName === 'a' ? 'href="' . $url . '" target="' . $target . '"' : '';
@@ -550,9 +484,7 @@ class MenuRenderer
 
             $html .= '<ul class="panth-dropdown-nested absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-3 border-2 border-gray-200 dark:border-gray-700 ' . $gridClass . '" style="min-width: ' . $minWidthPx . 'px;">';
 
-            // Show CMS block content first if it's a CMS block type
             if ($itemType === 'cms_block' && $cmsBlockId) {
-                // Apply column layout to CMS block content if submenu_columns > 1
                 $cmsGridClass = $submenuCols > 1 ? 'grid grid-cols-' . $submenuCols . ' gap-4' : '';
                 $html .= '<li class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 ' . $cmsGridClass . '">';
                 $html .= $this->renderCmsBlock($cmsBlockId, $isPreview);
@@ -564,8 +496,6 @@ class MenuRenderer
             }
             $html .= '</ul>';
         } elseif ($itemType === 'cms_block' && $cmsBlockId) {
-            // Show CMS block content in dropdown if no grandchildren
-            // Apply column layout to CMS block wrapper if submenu_columns > 1
             $submenuCols = $child['submenu_columns'] ?? 1;
             $cmsGridClass = $submenuCols > 1 ? 'grid grid-cols-' . $submenuCols . ' gap-4' : '';
             $cmsMinWidthPx = $submenuCols > 1 ? min($submenuCols * 220, 1000) : 300;
@@ -582,9 +512,6 @@ class MenuRenderer
         return $html;
     }
 
-    /**
-     * Get children items from parent
-     */
     protected function getChildren($parent)
     {
         $children = [];
@@ -605,10 +532,6 @@ class MenuRenderer
         return $children;
     }
 
-    /**
-     * Get common CSS styles for dropdown and hover effects
-     * EXACT same styles for both admin preview and frontend
-     */
     public function getCommonStyles()
     {
         return <<<CSS
@@ -723,32 +646,20 @@ class MenuRenderer
 CSS;
     }
 
-    /**
-     * Render desktop menu with scoped CSS for Luma theme
-     * Prevents conflicts with Luma theme and other modules
-     */
     public function renderDesktopMenuLuma($items, $isPreview = false)
     {
-        // Get the standard Hyva rendering
         $html = $this->renderDesktopMenu($items, $isPreview);
 
-        // Scope ALL CSS to .megamenu-container to prevent conflicts in Luma
         $html = $this->scopeCssToMegamenu($html);
 
         return $html;
     }
 
-    /**
-     * Scope CSS selectors to .megamenu-container
-     * Prevents Luma CSS conflicts while keeping Hyva unchanged
-     */
     private function scopeCssToMegamenu($html)
     {
-        // Extract the <style> content
         if (preg_match('/<style>(.*?)<\/style>/s', $html, $matches)) {
             $css = $matches[1];
 
-            // Scope selectors to .megamenu-container (except html, body, #panthMenuContent)
             $cssLines = explode(';', $css);
             $scopedCss = '';
 
@@ -756,19 +667,16 @@ CSS;
                 $line = trim($line);
                 if (empty($line)) continue;
 
-                // Extract selector and rules
                 if (preg_match('/^([^{]+)\{(.+)$/s', $line, $parts)) {
                     $selector = trim($parts[1]);
                     $rules = trim($parts[2]);
 
-                    // Don't scope html, body, #panthMenuContent, or @media/@keyframes
                     if (strpos($selector, 'html') === 0 ||
                         strpos($selector, 'body') === 0 ||
                         strpos($selector, '#panthMenuContent') === 0 ||
                         strpos($selector, '@') === 0) {
                         $scopedCss .= $selector . ' { ' . $rules . ' } ';
                     } else {
-                        // Scope to .megamenu-container
                         $scopedCss .= '.megamenu-container ' . $selector . ' { ' . $rules . ' } ';
                     }
                 } else {
@@ -776,14 +684,11 @@ CSS;
                 }
             }
 
-            // Replace in HTML
             $html = str_replace($css, $scopedCss, $html);
         }
 
-        // Remove Alpine.js x-init that sets overflow-x (causes issues in Luma)
         $html = preg_replace('/x-init="[^"]*"/', '', $html);
 
-        // Remove html, body overflow-x rule for Luma (causes vertical scrollbar)
         $html = preg_replace('/html,\s*body\s*\{[^}]*overflow-x[^}]*\}/', '', $html);
 
         return $html;

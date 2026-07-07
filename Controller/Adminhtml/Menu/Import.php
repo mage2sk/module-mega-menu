@@ -10,9 +10,6 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 
-/**
- * Import Menu from JSON
- */
 class Import extends Action implements CsrfAwareActionInterface
 {
     protected $jsonFactory;
@@ -46,7 +43,6 @@ class Import extends Action implements CsrfAwareActionInterface
                 ]);
             }
 
-            // Validate and parse JSON data
             $menuData = json_decode($menuDataJson, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -66,7 +62,6 @@ class Import extends Action implements CsrfAwareActionInterface
             $importedMenu = $menuData['menu'];
             $importedItems = $menuData['items'];
 
-            // Validate required fields
             if (empty($importedMenu['identifier'])) {
                 return $result->setData([
                     'success' => false,
@@ -74,23 +69,19 @@ class Import extends Action implements CsrfAwareActionInterface
                 ]);
             }
 
-            // Check if menu with this identifier already exists
             $identifier = $importedMenu['identifier'];
             $existingMenu = $this->menuFactory->create();
             $existingMenu->load($identifier, 'identifier');
 
             if ($existingMenu->getId()) {
-                // Update existing menu
                 $menu = $existingMenu;
                 $action = 'updated';
             } else {
-                // Create new menu
                 $menu = $this->menuFactory->create();
                 $menu->setIdentifier($identifier);
                 $action = 'created';
             }
 
-            // Set menu properties
             $menu->setTitle($importedMenu['title'] ?? 'Imported Menu');
             $menu->setMenuType($importedMenu['menu_type'] ?? 'horizontal');
             $menu->setIsActive($importedMenu['is_active'] ?? 1);
@@ -101,7 +92,6 @@ class Import extends Action implements CsrfAwareActionInterface
             $menu->setMobileLayout($importedMenu['mobile_layout'] ?? 'accordion');
             $menu->setItemsJson(json_encode($importedItems));
 
-            // Set container styling properties if available
             if (isset($importedMenu['container_bg_color'])) {
                 $menu->setData('container_bg_color', $importedMenu['container_bg_color']);
             }
@@ -127,7 +117,6 @@ class Import extends Action implements CsrfAwareActionInterface
                 $menu->setData('container_box_shadow', $importedMenu['container_box_shadow']);
             }
 
-            // Handle store IDs
             if (isset($importedMenu['store_ids'])) {
                 $storeIds = is_array($importedMenu['store_ids'])
                     ? $importedMenu['store_ids']
@@ -135,7 +124,6 @@ class Import extends Action implements CsrfAwareActionInterface
                 $menu->setStoreIds($storeIds);
             }
 
-            // Save through repository to trigger versioning
             $this->menuRepository->save($menu);
 
             return $result->setData([
@@ -144,7 +132,6 @@ class Import extends Action implements CsrfAwareActionInterface
                 'menu_id' => $menu->getId(),
                 'action' => $action
             ]);
-
         } catch (\Exception $e) {
             return $result->setData([
                 'success' => false,
