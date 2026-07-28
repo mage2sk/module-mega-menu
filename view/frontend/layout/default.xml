@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * MegaMenu base layout — loads Luma menu inside header (same row as logo).
+ * MegaMenu base layout - loads Luma menu inside header (same row as logo).
  * On Hyva, default_hyva.xml removes this; theme layout adds Alpine.js menu.
  * Default nav removal is handled by RemoveDefaultNavigation plugin (per-store config aware).
  */

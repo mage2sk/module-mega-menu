@@ -299,7 +299,7 @@
                 <field id="enable_debug" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Debug Mode</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment><![CDATA[Enable debug logging for MegaMenu troubleshooting. <strong>For development only</strong> — disable in production. Default: <strong>No</strong>]]></comment>
+                    <comment><![CDATA[Enable debug logging for MegaMenu troubleshooting. <strong>For development only</strong> - disable in production. Default: <strong>No</strong>]]></comment>
                 </field>
 
                 <field id="custom_js" translate="label comment" type="textarea" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">

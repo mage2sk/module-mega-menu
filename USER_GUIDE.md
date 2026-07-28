@@ -1,4 +1,4 @@
-# Panth Mega Menu — User Guide
+# Panth Mega Menu - User Guide
 
 This guide walks a Magento store administrator through every screen
 and setting of the Panth Mega Menu extension. No coding required.
@@ -39,7 +39,7 @@ bin/magento cache:flush
 1. Download the extension package zip
 2. Extract to `app/code/Panth/MegaMenu`
 3. Make sure `app/code/Panth/Core` is also present
-4. Run the same `module:enable … cache:flush` commands above
+4. Run the same `module:enable ... cache:flush` commands above
 
 ### Confirm
 
@@ -54,15 +54,15 @@ bin/magento module:status Panth_MegaMenu
 
 After installation, three things should be true:
 
-1. **Configuration page exists** — Stores → Configuration → Panth Extensions → Mega Menu is reachable
-2. **Menu Builder exists** — Stores → Panth Infotech → Mega Menu → Menu Builder is reachable
-3. **The storefront menu is replaced** — visit your store homepage and you should see the Panth menu instead of (or alongside) the native Magento top-menu
+1. **Configuration page exists** - Stores -> Configuration -> Panth Extensions -> Mega Menu is reachable
+2. **Menu Builder exists** - Stores -> Panth Infotech -> Mega Menu -> Menu Builder is reachable
+3. **The storefront menu is replaced** - visit your store homepage and you should see the Panth menu instead of (or alongside) the native Magento top-menu
 
 ---
 
 ## 3. Configuration screens
 
-Navigate to **Stores → Configuration → Panth Extensions → Mega Menu**.
+Navigate to **Stores -> Configuration -> Panth Extensions -> Mega Menu**.
 
 ### General
 
@@ -79,7 +79,7 @@ Navigate to **Stores → Configuration → Panth Extensions → Mega Menu**.
 
 ## 4. The Menu Builder
 
-Navigate to **Stores → Panth Infotech → Mega Menu → Menu Builder**.
+Navigate to **Stores -> Panth Infotech -> Mega Menu -> Menu Builder**.
 
 You will see a drag-and-drop tree editor on the left and an item
 properties panel on the right.
@@ -100,8 +100,8 @@ Each menu item can link to one of:
 | Type | What it is |
 |---|---|
 | **Manual URL** | Any URL (relative or absolute) |
-| **Category** | Pick a Magento category from a dropdown — URL is generated automatically and updates when the category URL changes |
-| **CMS Page** | Pick a CMS page from a dropdown — URL is generated automatically |
+| **Category** | Pick a Magento category from a dropdown - URL is generated automatically and updates when the category URL changes |
+| **CMS Page** | Pick a CMS page from a dropdown - URL is generated automatically |
 | **External Link** | Opens in a new tab |
 | **Group Header** | A non-clickable label, used for organizing items in dropdown columns |
 
@@ -123,7 +123,7 @@ dropdown. Open the parent item's properties and choose:
 
 ## 7. CMS block injection
 
-Inside any column you can drop a CMS block — perfect for promo
+Inside any column you can drop a CMS block - perfect for promo
 banners, featured products, custom HTML. To do it:
 
 1. Open the parent item's properties in the Menu Builder
@@ -133,7 +133,7 @@ banners, featured products, custom HTML. To do it:
 5. Save
 
 The block is rendered inline inside the dropdown column at runtime.
-It is **lazily rendered** — the block's HTML is only generated when
+It is **lazily rendered** - the block's HTML is only generated when
 the column is actually open in the user's browser, so unused blocks
 never cost you any backend time.
 
@@ -144,11 +144,11 @@ never cost you any backend time.
 Below the configured **Mobile Breakpoint** width, the desktop dropdown
 is replaced by a slide-in drawer:
 
-- Tap the hamburger icon → drawer slides in from the left
+- Tap the hamburger icon -> drawer slides in from the left
 - Each parent item with children shows an accordion arrow
-- Tap the arrow → that submenu expands inline (no nested drawers)
-- Tap a leaf item → navigates to the URL
-- Tap outside the drawer or the X → drawer slides out
+- Tap the arrow -> that submenu expands inline (no nested drawers)
+- Tap a leaf item -> navigates to the URL
+- Tap outside the drawer or the X -> drawer slides out
 
 The drawer uses big touch targets (44 px minimum), CSS transitions,
 and respects `prefers-reduced-motion`.
@@ -174,10 +174,10 @@ another store view" button.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Native menu still visible | "Replace Native Menu" is set to No | Configuration → Mega Menu → Replace Native Menu = Yes |
+| Native menu still visible | "Replace Native Menu" is set to No | Configuration -> Mega Menu -> Replace Native Menu = Yes |
 | Menu doesn't appear at all | Module disabled / cache not flushed | `bin/magento module:status Panth_MegaMenu` then `cache:flush` |
 | Edits don't show on the storefront | FPC + menu cache not invalidated | `cache:flush` or save any menu item to bump the cache tag |
-| Mobile drawer doesn't open | JS error from another extension | Open browser console; the Panth drawer requires no jQuery / RequireJS so it works on Hyva and Luma — but a third-party JS error elsewhere can break Alpine init |
+| Mobile drawer doesn't open | JS error from another extension | Open browser console; the Panth drawer requires no jQuery / RequireJS so it works on Hyva and Luma - but a third-party JS error elsewhere can break Alpine init |
 | Menu builder shows blank tree | Database empty for this store view | Click "Add Item" and start building, or "Copy from another store view" |
 
 ---

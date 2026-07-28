@@ -3080,7 +3080,7 @@ define([
             // =========================================================================
             // =========================================================================
 
-            // ── LEVEL 0 — Top-level categories ──
+            // ── LEVEL 0 - Top-level categories ──
 
             // 1. Women
             items.push(createItem({
@@ -3157,7 +3157,7 @@ define([
                 font_weight: '700'
             }));
 
-            // ── LEVEL 1 — Women children ──
+            // ── LEVEL 1 - Women children ──
 
             // Women > Tops
             items.push(createItem({
@@ -3183,7 +3183,7 @@ define([
             }));
             var womenBottomsId = items[items.length - 1].item_id;
 
-            // ── LEVEL 2 — Women > Tops children ──
+            // ── LEVEL 2 - Women > Tops children ──
 
             items.push(createItem({
                 title: 'Jackets',
@@ -3228,7 +3228,7 @@ define([
                 cms_block: 'megamenu-women-banner'
             }));
 
-            // ── LEVEL 2 — Women > Bottoms children ──
+            // ── LEVEL 2 - Women > Bottoms children ──
 
             items.push(createItem({
                 title: 'Pants',
@@ -3250,7 +3250,7 @@ define([
                 position: 2
             }));
 
-            // ── LEVEL 1 — Men children ──
+            // ── LEVEL 1 - Men children ──
 
             // Men > Tops
             items.push(createItem({
@@ -3276,7 +3276,7 @@ define([
             }));
             var menBottomsId = items[items.length - 1].item_id;
 
-            // ── LEVEL 2 — Men > Tops children ──
+            // ── LEVEL 2 - Men > Tops children ──
 
             items.push(createItem({
                 title: 'Jackets',
@@ -3318,7 +3318,7 @@ define([
                 position: 4
             }));
 
-            // ── LEVEL 2 — Men > Bottoms children ──
+            // ── LEVEL 2 - Men > Bottoms children ──
 
             items.push(createItem({
                 title: 'Pants',
@@ -3340,7 +3340,7 @@ define([
                 position: 2
             }));
 
-            // ── LEVEL 1 — Gear children ──
+            // ── LEVEL 1 - Gear children ──
 
             items.push(createItem({
                 title: 'Bags',
@@ -3372,7 +3372,7 @@ define([
                 position: 3
             }));
 
-            // ── LEVEL 1 — Collections children ──
+            // ── LEVEL 1 - Collections children ──
 
             items.push(createItem({
                 title: 'Erin Recommends',
@@ -3404,7 +3404,7 @@ define([
                 position: 3
             }));
 
-            // ── LEVEL 1 — Training children ──
+            // ── LEVEL 1 - Training children ──
 
             items.push(createItem({
                 title: 'Video Download',

@@ -209,15 +209,15 @@ bin/magento module:status Panth_MegaMenu
 
 After install, open:
 ```
-Admin → Panth Extensions → Mega Menu → Menu Items
-Admin → Stores → Configuration → Panth Extensions → MegaMenu
+Admin -> Panth Extensions -> Mega Menu -> Menu Items
+Admin -> Stores -> Configuration -> Panth Extensions -> MegaMenu
 ```
 
 ---
 
 ## Configuration
 
-Go to **Stores → Configuration → Panth Extensions → MegaMenu**.
+Go to **Stores -> Configuration -> Panth Extensions -> MegaMenu**.
 
 All settings support the standard Magento scope hierarchy: default, website, and store view.
 
@@ -296,7 +296,7 @@ These settings apply only when Sticky Menu is enabled in General Settings.
 
 ## Menu Builder Guide
 
-Open **Admin → Panth Extensions → Mega Menu → Menu Items**.
+Open **Admin -> Panth Extensions -> Mega Menu -> Menu Items**.
 
 1. **Create a menu** and give it an identifier (e.g., `mainmenu`). Assign it to one or more store views.
 2. **Add items** by clicking Add Item and choosing the type: category link, CMS page link, custom URL, label-only parent, or raw HTML.
@@ -327,7 +327,7 @@ The version history table records every save so you can restore an earlier snaps
 Yes. The module ships two separate templates. Hyva stores get Alpine.js plus Tailwind utilities, Luma stores get vanilla JS. The module picks the right one based on your active theme, so no manual configuration is needed.
 
 ### Can I build a menu without touching code?
-Yes. The drag-and-drop builder in Admin → Panth Extensions → Mega Menu → Menu Items lets you add, nest, and reorder items visually. You can also set column counts, inject CMS blocks, and upload images per item, all from the admin.
+Yes. The drag-and-drop builder in Admin -> Panth Extensions -> Mega Menu -> Menu Items lets you add, nest, and reorder items visually. You can also set column counts, inject CMS blocks, and upload images per item, all from the admin.
 
 ### Can I show a promo banner inside a dropdown?
 Yes. Enable the CMS block option on a column and assign any existing CMS block. The block renders lazily when the column is opened, keeping the initial page load fast.
