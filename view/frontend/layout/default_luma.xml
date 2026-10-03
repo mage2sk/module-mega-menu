@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Luma Theme Specific Layout
+ *
+ * This layout is loaded only when Luma (or Luma-based) theme is active.
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- MegaMenu (handles both desktop and mobile) -->
+        <referenceContainer name="header.container">
+            <block class="Panth\MegaMenu\Block\Menu"
+                   name="megamenu.main"
+                   template="Panth_MegaMenu::luma/desktop/menu.phtml"
+                   before="-"
+                   ifconfig="panth_megamenu/general/enabled">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Panth\MegaMenu\ViewModel\Menu</argument>
+                    <argument name="css_classes" xsi:type="string">megamenu-responsive</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

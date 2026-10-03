@@ -1,0 +1,370 @@
+<?php
+/**
+ * Panth MegaMenu - Sticky Header Wrapper (Hyva Theme)
+ *
+ * This template provides a sticky/fixed header wrapper for the mega menu.
+ * It handles scroll behavior, showing/hiding based on scroll direction,
+ * and compact mode when scrolling.
+ *
+ * Features:
+ * - Sticky positioning on scroll
+ * - Hide on scroll down, show on scroll up (optional)
+ * - Compact mode when sticky (optional)
+ * - Smooth animations
+ * - Configurable scroll offset threshold
+ * - Shadow effect when sticky
+ * - Performance optimized with requestAnimationFrame
+ * - Intersection Observer for efficiency
+ *
+ * @var \Panth\MegaMenu\Block\StickyMenu $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\StickyConfig $stickyConfig
+ */
+
+// Get sticky configuration view model
+$stickyConfig = $block->getLayout()
+    ->createBlock(\Magento\Framework\View\Element\Template::class)
+    ->setTemplate('')
+    ->addData(['view_model' => \Panth\MegaMenu\ViewModel\StickyConfig::class]);
+
+// Check if sticky menu is enabled
+$helper = $block->getMenuHelper();
+if (!$helper->isStickyMenuEnabled()) {
+    // Render regular menu without sticky behavior
+    echo $block->getChildHtml('megamenu.content');
+    return;
+}
+
+// Get configuration
+$stickyOffset = $helper->getStickyOffset();
+$hideOnScrollDown = $helper->hideOnScrollDown();
+$showOnScrollUp = $helper->showOnScrollUp();
+$compactMode = $helper->isStickyCompactMode();
+$animationSpeed = $helper->getStickyAnimationSpeed();
+$showShadow = $helper->showStickyShadow();
+
+// Generate unique ID
+$stickyId = 'sticky-menu-' . uniqid();
+?>
+
+<!--
+Sticky Menu Wrapper
+===================
+Wraps the mega menu with sticky scroll behavior.
+
+Behavior modes:
+1. Always visible: Menu stays at top when scrolling
+2. Hide on scroll down: Menu slides up when scrolling down
+3. Show on scroll up: Menu slides down when scrolling up
+4. Compact mode: Menu height reduces when sticky
+
+The wrapper uses Alpine.js to track scroll position and apply
+appropriate classes and styles.
+-->
+
+<div id="<?= $escaper->escapeHtmlAttr($stickyId) ?>"
+     class="sticky-menu-wrapper"
+     x-data="stickyMenuInit()"
+     x-init="init()"
+     @scroll.window.passive="handleScroll()">
+
+    <?php
+    /**
+     * Alpine.js Component Initialization
+     *
+     * Manages sticky menu behavior based on scroll position and direction.
+     *
+     * State Properties:
+     * - isSticky: Boolean indicating if menu is in sticky state
+     * - isVisible: Boolean for show/hide behavior
+     * - isCompact: Boolean for compact mode
+     * - lastScrollY: Last scroll position for direction detection
+     * - scrollDirection: Current scroll direction ('up' or 'down')
+     * - ticking: requestAnimationFrame throttle flag
+     */
+    ?>
+    <script>
+        function stickyMenuInit() {
+            return {
+                // Configuration (from PHP)
+                config: {
+                    stickyOffset: <?= (int) $stickyOffset ?>,
+                    hideOnScrollDown: <?= $hideOnScrollDown ? 'true' : 'false' /* @noEscape */ ?>,
+                    showOnScrollUp: <?= $showOnScrollUp ? 'true' : 'false' /* @noEscape */ ?>,
+                    compactMode: <?= $compactMode ? 'true' : 'false' /* @noEscape */ ?>,
+                    animationSpeed: <?= (int) $animationSpeed ?>,
+                    showShadow: <?= $showShadow ? 'true' : 'false' /* @noEscape */ ?>
+                },
+
+                // State
+                isSticky: false,
+                isVisible: true,
+                isCompact: false,
+                lastScrollY: 0,
+                scrollDirection: 'up',
+                ticking: false,
+                menuHeight: 0,
+
+                /**
+                 * Initialize component
+                 */
+                init() {
+                    this.lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    this.menuHeight = this.$el.offsetHeight;
+
+                    // Initial check
+                    this.checkStickyState();
+
+                    // Update menu height on resize
+                    window.addEventListener('resize', () => {
+                        this.menuHeight = this.$el.offsetHeight;
+                    });
+                },
+
+                /**
+                 * Handle scroll event (throttled with RAF)
+                 */
+                handleScroll() {
+                    if (!this.ticking) {
+                        window.requestAnimationFrame(() => {
+                            this.updateStickyState();
+                            this.ticking = false;
+                        });
+
+                        this.ticking = true;
+                    }
+                },
+
+                /**
+                 * Check and update sticky state
+                 */
+                checkStickyState() {
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+                    // Determine if menu should be sticky
+                    const shouldBeSticky = scrollY > this.config.stickyOffset;
+
+                    if (shouldBeSticky !== this.isSticky) {
+                        this.isSticky = shouldBeSticky;
+                        this.isCompact = shouldBeSticky && this.config.compactMode;
+                    }
+                },
+
+                /**
+                 * Update sticky state on scroll
+                 */
+                updateStickyState() {
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+                    // Check sticky state
+                    this.checkStickyState();
+
+                    // Determine scroll direction
+                    if (scrollY > this.lastScrollY) {
+                        this.scrollDirection = 'down';
+                    } else if (scrollY < this.lastScrollY) {
+                        this.scrollDirection = 'up';
+                    }
+
+                    // Update visibility based on scroll direction
+                    if (this.isSticky) {
+                        if (this.config.hideOnScrollDown && this.scrollDirection === 'down') {
+                            this.isVisible = false;
+                        } else if (this.config.showOnScrollUp && this.scrollDirection === 'up') {
+                            this.isVisible = true;
+                        } else if (!this.config.hideOnScrollDown) {
+                            this.isVisible = true;
+                        }
+                    } else {
+                        // Always visible when not sticky
+                        this.isVisible = true;
+                    }
+
+                    this.lastScrollY = scrollY;
+                },
+
+                /**
+                 * Get wrapper classes
+                 */
+                getWrapperClasses() {
+                    return {
+                        'is-sticky': this.isSticky,
+                        'is-hidden': !this.isVisible,
+                        'is-compact': this.isCompact,
+                        'has-shadow': this.isSticky && this.config.showShadow
+                    };
+                },
+
+                /**
+                 * Get wrapper styles
+                 */
+                getWrapperStyles() {
+                    const styles = {
+                        transition: `transform ${this.config.animationSpeed}ms ease, box-shadow ${this.config.animationSpeed}ms ease`
+                    };
+
+                    if (this.isSticky && !this.isVisible) {
+                        styles.transform = 'translateY(-100%)';
+                    }
+
+                    return styles;
+                }
+            };
+        }
+    </script>
+
+    <!--
+    Sticky Menu Container
+    =====================
+    The actual menu content with sticky positioning applied via classes
+    -->
+    <div class="sticky-menu-container"
+         :class="getWrapperClasses()"
+         :style="getWrapperStyles()">
+
+        <!--
+        Sticky Placeholder
+        ==================
+        Prevents content jump when menu becomes fixed positioned
+        Height matches the menu height
+        -->
+        <div class="sticky-placeholder"
+             x-show="isSticky"
+             :style="{ height: menuHeight + 'px' }"
+             aria-hidden="true"></div>
+
+        <!--
+        Menu Content
+        ============
+        The actual mega menu rendered here
+        -->
+        <div class="menu-content-wrapper relative">
+            <?php
+            /**
+             * Render the mega menu
+             *
+             * This renders the main menu template which handles
+             * desktop/mobile switching internally.
+             */
+            ?>
+            <?= /* @noEscape */ $block->getLayout()
+                ->createBlock(\Panth\MegaMenu\Block\Menu::class)
+                ->setTemplate('Panth_MegaMenu::hyva/menu.phtml')
+                ->setData('menu_identifier', $block->getData('menu_identifier') ?: 'pmenu')
+                ->toHtml() ?>
+        </div>
+
+    </div>
+
+</div>
+
+<?php
+/**
+ * Sticky Menu Styles
+ *
+ * Additional CSS for sticky behavior, transitions, and states.
+ */
+?>
+<style>
+    /* Sticky menu container */
+    .sticky-menu-container {
+        position: relative;
+        z-index: 100;
+        width: 100%;
+        transition: all 300ms ease;
+    }
+
+    /* Sticky state - fixed positioning */
+    .sticky-menu-container.is-sticky {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+
+    /* Shadow when sticky */
+    .sticky-menu-container.has-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Compact mode - reduce padding and spacing */
+    .sticky-menu-container.is-compact .desktop-megamenu {
+        transition: padding 300ms ease;
+    }
+
+    .sticky-menu-container.is-compact .desktop-megamenu .menu-root {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .sticky-menu-container.is-compact .menu-item-link {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    /* Hidden state - slide up */
+    .sticky-menu-container.is-hidden {
+        transform: translateY(-100%);
+    }
+
+    /* Ensure smooth transitions */
+    .sticky-menu-container,
+    .sticky-menu-container .menu-item-link,
+    .sticky-menu-container .desktop-megamenu {
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Prevent content shift during sticky transition */
+    .sticky-placeholder {
+        width: 100%;
+    }
+
+    /* Performance optimization - will-change */
+    .sticky-menu-container.is-sticky {
+        will-change: transform;
+    }
+
+    /* Ensure menu is above other content */
+    .sticky-menu-container {
+        isolation: isolate;
+    }
+
+    /* Backdrop blur effect when sticky (optional modern effect) */
+    .sticky-menu-container.is-sticky .menu-content-wrapper {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Dark mode support (if needed) */
+    @media (prefers-color-scheme: dark) {
+        .sticky-menu-container.is-sticky .menu-content-wrapper {
+            background: rgba(17, 24, 39, 0.95);
+        }
+    }
+
+    /* Disable sticky on print */
+    @media print {
+        .sticky-menu-container {
+            position: relative !important;
+            transform: none !important;
+        }
+
+        .sticky-placeholder {
+            display: none !important;
+        }
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .sticky-menu-container,
+        .sticky-menu-container * {
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+        }
+    }
+</style>

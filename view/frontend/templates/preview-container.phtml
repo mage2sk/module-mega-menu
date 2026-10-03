@@ -1,0 +1,15 @@
+<?php
+/**
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+<div class="panth-megamenu-preview" data-role="megamenu-preview">
+    <div class="panth-megamenu-preview__bar">
+        <span class="panth-megamenu-preview__badge"><?= $escaper->escapeHtml(__('Live preview')) ?></span>
+        <span><?= $escaper->escapeHtml(__('Links open in a new tab.')) ?></span>
+    </div>
+    <div class="panth-megamenu-preview__menu">
+        <?= /* @noEscape */ $block->getChildHtml('panth.megamenu.preview') ?>
+    </div>
+</div>

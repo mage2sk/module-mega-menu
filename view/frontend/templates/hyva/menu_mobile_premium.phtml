@@ -1,0 +1,221 @@
+<!-- ========================================
+     MOBILE MENU (hidden on desktop)
+     PREMIUM MOBILE EXPERIENCE
+     ======================================== -->
+<div x-data="initMobileMenu" x-bind="eventListeners" class="lg:hidden">
+    <!-- Mobile Menu Button with Ripple Effect -->
+    <button
+        type="button"
+        class="mobile-menu-btn btn bg-transparent border-transparent p-2 relative overflow-hidden"
+        aria-label="<?= $escaper->escapeHtmlAttr(__('Open menu')) ?>"
+        @click="open"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" class="mobile-menu-icon"><path stroke="none" d="M0 0h24v24H0z"></path><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+
+    <!-- Premium Mobile Drawer with Glassmorphism -->
+    <dialog
+        class="mobile-drawer size-full max-h-full ms-0 p-0 open:flex flex-col transition-all duration-500 motion-reduce:duration-0 rounded-s-none backdrop-blur-sm"
+        x-show="isOpen"
+        x-htmldialog="close"
+        closeby="any"
+        x-transition:enter="transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)"
+        x-transition:enter-start="-translate-x-full opacity-0"
+        x-transition:enter-end="translate-x-0 opacity-100"
+        x-transition:leave="transition-all duration-400 ease-in-out"
+        x-transition:leave-start="translate-x-0 opacity-100"
+        x-transition:leave-end="-translate-x-full opacity-0"
+    >
+        <!-- Premium Header with Gradient -->
+        <div class="mobile-menu-header border-b border-slate-200 bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg">
+            <div class="flex justify-between items-center gap-2 py-4 px-6">
+                <div class="font-bold text-lg text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" class="mobile-header-icon"><path stroke="none" d="M0 0h24v24H0z"></path><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 9h6M9 15h6"></path></svg>
+                    <?= $escaper->escapeHtml(__('Menu')) ?>
+                </div>
+                <button
+                    type="button"
+                    @click="close"
+                    class="mobile-close-btn btn bg-white/20 border-white/30 backdrop-blur-sm p-2 rounded-full hover:bg-white/30 transition-all duration-300"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Close menu')) ?>"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" class="mobile-close-icon"><path stroke="none" d="M0 0h24v24H0z"></path><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu Items Container with Glassmorphism Background -->
+        <div class="grow relative overflow-y-auto overflow-x-clip mobile-menu-bg" :style="lockWrapperScroll">
+            <nav aria-label="<?= $escaper->escapeHtmlAttr(__('Mobile Main Menu')) ?>">
+                <ul class="mobile-menu-list py-2">
+                    <?php foreach ($menuTree as $index => $item): ?>
+                        <?php
+                        $isActive = $getValue($item, 'is_active', 'getIsActive', true);
+                        if (!$isActive) {
+                            continue;
+                        }
+
+                        $title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+                        $url = $escaper->escapeUrl($getValue($item, 'url', 'getUrl', '#'));
+                        $children = $getValue($item, 'children', 'getChildren', []);
+                        $hasChildren = !empty($children);
+                        $icon = $getValue($item, 'icon', 'getIconClass', '');
+                        ?>
+
+                        <?php if ($hasChildren): ?>
+                            <li data-level="0"
+                                class="mobile-menu-item-animated"
+                                style="animation-delay: <?= ($index * 0.05) ?>s"
+                                x-data="initMobileSubMenu">
+                                <button
+                                    type="button"
+                                    class="mobile-item-with-submenu w-full justify-between flex items-center gap-3 py-4 px-6 relative overflow-hidden group"
+                                    aria-controls="submenu-<?= $escaper->escapeHtml($index) ?>-mobile-menu-panel"
+                                    aria-expanded="false"
+                                    x-ref="openSubMenuBtn"
+                                    :aria-expanded="isOpen"
+                                    :disabled="isOpen"
+                                    @click="open"
+                                >
+                                    <!-- Ripple Effect Background -->
+                                    <span class="mobile-ripple-effect"></span>
+
+                                    <span class="flex items-center gap-3 relative z-10">
+                                        <?php if ($icon): ?>
+                                            <span class="mobile-icon-wrapper">
+                                                <i class="<?= $escaper->escapeHtmlAttr($icon) ?> mobile-menu-icon-item" aria-hidden="true"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                        <span class="mobile-item-text font-medium"><?= $escaper->escapeHtml($title) ?></span>
+                                    </span>
+
+                                    <!-- Premium Arrow with Animation -->
+                                    <span class="mobile-arrow-btn btn p-2 border-0 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full shadow-md group-hover:shadow-lg transition-all duration-300 relative z-10">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" class="mobile-chevron-icon"><path stroke="none" d="M0 0h24v24H0z"></path><path d="m9 6 6 6-6 6"></path></svg>
+                                    </span>
+                                </button>
+
+                                <!-- Premium Submenu Panel with Elastic Animation -->
+                                <ul
+                                    id="submenu-<?= $escaper->escapeHtml($index) ?>-mobile-menu-panel"
+                                    class="mobile-submenu-panel z-10 absolute inset-0 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 backdrop-blur-xl overflow-y-auto overscroll-y-contain"
+                                    x-show="isOpen"
+                                    x-transition:enter="transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)"
+                                    x-transition:enter-start="opacity-0 translate-x-full scale-95"
+                                    x-transition:enter-end="opacity-100 translate-x-0 scale-100"
+                                    x-transition:leave="transition-all duration-400 ease-in-out"
+                                    x-transition:leave-start="opacity-100 translate-x-0 scale-100"
+                                    x-transition:leave-end="opacity-0 translate-x-full scale-95"
+                                    @keydown.escape.stop.prevent="close"
+                                >
+                                    <li data-level="1">
+                                        <!-- Back Button with Gradient -->
+                                        <button
+                                            type="button"
+                                            class="mobile-back-btn w-full bg-gradient-to-r from-blue-500 to-purple-600 font-bold flex items-center gap-3 py-4 px-6 text-white sticky top-0 z-20 shadow-lg"
+                                            @click="close"
+                                            x-ref="closeSubMenuBtn"
+                                        >
+                                            <span class="mobile-back-icon-wrapper">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" class="mobile-back-icon"><path stroke="none" d="M0 0h24v24H0z"></path><path d="m15 6-6 6 6 6"></path></svg>
+                                            </span>
+                                            <?= /* @noEscape */ $title ?>
+                                        </button>
+
+                                        <!-- View All Link with Badge -->
+                                        <a
+                                            href="<?= /* @noEscape */ $url ?>"
+                                            class="mobile-view-all-link flex items-center gap-2 py-4 px-6 bg-white/50 backdrop-blur-sm border-b-2 border-blue-200 hover:bg-white/80 transition-all duration-300 group"
+                                        >
+                                            <span class="mobile-category-badge px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-bold rounded-full shadow-md group-hover:shadow-lg transition-all duration-300">
+                                                VIEW ALL
+                                            </span>
+                                            <span class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-300"><?= /* @noEscape */ $title ?></span>
+                                        </a>
+                                    </li>
+                                    <?php
+                                    // Recursively render mobile submenu items with stagger animation
+                                    $renderMobileSubmenu = function($items, $level = 1, $parentIndex = 0) use (&$renderMobileSubmenu, $getValue, $escaper) {
+                                        $itemIndex = 0;
+                                        foreach ($items as $childItem) {
+                                            $childActive = $getValue($childItem, 'is_active', 'getIsActive', true);
+                                            if (!$childActive) {
+                                                continue;
+                                            }
+
+                                            $childTitle = $escaper->escapeHtml($getValue($childItem, 'title', 'getTitle', ''));
+                                            $childUrl = $escaper->escapeUrl($getValue($childItem, 'url', 'getUrl', '#'));
+                                            $childIcon = $getValue($childItem, 'icon', 'getIconClass', '');
+                                            $childChildren = $getValue($childItem, 'children', 'getChildren', []);
+                                            $hasChildChildren = !empty($childChildren);
+
+                                            $indent = str_repeat('pl-4 ', $level);
+                                            $delay = ($itemIndex * 0.05);
+                                            ?>
+                                            <li data-level="<?= (int) $level ?>"
+                                                class="mobile-submenu-item-animated"
+                                                style="animation-delay: <?= (float) $delay ?>s">
+                                                <a
+                                                    href="<?= /* @noEscape */ $childUrl ?>"
+                                                    class="mobile-submenu-link <?= $escaper->escapeHtmlAttr($indent) ?> flex items-center gap-3 py-3.5 px-6 border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 group relative overflow-hidden"
+                                                >
+                                                    <!-- Hover Gradient Effect -->
+                                                    <span class="mobile-submenu-hover-effect"></span>
+
+                                                    <span class="flex items-center gap-3 relative z-10">
+                                                        <?php if ($childIcon): ?>
+                                                            <span class="mobile-submenu-icon-wrapper">
+                                                                <i class="<?= $escaper->escapeHtmlAttr($childIcon) ?> mobile-submenu-icon text-gray-600 group-hover:text-blue-600 transition-colors duration-300" aria-hidden="true"></i>
+                                                            </span>
+                                                        <?php endif; ?>
+                                                        <span class="mobile-submenu-text text-gray-700 group-hover:text-blue-700 font-medium transition-all duration-300"><?= /* @noEscape */ $childTitle ?></span>
+                                                    </span>
+
+                                                    <!-- Subtle Arrow Indicator -->
+                                                    <span class="mobile-submenu-arrow ml-auto opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="16" height="16" viewBox="0 0 24 24" class="text-blue-500"><path stroke="none" d="M0 0h24v24H0z"></path><path d="m9 6 6 6-6 6"></path></svg>
+                                                    </span>
+                                                </a>
+                                            </li>
+                                            <?php
+                                            // Recursively render deeper levels (up to 6 levels)
+                                            if ($hasChildChildren && $level < 5) {
+                                                $renderMobileSubmenu($childChildren, $level + 1, $itemIndex);
+                                            }
+                                            $itemIndex++;
+                                        }
+                                    };
+
+                                    // Render all children
+                                    $renderMobileSubmenu($children, 1, $index);
+                                    ?>
+                                </ul>
+                            </li>
+                        <?php else: ?>
+                            <li data-level="0"
+                                class="mobile-menu-item-animated"
+                                style="animation-delay: <?= (float) ($index * 0.05) ?>s">
+                                <a
+                                    href="<?= /* @noEscape */ $url ?>"
+                                    class="mobile-simple-link flex items-center gap-3 py-4 px-6 border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 group relative overflow-hidden"
+                                >
+                                    <!-- Ripple Effect Background -->
+                                    <span class="mobile-ripple-effect"></span>
+
+                                    <span class="flex items-center gap-3 relative z-10">
+                                        <?php if ($icon): ?>
+                                            <span class="mobile-icon-wrapper">
+                                                <i class="<?= $escaper->escapeHtmlAttr($icon) ?> mobile-menu-icon-item group-hover:scale-110 transition-transform duration-300" aria-hidden="true"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                        <span class="mobile-item-text font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-300"><?= /* @noEscape */ $title ?></span>
+                                    </span>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </ul>
+            </nav>
+        </div>
+    </dialog>
+</div>

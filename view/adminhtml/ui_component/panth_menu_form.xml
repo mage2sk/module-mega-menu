@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">panth_menu_form.panth_menu_form_data_source</item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">Menu Information</item>
+        <item name="template" xsi:type="string">templates/form/collapsible</item>
+    </argument>
+
+    <settings>
+        <buttons>
+            <button name="back" class="Panth\MegaMenu\Block\Adminhtml\Menu\Button\Back"/>
+            <button name="preview" class="Panth\MegaMenu\Block\Adminhtml\Menu\Button\Preview"/>
+            <button name="export" class="Panth\MegaMenu\Block\Adminhtml\Menu\Button\Export"/>
+            <button name="import" class="Panth\MegaMenu\Block\Adminhtml\Menu\Button\Import"/>
+            <button name="save" class="Panth\MegaMenu\Block\Adminhtml\Menu\Button\Save"/>
+            <button name="save_and_continue" class="Panth\MegaMenu\Block\Adminhtml\Menu\Button\SaveAndContinue"/>
+        </buttons>
+        <namespace>panth_menu_form</namespace>
+        <dataScope>data</dataScope>
+        <deps>
+            <dep>panth_menu_form.panth_menu_form_data_source</dep>
+        </deps>
+    </settings>
+
+    <!-- Import Modal -->
+    <modal name="import_menu_modal_form">
+        <argument name="data" xsi:type="array">
+            <item name="config" xsi:type="array">
+                <item name="component" xsi:type="string">Panth_MegaMenu/js/import-modal-form</item>
+                <item name="onCancel" xsi:type="string">actionCancel</item>
+                <item name="options" xsi:type="array">
+                    <item name="title" xsi:type="string" translate="true">Import Menu</item>
+                </item>
+            </item>
+        </argument>
+        <settings>
+            <options>
+                <option name="title" xsi:type="string" translate="true">Import Menu</option>
+            </options>
+        </settings>
+        <fieldset name="import_fieldset">
+            <settings>
+                <label/>
+            </settings>
+            <container name="file_upload_container">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="template" xsi:type="string">Panth_MegaMenu/form/field/file-input</item>
+                    </item>
+                </argument>
+            </container>
+            <field name="menu_data" formElement="textarea">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="component" xsi:type="string">Magento_Ui/js/form/element/textarea</item>
+                        <item name="template" xsi:type="string">ui/form/field</item>
+                        <item name="elementTmpl" xsi:type="string">ui/form/element/textarea</item>
+                        <item name="rows" xsi:type="number">15</item>
+                        <item name="cols" xsi:type="number">80</item>
+                    </item>
+                </argument>
+                <settings>
+                    <dataType>text</dataType>
+                    <label translate="true">Menu JSON Data</label>
+                    <dataScope>menu_data</dataScope>
+                    <validation>
+                        <rule name="validate-json" xsi:type="boolean">true</rule>
+                    </validation>
+                    <notice translate="true">This field will be automatically populated when you upload a file above, or you can paste JSON data manually. This will update the current menu with the imported data.</notice>
+                </settings>
+            </field>
+            <button name="import_action">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="buttonClasses" xsi:type="string">action-primary action-accept modal-import-button</item>
+                        <item name="actions" xsi:type="array">
+                            <item name="0" xsi:type="array">
+                                <item name="targetName" xsi:type="string">${ $.ns }.${ $.ns }.import_menu_modal_form</item>
+                                <item name="actionName" xsi:type="string">actionDone</item>
+                            </item>
+                        </item>
+                    </item>
+                </argument>
+                <settings>
+                    <title translate="true">Import Menu</title>
+                </settings>
+            </button>
+        </fieldset>
+    </modal>
+
+    <dataSource name="panth_menu_form_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
+            </item>
+        </argument>
+        <settings>
+            <submitUrl path="panth_menu/menu/save"/>
+            <validateUrl path="panth_menu/menu/validate"/>
+        </settings>
+        <dataProvider class="Panth\MegaMenu\Ui\DataProvider\MenuFormDataProvider" name="panth_menu_form_data_source">
+            <settings>
+                <requestFieldName>menu_id</requestFieldName>
+                <primaryFieldName>menu_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+
+    <fieldset name="general" sortOrder="10">
+        <settings>
+            <label translate="true">General Information</label>
+            <collapsible>false</collapsible>
+            <opened>true</opened>
+        </settings>
+
+        <field name="menu_id" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <visible>false</visible>
+                <dataScope>menu_id</dataScope>
+            </settings>
+        </field>
+
+        <field name="title" sortOrder="10" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>text</dataType>
+                <label translate="true">Menu Title</label>
+                <dataScope>title</dataScope>
+            </settings>
+        </field>
+
+        <field name="identifier" sortOrder="20" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                    <rule name="validate-identifier" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>text</dataType>
+                <label translate="true">Identifier</label>
+                <dataScope>identifier</dataScope>
+                <notice translate="true">Lowercase letters, numbers, and underscores only.</notice>
+            </settings>
+        </field>
+
+        <field name="is_active" sortOrder="30" formElement="checkbox">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                    <item name="default" xsi:type="number">1</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>boolean</dataType>
+                <label translate="true">Enable Menu</label>
+                <dataScope>is_active</dataScope>
+            </settings>
+            <formElements>
+                <checkbox>
+                    <settings>
+                        <valueMap>
+                            <map name="false" xsi:type="number">0</map>
+                            <map name="true" xsi:type="number">1</map>
+                        </valueMap>
+                        <prefer>toggle</prefer>
+                    </settings>
+                </checkbox>
+            </formElements>
+        </field>
+
+        <field name="css_class" sortOrder="40" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">CSS Class</label>
+                <dataScope>css_class</dataScope>
+                <notice translate="true">Optional CSS class for custom styling.</notice>
+            </settings>
+        </field>
+
+        <field name="sort_order" sortOrder="50" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                    <item name="default" xsi:type="number">0</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="validate-number" xsi:type="boolean">true</rule>
+                    <rule name="validate-zero-or-greater" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>number</dataType>
+                <label translate="true">Sort Order</label>
+                <dataScope>sort_order</dataScope>
+            </settings>
+        </field>
+
+        <field name="description" sortOrder="60" formElement="textarea">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Description</label>
+                <dataScope>description</dataScope>
+                <notice translate="true">Internal description for administrative purposes.</notice>
+            </settings>
+        </field>
+
+        <container name="css_documentation_guide" sortOrder="65">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="template" xsi:type="string">Panth_MegaMenu/form/css-documentation-guide</item>
+                </item>
+            </argument>
+        </container>
+
+        <field name="custom_css" sortOrder="70" formElement="textarea">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                    <item name="rows" xsi:type="number">10</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Custom CSS</label>
+                <dataScope>custom_css</dataScope>
+                <notice translate="true">Do not include style tags.</notice>
+            </settings>
+        </field>
+
+        <htmlContent name="css_reference_button" sortOrder="75">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="additionalClasses" xsi:type="string">admin__field</item>
+                </item>
+            </argument>
+            <block class="Magento\Framework\View\Element\Template" name="megamenu.css.help.button">
+                <arguments>
+                    <argument name="template" xsi:type="string">Panth_MegaMenu::form/css-help-button.phtml</argument>
+                </arguments>
+            </block>
+        </htmlContent>
+    </fieldset>
+
+    <fieldset name="menu_styling" sortOrder="15">
+        <settings>
+            <label translate="true">Menu Container Styling</label>
+            <collapsible>true</collapsible>
+            <opened>false</opened>
+        </settings>
+
+        <field name="container_bg_color" sortOrder="10" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Background Color</label>
+                <dataScope>container_bg_color</dataScope>
+                <notice translate="true">Hex color code for menu container background (e.g., #ffffff)</notice>
+            </settings>
+        </field>
+
+        <field name="container_padding" sortOrder="20" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Padding</label>
+                <dataScope>container_padding</dataScope>
+                <notice translate="true">CSS padding value (e.g., 10px 20px, 15px)</notice>
+            </settings>
+        </field>
+
+        <field name="container_margin" sortOrder="30" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Margin</label>
+                <dataScope>container_margin</dataScope>
+                <notice translate="true">CSS margin value (e.g., 0 auto, 10px 0)</notice>
+            </settings>
+        </field>
+
+        <field name="item_gap" sortOrder="40" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Gap Between Menu Items</label>
+                <dataScope>item_gap</dataScope>
+                <notice translate="true">Space between root-level menu items (e.g., 10px, 1rem)</notice>
+            </settings>
+        </field>
+
+        <field name="container_max_width" sortOrder="50" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Max Width</label>
+                <dataScope>container_max_width</dataScope>
+                <notice translate="true">Maximum width for menu container (e.g., 1200px, 100%)</notice>
+            </settings>
+        </field>
+
+        <field name="container_border" sortOrder="60" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Border</label>
+                <dataScope>container_border</dataScope>
+                <notice translate="true">CSS border value (e.g., 1px solid #ddd)</notice>
+            </settings>
+        </field>
+
+        <field name="container_border_radius" sortOrder="70" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Border Radius</label>
+                <dataScope>container_border_radius</dataScope>
+                <notice translate="true">Border radius for menu container (e.g., 4px, 8px)</notice>
+            </settings>
+        </field>
+
+        <field name="container_box_shadow" sortOrder="80" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Container Box Shadow</label>
+                <dataScope>container_box_shadow</dataScope>
+                <notice translate="true">CSS box-shadow value (e.g., 0 2px 4px rgba(0,0,0,0.1))</notice>
+            </settings>
+        </field>
+
+        <field name="menu_alignment" sortOrder="90" formElement="select">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Menu Items Alignment</label>
+                <dataScope>menu_alignment</dataScope>
+                <notice translate="true">Horizontal alignment of root menu items</notice>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options>
+                            <option name="left" xsi:type="array">
+                                <item name="value" xsi:type="string">left</item>
+                                <item name="label" xsi:type="string" translate="true">Left</item>
+                            </option>
+                            <option name="center" xsi:type="array">
+                                <item name="value" xsi:type="string">center</item>
+                                <item name="label" xsi:type="string" translate="true">Center</item>
+                            </option>
+                            <option name="right" xsi:type="array">
+                                <item name="value" xsi:type="string">right</item>
+                                <item name="label" xsi:type="string" translate="true">Right</item>
+                            </option>
+                            <option name="space-between" xsi:type="array">
+                                <item name="value" xsi:type="string">space-between</item>
+                                <item name="label" xsi:type="string" translate="true">Space Between</item>
+                            </option>
+                            <option name="space-around" xsi:type="array">
+                                <item name="value" xsi:type="string">space-around</item>
+                                <item name="label" xsi:type="string" translate="true">Space Around</item>
+                            </option>
+                        </options>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+    </fieldset>
+
+    <fieldset name="menu_items" sortOrder="20">
+        <settings>
+            <label translate="true">Menu Items</label>
+            <collapsible>false</collapsible>
+            <opened>true</opened>
+        </settings>
+
+        <field name="menu_item_builder" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="component" xsi:type="string">Panth_MegaMenu/js/form/menu-item-builder</item>
+                    <item name="template" xsi:type="string">Panth_MegaMenu/form/menu-item-builder</item>
+                    <item name="elementTmpl" xsi:type="string">ui/form/element/hidden</item>
+                    <item name="getCategoriesUrl" xsi:type="url" path="panth_menu/menu/getCategories"/>
+                    <item name="uploadUrl" xsi:type="url" path="panth_menu/menu/upload"/>
+                    <item name="createDemoBlocksUrl" xsi:type="url" path="panth_menu/menu/createDemoBlocks"/>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <visible>false</visible>
+                <dataScope>menu_item_builder</dataScope>
+            </settings>
+        </field>
+
+        <field name="items_json" formElement="textarea">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">menu</item>
+                    <item name="rows" xsi:type="number">5</item>
+                    <item name="visible" xsi:type="boolean">false</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Menu Items JSON (Advanced)</label>
+                <dataScope>items_json</dataScope>
+                <notice translate="true">This field contains the JSON data for menu items. It's automatically managed by the builder above.</notice>
+            </settings>
+        </field>
+    </fieldset>
+
+    <fieldset name="version_history" sortOrder="30">
+        <settings>
+            <label translate="true">Version History</label>
+            <collapsible>true</collapsible>
+            <opened>false</opened>
+        </settings>
+
+        <insertListing name="menu_version_listing">
+            <settings>
+                <dataLinks>
+                    <exports>false</exports>
+                    <imports>true</imports>
+                </dataLinks>
+                <autoRender>true</autoRender>
+                <dataScope>menu_version_listing</dataScope>
+                <ns>menu_version_listing</ns>
+                <externalProvider>menu_version_listing.menu_version_listing_data_source</externalProvider>
+                <selectionsProvider>menu_version_listing.menu_version_listing.menu_version_columns.ids</selectionsProvider>
+                <exports>
+                    <link name="menu_id">${ $.externalProvider }:params.menu_id</link>
+                </exports>
+                <imports>
+                    <link name="menu_id">${ $.provider }:data.menu_id</link>
+                </imports>
+            </settings>
+        </insertListing>
+    </fieldset>
+</form>

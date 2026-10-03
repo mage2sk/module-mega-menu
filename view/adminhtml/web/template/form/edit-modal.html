@@ -1,0 +1,427 @@
+<!-- Knockout Template for Edit Modal -->
+<div class="menu-item-edit-modal">
+    <!-- Tabs Navigation -->
+    <ul class="edit-tabs-nav">
+        <!-- ko foreach: editTabs -->
+        <li data-bind="css: { active: $parent.activeTab() === id }, click: function() { $parent.activeTab(id); }">
+            <span data-bind="text: label"></span>
+        </li>
+        <!-- /ko -->
+    </ul>
+
+    <!-- General Tab -->
+    <div class="edit-tab-content" data-bind="visible: activeTab() === 'general', with: editingItem">
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Basic Information'"></div>
+
+            <div class="admin__field _required">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Menu Item Title'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: title" required />
+                </div>
+            </div>
+
+            <div class="admin__field _required">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Link Type'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: item_type">
+                        <optgroup data-bind="attr: { label: $t('Basic') }">
+                            <option value="link" data-bind="i18n: 'Custom URL'"></option>
+                            <option value="dropdown" data-bind="i18n: 'Dropdown Parent'"></option>
+                        </optgroup>
+                        <optgroup data-bind="attr: { label: $t('Catalog') }">
+                            <option value="category" data-bind="i18n: 'Category'"></option>
+                            <option value="product" data-bind="i18n: 'Product'"></option>
+                        </optgroup>
+                        <optgroup data-bind="attr: { label: $t('Content') }">
+                            <option value="cms_page" data-bind="i18n: 'CMS Page'"></option>
+                            <option value="custom_html" data-bind="i18n: 'Custom HTML'"></option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field _required">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'URL'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: url" required />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Target'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: target">
+                        <option value="_self" data-bind="i18n: 'Same Window'"></option>
+                        <option value="_blank" data-bind="i18n: 'New Window'"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Rel Attribute'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: rel" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Tab -->
+    <div class="edit-tab-content" data-bind="visible: activeTab() === 'content', with: editingItem">
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Content'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Custom Content'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <textarea class="admin__control-textarea" rows="6" data-bind="textInput: custom_content"></textarea>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'CMS Block Identifier'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: cms_block" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Design Tab -->
+    <div class="edit-tab-content" data-bind="visible: activeTab() === 'design', with: editingItem">
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Icons &amp; Images'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Icon Class'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: icon" placeholder="fa fa-home" />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Image URL'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: image" />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Badge'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: badge">
+                        <option value="">None</option>
+                        <option value="new" data-bind="i18n: 'New'"></option>
+                        <option value="hot" data-bind="i18n: 'Hot'"></option>
+                        <option value="sale" data-bind="i18n: 'Sale'"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Badge Text'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: badge_text" />
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Styling'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'CSS Class'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: css_class" />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Background Color'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: bg_color" placeholder="#ffffff" />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Text Color'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: text_color" placeholder="#000000" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Tab -->
+    <div class="edit-tab-content" data-bind="visible: activeTab() === 'advanced', with: editingItem">
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Animation &amp; Effects'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Animation'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: animation">
+                        <option value="">None</option>
+                        <option value="fade">Fade</option>
+                        <option value="slide">Slide</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Hover Effect'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: hover_effect" />
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Accessibility'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'ARIA Label'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: aria_label" />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Role'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="text" data-bind="textInput: role" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visibility Tab -->
+    <div class="edit-tab-content" data-bind="visible: activeTab() === 'visibility', with: editingItem">
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Display Status'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Enable Menu Item'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: is_active">
+                        <option value="1" data-bind="i18n: 'Yes'"></option>
+                        <option value="0" data-bind="i18n: 'No'"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Sort Order'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="number" data-bind="textInput: sort_order" min="0" />
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Device Visibility'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Show on Desktop'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: show_on_desktop">
+                        <option value="1" data-bind="i18n: 'Yes'"></option>
+                        <option value="0" data-bind="i18n: 'No'"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Show on Tablet'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: show_on_tablet">
+                        <option value="1" data-bind="i18n: 'Yes'"></option>
+                        <option value="0" data-bind="i18n: 'No'"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Show on Mobile'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <select class="admin__control-select" data-bind="value: show_on_mobile">
+                        <option value="1" data-bind="i18n: 'Yes'"></option>
+                        <option value="0" data-bind="i18n: 'No'"></option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title" data-bind="i18n: 'Schedule'"></div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'Start Date'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="datetime-local" data-bind="textInput: start_date" />
+                </div>
+            </div>
+
+            <div class="admin__field">
+                <label class="admin__field-label">
+                    <span data-bind="i18n: 'End Date'"></span>
+                </label>
+                <div class="admin__field-control">
+                    <input class="admin__control-text" type="datetime-local" data-bind="textInput: end_date" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Edit Modal Styles */
+.menu-item-edit-modal {
+    min-height: 500px;
+}
+
+.edit-tabs-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    border-bottom: 2px solid #ddd;
+    display: flex;
+}
+
+.edit-tabs-nav li {
+    padding: 12px 20px;
+    cursor: pointer;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-right: 5px;
+    border-radius: 4px 4px 0 0;
+    transition: all 0.3s;
+}
+
+.edit-tabs-nav li:hover {
+    background: #e9e9e9;
+}
+
+.edit-tabs-nav li.active {
+    background: #fff;
+    font-weight: 600;
+    color: #1979c3;
+    border-bottom-color: #fff;
+    margin-bottom: -2px;
+}
+
+.edit-tab-content {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0 4px 4px 4px;
+}
+
+.field-group {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.field-group:last-child {
+    border-bottom: none;
+}
+
+.field-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.admin__field {
+    margin-bottom: 20px;
+}
+
+.admin__field._required > .admin__field-label > span::after {
+    content: '*';
+    color: #e02b27;
+    font-size: 1.2rem;
+    margin: 0 0 0 5px;
+}
+
+.admin__field-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.admin__field-control {
+    position: relative;
+}
+
+.admin__control-text,
+.admin__control-select,
+.admin__control-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.admin__control-text:focus,
+.admin__control-select:focus,
+.admin__control-textarea:focus {
+    border-color: #1979c3;
+    outline: none;
+    box-shadow: 0 0 5px rgba(25, 121, 195, 0.3);
+}
+</style>

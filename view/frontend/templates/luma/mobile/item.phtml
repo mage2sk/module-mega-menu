@@ -1,0 +1,330 @@
+<?php
+/**
+ * Panth MegaMenu - Mobile Menu Item Template (Luma)
+ *
+ * Renders individual menu items for mobile view with:
+ * - Accordion-style submenus
+ * - Touch-optimized interactions
+ * - Icons and badges
+ * - Smooth animations
+ *
+ * @category    Panth
+ * @package     Panth_MegaMenu
+ * @copyright   Copyright (c) 2025 Panth InfoTech
+ * @license     Proprietary
+ *
+ * @var \Panth\MegaMenu\Block\MenuItem $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+/** @var \Panth\MegaMenu\Block\MenuItem $block */
+$item = $block->getData('item');
+$level = (int) $block->getData('level');
+$index = (int) $block->getData('index');
+
+// Helper function to get item value (for consistency with array/object access)
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method && method_exists($item, $method) ? $item->$method() : $default;
+};
+
+$children = $getValue($item, 'children', 'getChildren', []);
+$hasChildren = !empty($children);
+$uniqueId = uniqid('mobile-item-');
+
+// Build CSS classes
+$classes = ['mobile-nav-item', 'level' . $level];
+if ($hasChildren) {
+    $classes[] = 'parent';
+    $classes[] = 'has-children';
+}
+
+// Build link attributes
+$title = $getValue($item, 'title', 'getTitle', '');
+$url = $getValue($item, 'url', 'getUrl', '#');
+$target = $getValue($item, 'target', 'getTarget', '');
+$itemId = $getValue($item, 'item_id', 'getItemId');
+
+$linkAttrs = [
+    'href' => $hasChildren && !$url ? '#' : $escaper->escapeUrl($url ?: '#'),
+    'title' => $escaper->escapeHtmlAttr($title),
+    'role' => 'menuitem',
+    'tabindex' => '0'
+];
+
+if ($target) {
+    $linkAttrs['target'] = $escaper->escapeHtmlAttr($target);
+}
+
+if ($target === '_blank') {
+    $linkAttrs['rel'] = 'noopener noreferrer';
+}
+
+// Data attributes
+$dataAttrs = [
+    'data-item-id' => $itemId,
+    'data-level' => $level,
+    'data-index' => $index
+];
+?>
+
+<li class="<?= $escaper->escapeHtmlAttr(implode(' ', $classes)) ?>"
+    id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>"
+    <?php foreach ($dataAttrs as $key => $value): ?>
+        <?= $escaper->escapeHtmlAttr($key) ?>="<?= $escaper->escapeHtmlAttr($value) ?>"
+    <?php endforeach; ?>
+    role="presentation">
+
+    <a <?php foreach ($linkAttrs as $key => $value): ?>
+           <?= $escaper->escapeHtmlAttr($key) ?>="<?= $escaper->escapeHtmlAttr($value) ?>"
+       <?php endforeach; ?>
+       class="mobile-nav-link level<?= (int) $level ?>">
+
+        <span class="link-content">
+            <?php
+            $icon = $getValue($item, 'icon', 'getIcon', '');
+            if ($icon):
+            ?>
+                <span class="menu-icon <?= $escaper->escapeHtmlAttr($icon) ?>"
+                      aria-hidden="true"></span>
+            <?php endif; ?>
+
+            <span class="menu-label">
+                <?= $escaper->escapeHtml($title) ?>
+            </span>
+        </span>
+
+        <?php if ($hasChildren): ?>
+            <button type="button"
+                    class="submenu-toggle"
+                    aria-expanded="false"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle %1 submenu', $title)) ?>">
+                <span class="toggle-icon" aria-hidden="true">+</span>
+            </button>
+        <?php endif; ?>
+    </a>
+
+    <?php if ($hasChildren): ?>
+        <ul class="submenu level<?= (int) ($level + 1) ?>"
+            role="menu"
+            aria-label="<?= $escaper->escapeHtmlAttr($title . ' ' . __('Submenu')) ?>"
+            style="display: none;">
+            <?php foreach ($children as $childIndex => $child): ?>
+                <?php
+                $childIsActive = $getValue($child, 'is_active', 'getIsActive', true);
+                if (!$childIsActive) {
+                    continue;
+                }
+                ?>
+                <?= /* @noEscape */ $block->getLayout()
+                    ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                    ->setTemplate('Panth_MegaMenu::luma/mobile/item.phtml')
+                    ->setData('item', $child)
+                    ->setData('level', $level + 1)
+                    ->setData('index', $childIndex)
+                    ->toHtml() ?>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+</li>
+
+<style type="text/css">
+/* Mobile Menu Item Base */
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> {
+    position: relative;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.3s ease, color 0.3s ease;
+    position: relative;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link:hover,
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link:focus {
+    background: #fff;
+    color: #1979c3;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link:active {
+    background: #ebebeb;
+}
+
+/* Link Content */
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .link-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 10px;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-badge.badge-new {
+    background: #ff5501;
+    color: #fff;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-badge.badge-sale {
+    background: #e02b27;
+    color: #fff;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-badge.badge-hot {
+    background: #ff9800;
+    color: #fff;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .menu-badge.badge-default {
+    background: #757575;
+    color: #fff;
+}
+
+/* Submenu Toggle Button */
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu-toggle:hover,
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu-toggle:focus {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .toggle-icon {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    color: #666;
+    transition: transform 0.3s ease;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?>.active > .mobile-nav-link .toggle-icon {
+    transform: rotate(45deg);
+}
+
+/* Submenu */
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: #f9f9f9;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu .mobile-nav-link {
+    padding-left: <?= 20 + ($level * 20) ?>px;
+}
+
+/* Active State */
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?>.active > .mobile-nav-link {
+    background: #fff;
+    color: #1979c3;
+}
+
+/* Level-specific Styles */
+<?php if ($level > 0): ?>
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link {
+    padding-left: <?= 20 + ($level * 20) ?>px;
+    font-size: <?= 15 - ($level * 1) ?>px;
+}
+<?php endif; ?>
+
+/* Touch Optimizations */
+@media (pointer: coarse) {
+    #<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link {
+        min-height: 48px;
+        padding: 12px 20px;
+    }
+
+    #<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu-toggle {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* RTL Support */
+<?php if ($block->isRtl()): ?>
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .mobile-nav-link {
+    padding-left: 20px;
+    padding-right: <?= 20 + ($level * 20) ?>px;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu .mobile-nav-link {
+    padding-left: 20px;
+    padding-right: <?= 20 + (($level + 1) * 20) ?>px;
+}
+
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .link-content {
+    flex-direction: row-reverse;
+}
+<?php endif; ?>
+
+/* Animation for opening/closing */
+#<?= $escaper->escapeHtmlAttr($uniqueId) ?> .submenu {
+    overflow: hidden;
+    transition: max-height <?= (int) $block->getAnimationSpeed() ?>ms ease;
+}
+</style>
+
+<?php if ($item->getDescription()): ?>
+<script type="text/javascript">
+require(['jquery'], function($) {
+    'use strict';
+
+    $(document).ready(function() {
+        var $item = $('#<?= $escaper->escapeJs($uniqueId) ?>');
+
+        // Show tooltip on long press (mobile)
+        var pressTimer;
+        $item.find('> .mobile-nav-link').on('touchstart', function(e) {
+            pressTimer = setTimeout(function() {
+                // Show description tooltip
+                var description = '<?= $escaper->escapeJs($item->getDescription()) ?>';
+                if (description) {
+                    // You can implement your tooltip logic here
+                }
+            }, 500);
+        }).on('touchend touchcancel', function() {
+            clearTimeout(pressTimer);
+        });
+    });
+});
+</script>
+<?php endif; ?>

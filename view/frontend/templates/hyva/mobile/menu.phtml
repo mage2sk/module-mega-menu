@@ -1,0 +1,256 @@
+<?php
+/**
+ * Panth MegaMenu - Mobile Menu for Hyvä Theme
+ * Sliding drawer with nested submenu panels
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Get menu data - use dynamic identifier from config
+$menuTree = $block->getCurrentMenuTree();
+$menuIdentifier = $block->getData('menu_identifier') ?: $block->getMenuHelper()->getMenuIdentifier();
+
+// Return early if no menu items
+if (empty($menuTree)) {
+    return;
+}
+
+// Helper function to get item value
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method && method_exists($item, $method) ? $item->$method() : $default;
+};
+
+$itemClasses = "flex items-center gap-2 py-3 px-6 border-b border-slate-200 outline-offset-0";
+?>
+<div x-data="initMobileMenu" x-bind="eventListeners" class="lg:hidden">
+    <button
+        type="button"
+        class="btn bg-transparent border-transparent p-2"
+        aria-label="<?= $escaper->escapeHtmlAttr(__('Open menu')) ?>"
+        @click="open"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z"></path><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    <dialog
+        class="size-full max-h-full ms-0 p-0 open:flex flex-col transition ease-out duration-300 motion-reduce:duration-0 rounded-s-none"
+        x-show="isOpen"
+        x-htmldialog="close"
+        closeby="any"
+        x-transition:enter-start="-translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full"
+    >
+        <div class="border-b border-slate-200">
+            <div class="flex justify-between items-center gap-2 py-4 px-6">
+                <div class="font-bold"><?= $escaper->escapeHtml(__('Menu')) ?></div>
+                <button
+                    type="button"
+                    @click="close"
+                    class="btn bg-transparent border-transparent p-1"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Close menu')) ?>"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z"></path><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div class="grow relative overflow-y-auto overflow-x-clip py-0.5" :style="lockWrapperScroll">
+            <nav aria-label="<?= $escaper->escapeHtmlAttr(__('Mobile Main Menu')) ?>">
+                <ul>
+                    <?php foreach ($menuTree as $index => $item): ?>
+                        <?php
+                        $isActive = $getValue($item, 'is_active', 'getIsActive', true);
+                        if (!$isActive) {
+                            continue;
+                        }
+
+                        $title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+                        $url = $escaper->escapeUrl($getValue($item, 'url', 'getUrl', '#'));
+                        $children = $getValue($item, 'children', 'getChildren', []);
+                        $hasChildren = !empty($children);
+                        $icon = $getValue($item, 'icon', 'getIconClass', '');
+                        $cmsBlockId = $getValue($item, 'cms_block_id', 'getCmsBlockId', null);
+                        $itemType = $getValue($item, 'item_type', 'getItemType', '');
+                        ?>
+
+                        <?php if ($hasChildren): ?>
+                            <li data-level="0" x-data="initMobileSubMenu">
+                                <button
+                                    type="button"
+                                    class="w-full justify-between <?= $escaper->escapeHtmlAttr($itemClasses) ?>"
+                                    aria-controls="submenu-<?= $escaper->escapeHtml($index) ?>-mobile-menu-panel"
+                                    aria-expanded="false"
+                                    x-ref="openSubMenuBtn"
+                                    :aria-expanded="isOpen"
+                                    :disabled="isOpen"
+                                    @click="open"
+                                >
+                                    <span class="flex items-center gap-2">
+                                        <?php if ($icon): ?>
+                                            <i class="<?= $escaper->escapeHtmlAttr($icon) ?>" aria-hidden="true"></i>
+                                        <?php endif; ?>
+                                        <?= /* @noEscape */ $title ?>
+                                    </span>
+                                    <span class="btn p-1.5 border border-slate-300 bg-transparent text-current">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z"></path><path d="m9 6 6 6-6 6"></path></svg>
+                                    </span>
+                                </button>
+                                <ul
+                                    id="submenu-<?= $escaper->escapeHtml($index) ?>-mobile-menu-panel"
+                                    class="z-10 absolute inset-0 bg-white py-0.5 overflow-y-auto overscroll-y-contain transition motion-reduce:duration-0"
+                                    x-show="isOpen"
+                                    x-transition:enter-start="opacity-0 translate-x-8"
+                                    x-transition:enter-end="opacity-100 translate-x-0"
+                                    x-transition:leave-start="opacity-100 translate-x-0"
+                                    x-transition:leave-end="opacity-0 translate-x-8"
+                                    @keydown.escape.stop.prevent="close"
+                                >
+                                    <li data-level="1">
+                                        <button
+                                            type="button"
+                                            class="w-full bg-surface font-bold <?= $escaper->escapeHtmlAttr($itemClasses) ?>"
+                                            @click="close"
+                                            x-ref="closeSubMenuBtn"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z"></path><path d="m15 6-6 6 6 6"></path></svg>
+                                            <?= /* @noEscape */ $title ?>
+                                        </button>
+                                        <a
+                                            href="<?= /* @noEscape */ $url ?>"
+                                            class="<?= $escaper->escapeHtmlAttr($itemClasses) ?>"
+                                        >
+                                            <span class="ms-7"><?= $escaper->escapeHtml(__('See all %1', $title)) ?></span>
+                                        </a>
+                                    </li>
+                                    <?php foreach ($children as $childItem): ?>
+                                        <?php
+                                        $childActive = $getValue($childItem, 'is_active', 'getIsActive', true);
+                                        if (!$childActive) {
+                                            continue;
+                                        }
+
+                                        $childTitle = $escaper->escapeHtml($getValue($childItem, 'title', 'getTitle', ''));
+                                        $childUrl = $escaper->escapeUrl($getValue($childItem, 'url', 'getUrl', '#'));
+                                        $childIcon = $getValue($childItem, 'icon', 'getIconClass', '');
+                                        ?>
+                                        <li data-level="1">
+                                            <a
+                                                href="<?= /* @noEscape */ $childUrl ?>"
+                                                class="<?= $escaper->escapeHtmlAttr($itemClasses) ?>"
+                                            >
+                                                <span class="ms-7 flex items-center gap-2">
+                                                    <?php if ($childIcon): ?>
+                                                        <i class="<?= $escaper->escapeHtmlAttr($childIcon) ?>" aria-hidden="true"></i>
+                                                    <?php endif; ?>
+                                                    <?= /* @noEscape */ $childTitle ?>
+                                                </span>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+
+                                    <?php if ($cmsBlockId && $itemType === 'cms_block'): ?>
+                                        <!-- CMS Block Content -->
+                                        <li data-level="1" class="cms-block-mobile">
+                                            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200">
+                                                <div class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                                                    <?= $escaper->escapeHtml(__('Featured')) ?>
+                                                </div>
+                                                <div class="text-sm">
+                                                    <?= /* @noEscape */ $block->getMenuHelper()->getMenuRenderer()->renderCmsBlock($cmsBlockId, false) ?>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+                            </li>
+                        <?php else: ?>
+                            <li data-level="0">
+                                <a
+                                    href="<?= /* @noEscape */ $url ?>"
+                                    class="<?= $escaper->escapeHtmlAttr($itemClasses) ?>"
+                                >
+                                    <?php if ($icon): ?>
+                                        <i class="<?= $escaper->escapeHtmlAttr($icon) ?>" aria-hidden="true"></i>
+                                    <?php endif; ?>
+                                    <?= /* @noEscape */ $title ?>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </ul>
+            </nav>
+        </div>
+    </dialog>
+</div>
+<script>
+    const initMobileMenu = () => {
+        return {
+            isOpen: false,
+            isSubMenuOpen: false,
+            isOverflowing: false,
+            init() {
+                Array.from(this.$root.querySelectorAll('a')).forEach(link => {
+                    if (link.href === `${window.location.origin}${window.location.pathname}`) {
+                        link.setAttribute('aria-current', 'page');
+                    }
+                });
+            },
+            open() {
+                this.isOpen = true;
+            },
+            close() {
+                this.isOpen = false;
+            },
+            get lockWrapperScroll() {
+                return this.isSubMenuOpen ? 'overflow: hidden' : '';
+            },
+            eventListeners: {
+                ['@htmldialog-closed.window']() {
+                    this.isOpen = false;
+                },
+                ['@sub-menu-open.window']() {
+                    this.isSubMenuOpen = true;
+                },
+                ['@sub-menu-closed.window']() {
+                    this.isSubMenuOpen = false;
+                }
+            }
+        }
+    };
+
+    const initMobileSubMenu = () => {
+        return {
+            isOpen: false,
+            init() {
+                Array.from(this.$el.querySelectorAll('a')).forEach(link => {
+                    if (link.href === `${window.location.origin}${window.location.pathname}`) {
+                        link.setAttribute('aria-current', 'page');
+                    }
+                });
+            },
+            open() {
+                this.isOpen = true;
+                window.dispatchEvent(new CustomEvent('sub-menu-open'));
+                this.$nextTick(() => {
+                    this.$refs.closeSubMenuBtn.focus();
+                });
+            },
+            close() {
+                this.isOpen = false;
+                window.dispatchEvent(new CustomEvent('sub-menu-closed'));
+                this.$nextTick(() => {
+                    this.$refs.openSubMenuBtn.focus();
+                });
+            }
+        }
+    };
+
+    window.addEventListener('alpine:init', () => {
+        Alpine.data('initMobileMenu', initMobileMenu);
+        Alpine.data('initMobileSubMenu', initMobileSubMenu);
+    }, { once: true });
+</script>

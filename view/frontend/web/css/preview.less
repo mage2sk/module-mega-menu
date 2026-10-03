@@ -1,0 +1,50 @@
+/**
+ * Preview Page Styles
+ */
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    overflow-x: hidden;
+}
+
+.page-wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+.page-main {
+    margin: 0;
+    padding: 0;
+}
+
+.preview-badge {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #0D9488;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 100000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.preview-menu-wrapper {
+    padding: 20px 0;
+    background: #fff;
+}
+
+/* Ensure menu is visible and has proper z-index */
+.preview-menu-wrapper .navigation {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Make sure dropdowns show on top */
+.preview-menu-wrapper .pmenu-dropdown {
+    z-index: 2000;
+}

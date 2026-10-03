@@ -1,0 +1,410 @@
+/**
+ * Menu Tree Component
+ * BEM Methodology: menu-items-tree, menu-items-list, menu-items-children
+ */
+
+/* ============================================
+   Block: menu-items-tree
+   ============================================ */
+.menu-items-tree {
+    padding: var(--mm-space-5);
+    background: var(--mm-builder-bg);
+    min-height: 150px;
+    position: relative;
+    animation: fadeIn var(--mm-transition-slow) var(--mm-ease-out);
+    will-change: opacity;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ============================================
+   Block: menu-items-list (Root and nested)
+   ============================================ */
+.menu-items-list,
+.menu-items-children {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    position: relative;
+}
+
+/* ============================================
+   Block: menu-items-children (Nested lists)
+   ============================================ */
+.menu-items-children {
+    padding-left: var(--mm-indent-size);
+    margin-top: var(--mm-space-1);
+    position: relative;
+    min-height: 10px; /* Allow drops even when empty */
+    contain: layout style; /* CSS containment for better performance */
+}
+
+/* Visual hierarchy line */
+.menu-items-children::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 0;
+    bottom: 0;
+    width: var(--mm-indent-line-width);
+    background: var(--mm-indent-line-color);
+    border-radius: var(--mm-radius-sm);
+    opacity: 0.5;
+    transition: opacity var(--mm-transition-base);
+}
+
+.menu-items-children:hover::before {
+    opacity: 1;
+    background: var(--mm-primary-500);
+}
+
+/* Hide line when empty */
+.menu-items-children:empty::before {
+    display: none;
+}
+
+/* ============================================
+   Empty State for Root List
+   ============================================ */
+.menu-items-list[data-level="0"]:empty::before {
+    content: 'No menu items yet. Click "Add Root Item" to create your first menu item.';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--mm-space-16) var(--mm-space-5);
+    color: var(--mm-neutral-500);
+    font-size: var(--mm-font-size-base);
+    background: linear-gradient(135deg, var(--mm-neutral-50) 0%, var(--mm-neutral-100) 100%);
+    border: 2px dashed var(--mm-neutral-400);
+    border-radius: var(--mm-radius-lg);
+    min-height: 200px;
+    font-style: italic;
+    position: relative;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Icon for empty state */
+.menu-items-list[data-level="0"]:empty::after {
+    content: '📋';
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    font-size: 48px;
+    opacity: 0.3;
+}
+
+/* ============================================
+   Drop Zone Indicators (Active during drag)
+   ============================================ */
+body.sortable-active .menu-items-list:empty,
+body.sortable-active .menu-items-children:empty {
+    min-height: 50px;
+    background: var(--mm-dropzone-bg);
+    border: var(--mm-ghost-border);
+    border-radius: var(--mm-radius-md);
+    position: relative;
+    animation: pulseDropZone 1.5s ease-in-out infinite;
+    contain: layout style paint;
+}
+
+@keyframes pulseDropZone {
+    0%, 100% {
+        background: var(--mm-dropzone-bg);
+        border-color: var(--mm-primary-500);
+    }
+    50% {
+        background: linear-gradient(90deg, #bbdefb 0%, var(--mm-primary-50) 100%);
+        border-color: var(--mm-primary-600);
+    }
+}
+
+/* Drop zone hint text */
+body.sortable-active .menu-items-list:empty::after,
+body.sortable-active .menu-items-children:empty::after {
+    content: '📥 Drop items here';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--mm-primary-500);
+    font-size: var(--mm-font-size-base);
+    font-weight: var(--mm-font-weight-semibold);
+    pointer-events: none;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Reset empty state styling when not dragging */
+body:not(.sortable-active) .menu-items-list:not([data-level="0"]):empty,
+body:not(.sortable-active) .menu-items-children:empty {
+    min-height: 10px;
+    background: transparent;
+    border: none;
+}
+
+body:not(.sortable-active) .menu-items-list:not([data-level="0"]):empty::before,
+body:not(.sortable-active) .menu-items-children:empty::before,
+body:not(.sortable-active) .menu-items-list:not([data-level="0"]):empty::after,
+body:not(.sortable-active) .menu-items-children:empty::after {
+    display: none;
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+.menu-items-loading {
+    animation: fadeIn var(--mm-transition-slow) var(--mm-ease-out);
+}
+
+.menu-items-loading .loading-content {
+    text-align: center;
+    padding: var(--mm-space-16) var(--mm-space-5);
+    background: var(--mm-neutral-50);
+    border: 2px dashed var(--mm-neutral-400);
+    border-radius: var(--mm-radius-lg);
+    margin: var(--mm-space-5) 0;
+}
+
+.menu-items-loading .spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--mm-neutral-200);
+    border-top-color: var(--mm-primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--mm-space-4);
+}
+
+.menu-items-loading p {
+    color: var(--mm-neutral-700);
+    font-size: var(--mm-font-size-md);
+    margin: var(--mm-space-2) 0;
+    line-height: var(--mm-line-height-normal);
+}
+
+.menu-items-loading p:last-child {
+    color: var(--mm-neutral-500);
+    font-size: var(--mm-font-size-sm);
+    margin-top: var(--mm-space-3);
+}
+
+/* ============================================
+   Nested Level Depth Indicators
+   ============================================ */
+
+/* Visual depth cues via left padding progression */
+.menu-items-list[data-level="0"] {
+    --depth-indicator: 0px;
+}
+
+.menu-items-list[data-level="1"] {
+    --depth-indicator: 4px;
+}
+
+.menu-items-list[data-level="2"] {
+    --depth-indicator: 8px;
+}
+
+.menu-items-list[data-level="3"] {
+    --depth-indicator: 12px;
+}
+
+/* Apply depth indicator as subtle shadow */
+.menu-items-list::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--depth-indicator, 0px));
+    top: 0;
+    bottom: 0;
+    width: var(--depth-indicator, 0px);
+    background: linear-gradient(90deg, transparent, rgba(25, 121, 195, 0.05));
+    pointer-events: none;
+}
+
+/* ============================================
+   Scrollbar Styling (Webkit browsers)
+   ============================================ */
+.menu-items-tree::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.menu-items-tree::-webkit-scrollbar-track {
+    background: var(--mm-neutral-100);
+    border-radius: var(--mm-radius-md);
+}
+
+.menu-items-tree::-webkit-scrollbar-thumb {
+    background: var(--mm-neutral-400);
+    border-radius: var(--mm-radius-md);
+    border: 2px solid var(--mm-neutral-100);
+    transition: background var(--mm-transition-base);
+}
+
+.menu-items-tree::-webkit-scrollbar-thumb:hover {
+    background: var(--mm-neutral-600);
+}
+
+.menu-items-tree::-webkit-scrollbar-corner {
+    background: var(--mm-neutral-100);
+}
+
+/* Firefox scrollbar styling */
+.menu-items-tree {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mm-neutral-400) var(--mm-neutral-100);
+}
+
+/* ============================================
+   Responsive Design - Tablet
+   ============================================ */
+@media (max-width: 1024px) {
+    .menu-items-tree {
+        padding: var(--mm-space-4);
+    }
+
+    .menu-items-children {
+        padding-left: 32px;
+    }
+
+    .menu-items-children::before {
+        left: 14px;
+    }
+}
+
+/* ============================================
+   Responsive Design - Mobile
+   ============================================ */
+@media (max-width: 768px) {
+    .menu-items-tree {
+        padding: var(--mm-space-3);
+    }
+
+    .menu-items-children {
+        padding-left: 24px;
+    }
+
+    .menu-items-children::before {
+        left: 10px;
+    }
+
+    .menu-items-list[data-level="0"]:empty::before {
+        padding: var(--mm-space-12) var(--mm-space-4);
+        font-size: var(--mm-font-size-sm);
+        min-height: 150px;
+    }
+
+    .menu-items-list[data-level="0"]:empty::after {
+        font-size: 36px;
+        top: 35%;
+    }
+
+    body.sortable-active .menu-items-list:empty::after,
+    body.sortable-active .menu-items-children:empty::after {
+        font-size: var(--mm-font-size-sm);
+    }
+
+    .menu-items-loading .loading-content {
+        padding: var(--mm-space-12) var(--mm-space-3);
+    }
+
+    .menu-items-loading .spinner {
+        width: 32px;
+        height: 32px;
+        border-width: 3px;
+    }
+}
+
+/* ============================================
+   Performance Optimizations
+   ============================================ */
+
+/* Use CSS containment for better rendering performance */
+.menu-items-tree {
+    contain: layout style;
+}
+
+.menu-items-list,
+.menu-items-children {
+    contain: layout style;
+}
+
+/* Hardware acceleration for animations */
+.menu-items-loading .spinner,
+body.sortable-active .menu-items-list:empty,
+body.sortable-active .menu-items-children:empty {
+    will-change: transform;
+    transform: translateZ(0); /* Force GPU acceleration */
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+    .menu-items-tree {
+        background: var(--mm-neutral-0);
+        padding: 0;
+    }
+
+    .menu-items-loading,
+    body.sortable-active .menu-items-list:empty::after,
+    body.sortable-active .menu-items-children:empty::after {
+        display: none;
+    }
+
+    .menu-items-children::before {
+        background: var(--mm-neutral-800);
+        opacity: 0.3;
+    }
+}
+
+/* ============================================
+   Accessibility - Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .menu-items-tree,
+    .menu-items-loading,
+    .menu-items-list[data-level="0"]:empty::before {
+        animation: none;
+    }
+
+    body.sortable-active .menu-items-list:empty,
+    body.sortable-active .menu-items-children:empty {
+        animation: none;
+    }
+
+    .menu-items-children::before {
+        transition: none;
+    }
+}
+
+/* ============================================
+   High Contrast Mode
+   ============================================ */
+@media (prefers-contrast: high) {
+    .menu-items-children::before {
+        width: 2px;
+        opacity: 1;
+    }
+
+    .menu-items-list[data-level="0"]:empty::before {
+        border-width: 3px;
+        font-weight: var(--mm-font-weight-semibold);
+    }
+
+    body.sortable-active .menu-items-list:empty,
+    body.sortable-active .menu-items-children:empty {
+        border-width: 3px;
+    }
+}

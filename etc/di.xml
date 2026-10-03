@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Panth MegaMenu Dependency Injection Configuration
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ * @author    Panth
+ * @copyright Copyright (c) Panth
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Repository Preferences -->
+    <preference for="Panth\MegaMenu\Api\Data\MenuInterface"
+                type="Panth\MegaMenu\Model\Menu"/>
+    <preference for="Panth\MegaMenu\Api\Data\ItemInterface"
+                type="Panth\MegaMenu\Model\Item"/>
+    <preference for="Panth\MegaMenu\Api\MenuRepositoryInterface"
+                type="Panth\MegaMenu\Model\MenuRepository"/>
+    <preference for="Panth\MegaMenu\Api\ItemRepositoryInterface"
+                type="Panth\MegaMenu\Model\ItemRepository"/>
+    <preference for="Panth\MegaMenu\Api\Data\MenuSearchResultsInterface"
+                type="Panth\MegaMenu\Model\MenuSearchResults"/>
+    <preference for="Panth\MegaMenu\Api\Data\ItemSearchResultsInterface"
+                type="Panth\MegaMenu\Model\ItemSearchResults"/>
+    <preference for="Panth\MegaMenu\Api\Data\MenuVersionInterface"
+                type="Panth\MegaMenu\Model\MenuVersion"/>
+    <preference for="Panth\MegaMenu\Api\MenuVersionRepositoryInterface"
+                type="Panth\MegaMenu\Model\MenuVersionRepository"/>
+    <preference for="Panth\MegaMenu\Api\Data\MenuVersionSearchResultsInterface"
+                type="Panth\MegaMenu\Model\MenuVersionSearchResults"/>
+
+    <!-- Theme Detection Plugin -->
+    <type name="Magento\Framework\View\DesignInterface">
+        <plugin name="panth_megamenu_theme_resolver"
+                type="Panth\MegaMenu\Plugin\ThemeResolver"
+                sortOrder="10"/>
+    </type>
+
+    <!-- Configure real Grid Collection with arguments -->
+    <type name="Panth\MegaMenu\Model\ResourceModel\Menu\Grid\Collection">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">panth_megamenu_menu</argument>
+            <argument name="resourceModel" xsi:type="string">Panth\MegaMenu\Model\ResourceModel\Menu</argument>
+        </arguments>
+    </type>
+
+    <!-- Virtual Type for Item Collection -->
+    <virtualType name="Panth\MegaMenu\Model\ResourceModel\Item\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">panth_megamenu_item</argument>
+            <argument name="resourceModel" xsi:type="string">Panth\MegaMenu\Model\ResourceModel\Item</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Data Provider Configuration -->
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="panth_menu_listing_data_source" xsi:type="string">Panth\MegaMenu\Model\ResourceModel\Menu\Grid\Collection</item>
+                <item name="panth_megamenu_item_listing_data_source" xsi:type="string">Panth\MegaMenu\Model\ResourceModel\Item\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Disable backend validation for JSON endpoints -->
+    <type name="Magento\Backend\App\Request\BackendValidator">
+        <plugin name="panth_megamenu_disable_validator" type="Panth\MegaMenu\Plugin\DisableBackendValidation" sortOrder="1"/>
+    </type>
+
+    <!-- Remove default navigation when MegaMenu is enabled -->
+    <type name="Magento\Framework\View\Layout">
+        <plugin name="panth_megamenu_remove_default_nav" type="Panth\MegaMenu\Plugin\RemoveDefaultNavigation" sortOrder="100"/>
+    </type>
+
+
+</config>

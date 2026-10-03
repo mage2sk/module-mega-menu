@@ -1,0 +1,168 @@
+<?php
+namespace Panth\MegaMenu\Controller\Adminhtml\Menu;
+
+use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Panth\MegaMenu\Model\MenuFactory;
+use Panth\MegaMenu\Api\MenuRepositoryInterface;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+
+class Import extends Action implements CsrfAwareActionInterface
+{
+    private const MAX_IMPORT_BYTES = 5242880;
+
+    protected $jsonFactory;
+    protected $menuFactory;
+    protected $menuRepository;
+
+    public function __construct(
+        Context $context,
+        JsonFactory $jsonFactory,
+        MenuFactory $menuFactory,
+        MenuRepositoryInterface $menuRepository
+    ) {
+        parent::__construct($context);
+        $this->jsonFactory = $jsonFactory;
+        $this->menuFactory = $menuFactory;
+        $this->menuRepository = $menuRepository;
+    }
+
+    public function execute()
+    {
+        $result = $this->jsonFactory->create();
+        $this->getResponse()->setHeader('Content-Type', 'application/json', true);
+
+        try {
+            $menuDataJson = $this->getRequest()->getParam('menu_data');
+
+            if (!$menuDataJson) {
+                return $result->setData([
+                    'success' => false,
+                    'message' => 'Menu data is required'
+                ]);
+            }
+
+            if (!is_string($menuDataJson) || strlen($menuDataJson) > self::MAX_IMPORT_BYTES) {
+                return $result->setData([
+                    'success' => false,
+                    'message' => 'Menu data is too large or malformed'
+                ]);
+            }
+
+            $menuData = json_decode($menuDataJson, true, 64);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return $result->setData([
+                    'success' => false,
+                    'message' => 'Invalid JSON: ' . json_last_error_msg()
+                ]);
+            }
+
+            if (!is_array($menuData) || !isset($menuData['menu']) || !isset($menuData['items'])
+                || !is_array($menuData['menu']) || !is_array($menuData['items'])
+            ) {
+                return $result->setData([
+                    'success' => false,
+                    'message' => 'Invalid JSON format. Expected format: {menu: {...}, items: [...]}'
+                ]);
+            }
+
+            $importedMenu = $menuData['menu'];
+            $importedItems = $menuData['items'];
+
+            if (empty($importedMenu['identifier'])) {
+                return $result->setData([
+                    'success' => false,
+                    'message' => 'Menu identifier is required in the JSON data'
+                ]);
+            }
+
+            $identifier = $importedMenu['identifier'];
+            $existingMenu = $this->menuFactory->create();
+            $existingMenu->load($identifier, 'identifier');
+
+            if ($existingMenu->getId()) {
+                $menu = $existingMenu;
+                $action = 'updated';
+            } else {
+                $menu = $this->menuFactory->create();
+                $menu->setIdentifier($identifier);
+                $action = 'created';
+            }
+
+            $menu->setTitle($importedMenu['title'] ?? 'Imported Menu');
+            $menu->setMenuType($importedMenu['menu_type'] ?? 'horizontal');
+            $menu->setIsActive($importedMenu['is_active'] ?? 1);
+            $menu->setCssClass($importedMenu['css_class'] ?? '');
+            $menu->setSortOrder($importedMenu['sort_order'] ?? 0);
+            $menu->setDescription($importedMenu['description'] ?? '');
+            $menu->setCustomCss($importedMenu['custom_css'] ?? '');
+            $menu->setMobileLayout($importedMenu['mobile_layout'] ?? 'accordion');
+            $menu->setItemsJson(json_encode($importedItems));
+
+            if (isset($importedMenu['container_bg_color'])) {
+                $menu->setData('container_bg_color', $importedMenu['container_bg_color']);
+            }
+            if (isset($importedMenu['container_padding'])) {
+                $menu->setData('container_padding', $importedMenu['container_padding']);
+            }
+            if (isset($importedMenu['container_margin'])) {
+                $menu->setData('container_margin', $importedMenu['container_margin']);
+            }
+            if (isset($importedMenu['item_gap'])) {
+                $menu->setData('item_gap', $importedMenu['item_gap']);
+            }
+            if (isset($importedMenu['container_max_width'])) {
+                $menu->setData('container_max_width', $importedMenu['container_max_width']);
+            }
+            if (isset($importedMenu['container_border'])) {
+                $menu->setData('container_border', $importedMenu['container_border']);
+            }
+            if (isset($importedMenu['container_border_radius'])) {
+                $menu->setData('container_border_radius', $importedMenu['container_border_radius']);
+            }
+            if (isset($importedMenu['container_box_shadow'])) {
+                $menu->setData('container_box_shadow', $importedMenu['container_box_shadow']);
+            }
+
+            if (isset($importedMenu['store_ids'])) {
+                $storeIds = is_array($importedMenu['store_ids'])
+                    ? $importedMenu['store_ids']
+                    : explode(',', $importedMenu['store_ids']);
+                $menu->setStoreIds($storeIds);
+            }
+
+            $this->menuRepository->save($menu);
+
+            return $result->setData([
+                'success' => true,
+                'message' => sprintf('Menu "%s" %s successfully', $menu->getTitle(), $action),
+                'menu_id' => $menu->getId(),
+                'action' => $action
+            ]);
+        } catch (\Exception $e) {
+            return $result->setData([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    protected function _isAllowed()
+    {
+        return $this->_authorization->isAllowed('Panth_MegaMenu::menu');
+    }
+
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
+    }
+}

@@ -1,0 +1,50 @@
+<?php
+/**
+ * @var \Magento\Framework\View\Result\Page $this
+ * @var string $htmlAttributes
+ * @var string $headAttributes
+ * @var string $headContent
+ * @var string $headAdditional
+ * @var string $bodyAttributes
+ */
+$previewLayout = $this->getLayout();
+$previewBody = '';
+foreach (['panth.megamenu.preview.container', 'panth.megamenu.dynamic.css', 'script-alpine-js'] as $previewElement) {
+    if ($previewLayout->hasElement($previewElement)) {
+        $previewBody .= $previewLayout->renderElement($previewElement);
+    }
+}
+?>
+<!doctype html>
+<html <?= /* @noEscape */ $htmlAttributes ?>>
+<head <?= /* @noEscape */ $headAttributes ?>>
+    <?= /* @noEscape */ $requireJs ?? '' ?>
+    <?= /* @noEscape */ $headContent ?>
+    <?= /* @noEscape */ $headCritical ?? '' ?>
+    <?= /* @noEscape */ $headAssets ?? '' ?>
+    <?= /* @noEscape */ $headAdditional ?>
+    <base target="_blank">
+    <style>
+        html { overflow-y: auto; scrollbar-gutter: auto; }
+        html, body.panth-megamenu-preview-page { margin: 0; padding: 0; min-height: 100%; background: #f8fafc; }
+        .panth-megamenu-preview { font-family: inherit; color: #1f2937; }
+        .panth-megamenu-preview__bar {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+            padding: 8px 16px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0;
+            font-size: 13px; line-height: 1.5; color: #475569;
+        }
+        .panth-megamenu-preview__badge {
+            display: inline-block; padding: 2px 10px; border-radius: 9999px;
+            background: var(--color-primary-darker, #0f766e); color: #fff;
+            font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+        }
+        .panth-megamenu-preview__menu {
+            position: relative; z-index: 30; background: #fff;
+            border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+        }
+    </style>
+</head>
+<body <?= /* @noEscape */ $bodyAttributes ?>>
+<?= /* @noEscape */ $previewBody ?>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">panth_menu_import_form.panth_menu_import_form_data_source</item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">Import Menu</item>
+    </argument>
+
+    <settings>
+        <buttons>
+            <button name="back">
+                <url path="*/*/index"/>
+                <class>back</class>
+                <label translate="true">Back</label>
+            </button>
+            <button name="import" class="Panth\MegaMenu\Block\Adminhtml\Menu\ImportButton"/>
+        </buttons>
+        <namespace>panth_menu_import_form</namespace>
+        <dataScope>data</dataScope>
+        <deps>
+            <dep>panth_menu_import_form.panth_menu_import_form_data_source</dep>
+        </deps>
+    </settings>
+
+    <dataSource name="panth_menu_import_form_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
+            </item>
+        </argument>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider" name="panth_menu_import_form_data_source">
+            <settings>
+                <requestFieldName>menu_id</requestFieldName>
+                <primaryFieldName>menu_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+        <settings>
+            <submitUrl path="*/*/import"/>
+        </settings>
+    </dataSource>
+
+    <fieldset name="general">
+        <settings>
+            <label translate="true">Import Settings</label>
+        </settings>
+
+        <field name="menu_file" formElement="fileUploader">
+            <settings>
+                <label translate="true">Menu JSON File</label>
+                <componentType>fileUploader</componentType>
+                <required>true</required>
+            </settings>
+            <formElements>
+                <fileUploader>
+                    <settings>
+                        <uploaderConfig>
+                            <param xsi:type="string" name="url">panth_menu/menu/uploadFile</param>
+                        </uploaderConfig>
+                        <allowedExtensions>json</allowedExtensions>
+                        <maxFileSize>2097152</maxFileSize>
+                    </settings>
+                </fileUploader>
+            </formElements>
+        </field>
+
+        <field name="action" formElement="select">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Import Action</label>
+                <dataScope>action</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options>
+                            <option name="0" xsi:type="array">
+                                <item name="value" xsi:type="string">create</item>
+                                <item name="label" xsi:type="string" translate="true">Create New Menu</item>
+                            </option>
+                            <option name="1" xsi:type="array">
+                                <item name="value" xsi:type="string">replace</item>
+                                <item name="label" xsi:type="string" translate="true">Replace Existing Menu</item>
+                            </option>
+                        </options>
+                        <caption translate="true">-- Please Select --</caption>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+
+        <field name="replace_menu_id" formElement="select">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Select Menu to Replace</label>
+                <dataScope>replace_menu_id</dataScope>
+                <visible>false</visible>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options class="Panth\MegaMenu\Ui\Component\Listing\Column\MenuOptions"/>
+                        <caption translate="true">-- Please Select --</caption>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+    </fieldset>
+</form>

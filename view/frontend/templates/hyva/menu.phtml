@@ -1,0 +1,413 @@
+<?php
+/**
+ * Panth MegaMenu - Unified Menu Template for Hyvä Theme
+ * Renders desktop and mobile menus with proper BEM class structure
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel
+ */
+
+// Get menu data
+$menuTree = $block->getCurrentMenuTree();
+$menu = $block->getCurrentMenu();
+$menuViewModel = $block->getData('view_model') ?: $block->getViewModel();
+
+// Return early if no menu items
+if (empty($menuTree)) {
+    return;
+}
+
+// Get custom CSS from menu settings
+$customCss = $menu ? $menu->getCustomCss() : '';
+$menuCssClass = $menu ? $menu->getCssClass() : '';
+?>
+
+<!-- ========================================
+     DESKTOP MENU (visible on desktop)
+     ======================================== -->
+<nav class="panth-mega-menu-desktop hidden lg:block" aria-label="Main Navigation" x-data="megaMenuData()">
+    <ul class="panth-mega-menu-list flex items-center justify-start" role="menubar">
+        <?php foreach ($menuTree as $index => $item): ?>
+            <?php
+            $itemIsActive = is_array($item) ? ($item['is_active'] ?? true) : $item->getIsActive();
+            if (!$itemIsActive): continue; endif;
+            ?>
+
+            <?= /* @noEscape */ $block->getLayout()
+                ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                ->setTemplate('Panth_MegaMenu::hyva/desktop/item.phtml')
+                ->setData('item', $item)
+                ->setData('level', 0)
+                ->setData('index', $index)
+                ->setData('menu_view_model', $menuViewModel)
+                ->toHtml() ?>
+
+        <?php endforeach; ?>
+    </ul>
+</nav>
+
+<!-- ========================================
+     MOBILE MENU (visible on mobile/tablet)
+     ======================================== -->
+<div class="panth-mega-menu-mobile lg:hidden" x-data="initMobileMenu" x-bind="eventListeners">
+    <button
+        type="button"
+        class="panth-mega-menu-mobile__toggle btn bg-transparent border-transparent p-2"
+        aria-label="<?= $escaper->escapeHtmlAttr(__('Open menu')) ?>"
+        @click="open"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z"></path>
+            <path d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <dialog
+        class="size-full max-h-full ms-0 p-0 open:flex flex-col transition ease-out duration-300 motion-reduce:duration-0 rounded-s-none"
+        x-show="isOpen"
+        x-htmldialog="close"
+        closeby="any"
+        x-transition:enter-start="-translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full"
+    >
+        <div class="border-b border-slate-200">
+            <div class="flex justify-between items-center gap-2 py-4 px-6">
+                <div class="font-bold"><?= $escaper->escapeHtml(__('Menu')) ?></div>
+                <button
+                    type="button"
+                    @click="close"
+                    class="btn bg-transparent border-transparent p-1"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Close menu')) ?>"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke="none" d="M0 0h24v24H0z"></path>
+                        <path d="M18 6 6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-y-auto flex-1">
+            <ul class="panth-mega-menu-mobile__list">
+                <?php foreach ($menuTree as $index => $item): ?>
+                    <?php
+                    $itemIsActive = is_array($item) ? ($item['is_active'] ?? true) : $item->getIsActive();
+                    if (!$itemIsActive): continue; endif;
+                    ?>
+
+                    <?= /* @noEscape */ $block->getLayout()
+                        ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                        ->setTemplate('Panth_MegaMenu::hyva/mobile/item.phtml')
+                        ->setData('item', $item)
+                        ->setData('level', 0)
+                        ->setData('index', $index)
+                        ->setData('menu_view_model', $menuViewModel)
+                        ->toHtml() ?>
+
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </dialog>
+</div>
+
+<!-- Custom CSS from menu settings -->
+<?php if ($customCss): ?>
+<style>
+<?= /* @noEscape */ $customCss ?>
+</style>
+<?php endif; ?>
+
+<!-- Dynamic Menu System: Alpine.js (Hyva) or RequireJS/jQuery (Luma) -->
+<script>
+// Detect if RequireJS is available (Luma) or use Alpine.js (Hyva)
+if (typeof require !== 'undefined' && typeof jQuery !== 'undefined') {
+    // ============================================
+    // LUMA/RequireJS Implementation
+    // ============================================
+    require(['jquery', 'jquery/ui'], function($) {
+        'use strict';
+
+        $(document).ready(function() {
+            var menu = $('.panth-mega-menu-desktop');
+            var openMenus = [];
+            var hoverTimers = {};
+            var isMobile = window.innerWidth < 1024;
+
+            // Update isMobile on resize
+            $(window).on('resize', function() {
+                isMobile = window.innerWidth < 1024;
+                if (!isMobile) {
+                    closeAllMenus();
+                }
+            });
+
+            function isMenuOpen(itemId) {
+                return openMenus.indexOf(itemId) > -1;
+            }
+
+            function openMenu(itemId) {
+                if (openMenus.indexOf(itemId) === -1) {
+                    openMenus.push(itemId);
+                    $('[data-item-id="' + itemId + '"]').addClass('panth-mega-menu__item--open');
+                    $('[data-item-id="' + itemId + '"] > .panth-mega-menu__dropdown').show().addClass('is-open');
+                }
+            }
+
+            function closeMenu(itemId) {
+                var index = openMenus.indexOf(itemId);
+                if (index > -1) {
+                    openMenus.splice(index, 1);
+                    $('[data-item-id="' + itemId + '"]').removeClass('panth-mega-menu__item--open');
+                    $('[data-item-id="' + itemId + '"] > .panth-mega-menu__dropdown').hide().removeClass('is-open');
+                }
+            }
+
+            function toggleMenu(itemId) {
+                if (isMenuOpen(itemId)) {
+                    closeMenu(itemId);
+                } else {
+                    openMenu(itemId);
+                }
+            }
+
+            function closeAllMenus() {
+                openMenus.slice().forEach(function(id) {
+                    closeMenu(id);
+                });
+            }
+
+            function openMenuWithDelay(itemId) {
+                if (hoverTimers[itemId]) {
+                    clearTimeout(hoverTimers[itemId]);
+                }
+                hoverTimers[itemId] = setTimeout(function() {
+                    openMenu(itemId);
+                }, 200);
+            }
+
+            function closeMenuWithDelay(itemId) {
+                if (hoverTimers[itemId]) {
+                    clearTimeout(hoverTimers[itemId]);
+                }
+                hoverTimers[itemId] = setTimeout(function() {
+                    closeMenu(itemId);
+                }, 300);
+            }
+
+            // Desktop hover interactions
+            menu.find('.panth-mega-menu__item').each(function() {
+                var $item = $(this);
+                var itemId = $item.data('item-id');
+
+                if (!itemId) return;
+
+                $item.on('mouseenter', function() {
+                    if (!isMobile) {
+                        openMenuWithDelay(itemId);
+                    }
+                });
+
+                $item.on('mouseleave', function() {
+                    if (!isMobile) {
+                        closeMenuWithDelay(itemId);
+                    }
+                });
+
+                $item.find('> a, > button').on('click', function(e) {
+                    if ($item.find('.panth-mega-menu__dropdown').length > 0) {
+                        e.preventDefault();
+                        toggleMenu(itemId);
+                    }
+                });
+            });
+
+            // Close menus when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.panth-mega-menu-desktop').length) {
+                    closeAllMenus();
+                }
+            });
+
+            // Escape key closes menus
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeAllMenus();
+                }
+            });
+
+            // Mobile menu support for RequireJS
+            var mobileMenu = $('.panth-mega-menu-mobile');
+            var mobileMenuDialog = mobileMenu.find('dialog');
+            var mobileOpenMenus = [];
+
+            mobileMenu.find('.panth-mega-menu-mobile__toggle').on('click', function() {
+                mobileMenuDialog.attr('open', 'open').show();
+                $('body').css('overflow', 'hidden');
+            });
+
+            mobileMenu.find('dialog button[aria-label*="Close"]').on('click', function() {
+                mobileMenuDialog.removeAttr('open').hide();
+                $('body').css('overflow', '');
+                mobileOpenMenus = [];
+            });
+
+            // Mobile accordion functionality
+            mobileMenu.find('.panth-mega-menu-mobile__list .panth-mega-menu__item').each(function() {
+                var $item = $(this);
+                var itemId = $item.data('item-id');
+
+                $item.find('> button[aria-label*="Expand"]').on('click', function() {
+                    var index = mobileOpenMenus.indexOf(itemId);
+                    if (index > -1) {
+                        mobileOpenMenus.splice(index, 1);
+                        $item.removeClass('is-open');
+                        $item.find('> .mobile-submenu').slideUp(300);
+                    } else {
+                        mobileOpenMenus.push(itemId);
+                        $item.addClass('is-open');
+                        $item.find('> .mobile-submenu').slideDown(300);
+                    }
+                });
+            });
+        });
+    });
+} else {
+    // ============================================
+    // HYVA/Alpine.js Implementation
+    // ============================================
+
+    // Alpine.js Component for Desktop Menu
+    function megaMenuData() {
+        return {
+            openMenus: [],
+            hoverTimers: {},
+            isMobile: window.innerWidth < 1024,
+
+            init() {
+                // Listen to window resize
+                window.addEventListener('resize', () => {
+                    this.isMobile = window.innerWidth < 1024;
+                    if (!this.isMobile) {
+                        this.openMenus = [];
+                    }
+                });
+
+                // Close menus when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.panth-mega-menu-desktop')) {
+                        this.openMenus = [];
+                    }
+                });
+            },
+
+            isMenuOpen(itemId) {
+                return this.openMenus.includes(itemId);
+            },
+
+            toggleMenu(itemId) {
+                const index = this.openMenus.indexOf(itemId);
+                if (index > -1) {
+                    this.openMenus.splice(index, 1);
+                } else {
+                    this.openMenus.push(itemId);
+                }
+            },
+
+            openMenuWithDelay(itemId) {
+                // Cancel any pending close timer for this item
+                if (this.hoverTimers[itemId]) {
+                    clearTimeout(this.hoverTimers[itemId]);
+                }
+
+                this.hoverTimers[itemId] = setTimeout(() => {
+                    // Close all other root-level menus first
+                    this.openMenus = this.openMenus.filter(id => id === itemId);
+                    if (!this.openMenus.includes(itemId)) {
+                        this.openMenus.push(itemId);
+                    }
+                }, 150);
+            },
+
+            closeMenuWithDelay(itemId) {
+                if (this.hoverTimers[itemId]) {
+                    clearTimeout(this.hoverTimers[itemId]);
+                }
+
+                this.hoverTimers[itemId] = setTimeout(() => {
+                    const index = this.openMenus.indexOf(itemId);
+                    if (index > -1) {
+                        this.openMenus.splice(index, 1);
+                    }
+                }, 200);
+            },
+
+            cancelHoverTimer(itemId) {
+                if (itemId && this.hoverTimers[itemId]) {
+                    clearTimeout(this.hoverTimers[itemId]);
+                } else {
+                    Object.keys(this.hoverTimers).forEach(key => {
+                        if (this.hoverTimers[key]) {
+                            clearTimeout(this.hoverTimers[key]);
+                        }
+                    });
+                }
+            }
+        };
+    }
+
+    // Mobile menu handler
+    function initMobileMenu() {
+        return {
+            isOpen: false,
+            openMenus: [],
+
+            eventListeners: {
+                ['@keydown.escape.window']() {
+                    this.close();
+                }
+            },
+
+            open() {
+                this.isOpen = true;
+                document.body.style.overflow = 'hidden';
+            },
+
+            close() {
+                this.isOpen = false;
+                this.openMenus = [];
+                document.body.style.overflow = '';
+            },
+
+            isMenuOpen(itemId) {
+                return this.openMenus.includes(itemId);
+            },
+
+            toggleMenu(itemId) {
+                const index = this.openMenus.indexOf(itemId);
+                if (index > -1) {
+                    this.openMenus.splice(index, 1);
+                } else {
+                    this.openMenus.push(itemId);
+                }
+            }
+        };
+    }
+}
+</script>
+
+<!-- Active page highlighting -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const path = window.location.origin + window.location.pathname;
+    document.querySelectorAll('.panth-mega-menu-desktop a[href], .panth-mega-menu-mobile a[href]').forEach(link => {
+        if (link.href === path) {
+            link.setAttribute('aria-current', 'page');
+            link.style.color = '#1979c3';
+            link.style.fontWeight = '700';
+        }
+    });
+});
+</script>

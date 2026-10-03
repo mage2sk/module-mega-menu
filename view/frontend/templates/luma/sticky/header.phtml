@@ -1,0 +1,477 @@
+<?php
+/**
+ * Panth MegaMenu - Sticky Header Template (Luma)
+ *
+ * Sticky menu with jQuery scroll behavior and smooth animations.
+ * Automatically shows/hides based on scroll direction.
+ *
+ * @category    Panth
+ * @package     Panth_MegaMenu
+ * @copyright   Copyright (c) 2025 Panth InfoTech
+ * @license     Proprietary
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+/** @var \Panth\MegaMenu\Block\Menu $block */
+$menuData = $block->getMenuData();
+$uniqueId = uniqid('sticky-header-');
+$stickyOffset = (int) $block->getStickyOffset() ?: 100;
+?>
+
+<?php if ($menuData && $block->isStickyEnabled()): ?>
+<div class="panth-megamenu-sticky-container"
+     id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>"
+     data-sticky-offset="<?= $escaper->escapeHtmlAttr($stickyOffset) ?>"
+     role="banner">
+
+    <div class="sticky-header-content">
+        <!-- Logo -->
+        <?php if ($block->getLogoUrl()): ?>
+        <div class="sticky-logo">
+            <a href="<?= $escaper->escapeUrl($block->getBaseUrl()) ?>"
+               title="<?= $escaper->escapeHtmlAttr($block->getStoreName()) ?>">
+                <img src="<?= $escaper->escapeUrl($block->getLogoUrl()) ?>"
+                     alt="<?= $escaper->escapeHtmlAttr($block->getStoreName()) ?>"
+                     width="<?= (int) $block->getLogoWidth() ?: 100 ?>"
+                     height="<?= (int) $block->getLogoHeight() ?: 40 ?>">
+            </a>
+        </div>
+        <?php endif; ?>
+
+        <!-- Menu -->
+        <div class="sticky-menu">
+            <?= /* @noEscape */ $block->getChildHtml('desktop_menu') ?>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="sticky-actions">
+            <?php if ($block->showSearch()): ?>
+            <div class="sticky-search">
+                <button type="button"
+                        class="action search-toggle"
+                        data-action="toggle-search"
+                        aria-label="<?= $escaper->escapeHtmlAttr(__('Search')) ?>">
+                    <span class="icon icon-search" aria-hidden="true"></span>
+                </button>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($block->showAccount()): ?>
+            <div class="sticky-account">
+                <a href="<?= $escaper->escapeUrl($block->getAccountUrl()) ?>"
+                   class="action account-link"
+                   title="<?= $escaper->escapeHtmlAttr(__('My Account')) ?>">
+                    <span class="icon icon-user" aria-hidden="true"></span>
+                </a>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($block->showCart()): ?>
+            <div class="sticky-cart">
+                <a href="<?= $escaper->escapeUrl($block->getCartUrl()) ?>"
+                   class="action cart-link"
+                   data-bind="scope: 'minicart_content'"
+                   title="<?= $escaper->escapeHtmlAttr(__('Shopping Cart')) ?>">
+                    <span class="icon icon-cart" aria-hidden="true"></span>
+                    <span class="counter qty"
+                          data-bind="text: getCartParam('summary_count'), visible: getCartParam('summary_count') > 0"
+                          style="display: none;"></span>
+                </a>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Search Form (Expandable) -->
+    <?php if ($block->showSearch()): ?>
+    <div class="sticky-search-form" style="display: none;">
+        <form class="form minisearch" action="<?= $escaper->escapeUrl($block->getSearchUrl()) ?>" method="get">
+            <div class="field search">
+                <div class="control">
+                    <input type="search"
+                           name="<?= $escaper->escapeHtmlAttr($block->getSearchQueryParam()) ?>"
+                           value=""
+                           placeholder="<?= $escaper->escapeHtmlAttr(__('Search entire store here...')) ?>"
+                           class="input-text"
+                           maxlength="128"
+                           role="combobox"
+                           aria-expanded="false"
+                           aria-autocomplete="list"
+                           autocomplete="off">
+                    <button type="submit"
+                            title="<?= $escaper->escapeHtmlAttr(__('Search')) ?>"
+                            class="action search">
+                        <span><?= $escaper->escapeHtml(__('Search')) ?></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <?php endif; ?>
+</div>
+
+<script type="text/javascript">
+require([
+    'jquery',
+    'jquery-ui-modules/widget'
+], function($) {
+    'use strict';
+
+    $.widget('panth.stickyHeader', {
+        options: {
+            stickyOffset: <?= (int) $stickyOffset ?>,
+            animationSpeed: <?= (int) $block->getAnimationSpeed() ?>,
+            showOnScrollUp: <?= $block->getShowOnScrollUp() ? 'true' : 'false' /* @noEscape */ ?>,
+            hideOnScrollDown: <?= $block->getHideOnScrollDown() ? 'true' : 'false' /* @noEscape */ ?>,
+            transparentOnTop: <?= $block->getTransparentOnTop() ? 'true' : 'false' /* @noEscape */ ?>
+        },
+
+        _create: function() {
+            this.lastScrollTop = 0;
+            this.isSticky = false;
+            this.isVisible = true;
+            this.ticking = false;
+
+            this._bind();
+            this._checkPosition();
+        },
+
+        _bind: function() {
+            var self = this;
+
+            // Scroll event with requestAnimationFrame for performance
+            $(window).on('scroll.stickyHeader', function() {
+                if (!self.ticking) {
+                    window.requestAnimationFrame(function() {
+                        self._checkPosition();
+                        self.ticking = false;
+                    });
+                    self.ticking = true;
+                }
+            });
+
+            // Resize event
+            $(window).on('resize.stickyHeader', $.proxy(this._checkPosition, this));
+
+            // Search toggle
+            this.element.on('click', '[data-action="toggle-search"]', function(e) {
+                e.preventDefault();
+                self._toggleSearch();
+            });
+
+            // Close search on outside click
+            $(document).on('click.stickyHeader', function(e) {
+                if (!$(e.target).closest('.sticky-search, .sticky-search-form').length) {
+                    self._closeSearch();
+                }
+            });
+
+            // ESC key to close search
+            $(document).on('keydown.stickyHeader', function(e) {
+                if (e.keyCode === 27) {
+                    self._closeSearch();
+                }
+            });
+        },
+
+        _checkPosition: function() {
+            var scrollTop = $(window).scrollTop();
+            var scrollDirection = scrollTop > this.lastScrollTop ? 'down' : 'up';
+
+            // Check if should be sticky
+            if (scrollTop >= this.options.stickyOffset) {
+                if (!this.isSticky) {
+                    this._makeSticky();
+                }
+
+                // Show/hide based on scroll direction
+                if (this.options.showOnScrollUp && scrollDirection === 'up' && !this.isVisible) {
+                    this._show();
+                } else if (this.options.hideOnScrollDown && scrollDirection === 'down' && this.isVisible) {
+                    this._hide();
+                }
+            } else {
+                if (this.isSticky) {
+                    this._makeNormal();
+                }
+
+                // Transparent on top
+                if (this.options.transparentOnTop && scrollTop === 0) {
+                    this.element.addClass('transparent');
+                } else {
+                    this.element.removeClass('transparent');
+                }
+            }
+
+            this.lastScrollTop = scrollTop;
+        },
+
+        _makeSticky: function() {
+            this.isSticky = true;
+            this.element.addClass('sticky active');
+            this.element.css('top', '0');
+            $('body').addClass('has-sticky-header');
+        },
+
+        _makeNormal: function() {
+            this.isSticky = false;
+            this.isVisible = true;
+            this.element.removeClass('sticky active hidden');
+            this.element.css('top', '');
+            $('body').removeClass('has-sticky-header');
+        },
+
+        _show: function() {
+            this.isVisible = true;
+            this.element.removeClass('hidden').addClass('shown');
+        },
+
+        _hide: function() {
+            this.isVisible = false;
+            this.element.removeClass('shown').addClass('hidden');
+            this._closeSearch();
+        },
+
+        _toggleSearch: function() {
+            var $searchForm = this.element.find('.sticky-search-form');
+            var $searchInput = $searchForm.find('input[type="search"]');
+
+            if ($searchForm.is(':visible')) {
+                $searchForm.slideUp(this.options.animationSpeed);
+            } else {
+                $searchForm.slideDown(this.options.animationSpeed, function() {
+                    $searchInput.focus();
+                });
+            }
+        },
+
+        _closeSearch: function() {
+            var $searchForm = this.element.find('.sticky-search-form');
+            if ($searchForm.is(':visible')) {
+                $searchForm.slideUp(this.options.animationSpeed);
+            }
+        },
+
+        _destroy: function() {
+            $(window).off('.stickyHeader');
+            $(document).off('.stickyHeader');
+            this.element.removeClass('sticky active hidden shown transparent');
+            $('body').removeClass('has-sticky-header');
+        }
+    });
+
+    // Initialize widget
+    $(document).ready(function() {
+        $('#<?= $escaper->escapeJs($uniqueId) ?>').stickyHeader({
+            stickyOffset: <?= (int) $stickyOffset ?>,
+            animationSpeed: <?= (int) $block->getAnimationSpeed() ?>,
+            showOnScrollUp: <?= $block->getShowOnScrollUp() ? 'true' : 'false' /* @noEscape */ ?>,
+            hideOnScrollDown: <?= $block->getHideOnScrollDown() ? 'true' : 'false' /* @noEscape */ ?>,
+            transparentOnTop: <?= $block->getTransparentOnTop() ? 'true' : 'false' /* @noEscape */ ?>
+        });
+    });
+});
+</script>
+
+<style type="text/css">
+/* Sticky Header Container */
+.panth-megamenu-sticky-container {
+    position: relative;
+    width: 100%;
+    background: #fff;
+    z-index: 100;
+    transition: all 0.3s ease;
+    box-shadow: none;
+}
+
+.panth-megamenu-sticky-container.sticky {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.panth-megamenu-sticky-container.sticky.hidden {
+    transform: translateY(-100%);
+}
+
+.panth-megamenu-sticky-container.sticky.shown {
+    transform: translateY(0);
+}
+
+.panth-megamenu-sticky-container.transparent {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* Sticky Header Content */
+.panth-megamenu-sticky-container .sticky-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 10px 20px;
+}
+
+/* Logo */
+.panth-megamenu-sticky-container .sticky-logo {
+    flex-shrink: 0;
+    margin-right: 30px;
+}
+
+.panth-megamenu-sticky-container .sticky-logo img {
+    display: block;
+    max-height: 40px;
+    width: auto;
+    transition: all 0.3s ease;
+}
+
+.panth-megamenu-sticky-container.sticky .sticky-logo img {
+    max-height: 35px;
+}
+
+/* Menu */
+.panth-megamenu-sticky-container .sticky-menu {
+    flex: 1;
+}
+
+/* Quick Actions */
+.panth-megamenu-sticky-container .sticky-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.panth-megamenu-sticky-container .sticky-actions .action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    position: relative;
+}
+
+.panth-megamenu-sticky-container .sticky-actions .action:hover,
+.panth-megamenu-sticky-container .sticky-actions .action:focus {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1979c3;
+}
+
+.panth-megamenu-sticky-container .sticky-actions .icon {
+    font-size: 20px;
+}
+
+/* Cart Counter */
+.panth-megamenu-sticky-container .counter.qty {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: #e02b27;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 9px;
+}
+
+/* Search Form */
+.panth-megamenu-sticky-container .sticky-search-form {
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border-top: 1px solid #e0e0e0;
+}
+
+.panth-megamenu-sticky-container .sticky-search-form .minisearch {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.panth-megamenu-sticky-container .sticky-search-form .field.search {
+    margin: 0;
+}
+
+.panth-megamenu-sticky-container .sticky-search-form .control {
+    display: flex;
+    align-items: center;
+}
+
+.panth-megamenu-sticky-container .sticky-search-form input[type="search"] {
+    flex: 1;
+    height: 40px;
+    padding: 0 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    font-size: 14px;
+}
+
+.panth-megamenu-sticky-container .sticky-search-form .action.search {
+    height: 40px;
+    padding: 0 20px;
+    background: #1979c3;
+    color: #fff;
+    border: 1px solid #1979c3;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.panth-megamenu-sticky-container .sticky-search-form .action.search:hover {
+    background: #155f96;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .panth-megamenu-sticky-container .sticky-header-content {
+        padding: 10px 15px;
+    }
+
+    .panth-megamenu-sticky-container .sticky-logo {
+        margin-right: 15px;
+    }
+
+    .panth-megamenu-sticky-container .sticky-menu {
+        display: none;
+    }
+
+    .panth-megamenu-sticky-container .sticky-actions {
+        gap: 10px;
+    }
+
+    .panth-megamenu-sticky-container .sticky-actions .action {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* RTL Support */
+<?php if ($block->isRtl()): ?>
+.panth-megamenu-sticky-container .sticky-logo {
+    margin-right: 0;
+    margin-left: 30px;
+}
+
+.panth-megamenu-sticky-container .counter.qty {
+    right: auto;
+    left: 0;
+}
+<?php endif; ?>
+</style>
+
+<?php endif; ?>

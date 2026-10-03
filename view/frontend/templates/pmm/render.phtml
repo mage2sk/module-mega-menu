@@ -1,0 +1,480 @@
+<?php
+/**
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$cfg = (array) $block->getData('pmm_config');
+$rawItems = (array) $block->getData('pmm_items');
+$source = (string) ($cfg['source'] ?? 'menu');
+$renderer = $cfg['renderer'] ?? null;
+$menu = $cfg['menu'] ?? null;
+$maxDepth = max(1, (int) ($cfg['max_depth'] ?? 10));
+$showIcons = (bool) ($cfg['show_icons'] ?? true);
+$showImages = (bool) ($cfg['show_images'] ?? true);
+$showCount = (bool) ($cfg['show_count'] ?? false);
+$enableBlocks = (bool) ($cfg['enable_blocks'] ?? true);
+$hoverDelay = (int) ($cfg['hover_delay'] ?? 150);
+$hoverEffect = (string) ($cfg['hover_effect'] ?? 'underline');
+$animation = (string) ($cfg['animation'] ?? 'slide');
+$mobilePosition = ($cfg['mobile_position'] ?? 'left') === 'right' ? 'right' : 'left';
+$breakpoint = (int) ($cfg['breakpoint'] ?? 1023);
+$toggleLabel = trim((string) ($cfg['toggle_label'] ?? ''));
+$navLabel = (string) ($cfg['nav_label'] ?? __('Main menu'));
+$customCss = trim((string) ($cfg['custom_css'] ?? ''));
+$isPreview = !empty($cfg['preview']);
+$uid = 'pmm' . bin2hex(random_bytes(5));
+
+$safeCss = function ($value): string {
+    $value = trim((string) $value);
+    if ($value === '' || preg_match('/[;{}<>"\\\\]|url\s*\(|expression\s*\(|javascript:/i', $value)) {
+        return '';
+    }
+    return $value;
+};
+
+$normalize = function (array $item, int $depth) use (&$normalize, $source, $maxDepth, $renderer): array {
+    $isMenu = $source === 'menu';
+    $raw = $isMenu ? ($item['children'] ?? []) : ($item['childData'] ?? []);
+    $children = [];
+    if ($depth + 1 < $maxDepth && is_array($raw)) {
+        foreach ($raw as $child) {
+            if (is_array($child)) {
+                $children[] = $normalize($child, $depth + 1);
+            }
+        }
+        usort($children, function ($a, $b) {
+            return (int) $a['sort_order'] - (int) $b['sort_order'];
+        });
+    }
+    $get = function (string $key) use ($item, $isMenu) {
+        return $isMenu ? ($item[$key] ?? '') : '';
+    };
+    return [
+        'title' => (string) ($isMenu ? ($item['title'] ?? '') : ($item['name'] ?? '')),
+        'url' => (string) ($item['url'] ?? '#'),
+        'current' => !$isMenu && !empty($item['isActive']),
+        'children' => $children,
+        'css_class' => (string) $get('css_class'),
+        'icon' => (string) $get('icon'),
+        'icon_library' => (string) ($get('icon_library') ?: 'fontawesome'),
+        'image' => (string) $get('image'),
+        'image_width' => $get('image_width'),
+        'image_height' => $get('image_height'),
+        'badge_text' => (string) ($isMenu ? ($item['badge_text'] ?? ($item['badge'] ?? '')) : ''),
+        'target' => (string) ($get('target') ?: '_self'),
+        'rel' => (string) $get('rel'),
+        'cms_block' => $isMenu ? ($item['cms_block_id'] ?? ($item['cms_block'] ?? '')) : '',
+        'custom_content' => (string) ($get('custom_content') ?: ($isMenu && ($item['item_type'] ?? '') === 'custom_html' && !empty($item['custom_html']) && $renderer ? $renderer->filterContent($item['custom_html']) : '')),
+        'product_count' => $isMenu ? ($item['product_count'] ?? '') : '',
+        'column_width' => (string) $get('column_width'),
+        'bg_color' => $get('bg_color') ?: $get('background_color'),
+        'text_color' => $get('text_color'),
+        'hover_bg_color' => $get('hover_bg_color'),
+        'hover_text_color' => $get('hover_text_color'),
+        'font_family' => $get('font_family'),
+        'font_size' => $get('font_size'),
+        'font_weight' => $get('font_weight'),
+        'text_transform' => $get('text_transform'),
+        'hover_effect' => (string) $get('hover_effect'),
+        'is_active' => $isMenu ? (!isset($item['is_active']) || !empty($item['is_active'])) : true,
+        'show_on_frontend' => $isMenu ? (!isset($item['show_on_frontend']) || !empty($item['show_on_frontend'])) : true,
+        'sort_order' => (int) ($isMenu ? ($item['sort_order'] ?? ($item['position'] ?? 0)) : ($item['position'] ?? 0)),
+        'show_on_desktop' => $isMenu ? (!isset($item['show_on_desktop']) || !empty($item['show_on_desktop'])) : true,
+        'show_on_mobile' => $isMenu ? (!isset($item['show_on_mobile']) || !empty($item['show_on_mobile'])) : true,
+        'start_date' => (string) $get('start_date'),
+        'end_date' => (string) $get('end_date'),
+    ];
+};
+
+$items = [];
+foreach ($rawItems as $raw) {
+    if (is_array($raw)) {
+        $items[] = $normalize($raw, 0);
+    }
+}
+usort($items, function ($a, $b) {
+    return (int) $a['sort_order'] - (int) $b['sort_order'];
+});
+
+$now = time();
+$timezone = (string) ($cfg['timezone'] ?? 'UTC');
+$filter = function (array $list, string $device) use ($now, $renderer, $timezone): array {
+    return array_values(array_filter($list, function (array $i) use ($device, $now, $renderer, $timezone) {
+        if (empty($i['is_active']) || empty($i['show_on_frontend']) || empty($i['show_on_' . $device])) {
+            return false;
+        }
+        if ($renderer) {
+            return $renderer->isWithinSchedule($i['start_date'], $i['end_date'], $now, $timezone);
+        }
+        if ($i['start_date'] !== '' && strtotime($i['start_date']) > $now) {
+            return false;
+        }
+        if ($i['end_date'] !== '' && strtotime($i['end_date']) < $now) {
+            return false;
+        }
+        return true;
+    }));
+};
+
+$styleVars = function (array $i) use ($safeCss): string {
+    $map = [
+        '--pmm-color' => $i['text_color'],
+        '--pmm-hover-text' => $i['hover_text_color'],
+        '--pmm-hover-bg' => $i['hover_bg_color'],
+        'background-color' => $i['bg_color'],
+        'font-family' => $i['font_family'],
+        'font-size' => $i['font_size'],
+        'font-weight' => $i['font_weight'],
+        'text-transform' => $i['text_transform'],
+    ];
+    $out = [];
+    foreach ($map as $prop => $value) {
+        $value = $safeCss($value);
+        if ($value !== '') {
+            $out[] = $prop . ':' . $value;
+        }
+    }
+    return implode(';', $out);
+};
+
+$isHash = function (string $url): bool {
+    $url = trim($url);
+    return $url === '' || $url === '#';
+};
+
+$linkAttrs = function (array $i) use ($escaper, $isPreview): string {
+    $attrs = ' href="' . $escaper->escapeUrl($i['url'] !== '' ? $i['url'] : '#') . '"';
+    $target = $isPreview ? '_blank' : $i['target'];
+    if ($target !== '' && $target !== '_self') {
+        $attrs .= ' target="' . $escaper->escapeHtmlAttr($target) . '"';
+    }
+    $rel = trim($i['rel'] . ($target === '_blank' ? ' noopener' : ''));
+    if ($rel !== '') {
+        $attrs .= ' rel="' . $escaper->escapeHtmlAttr($rel) . '"';
+    }
+    return $attrs;
+};
+
+$anchor = function (array $i, string $class, string $style, bool $labelOnly, string $extra = '') use ($escaper, $linkAttrs, &$labelHtml): string {
+    $styleAttr = $style !== '' ? ' style="' . $escaper->escapeHtmlAttr($style) . '"' : '';
+    if ($labelOnly) {
+        return '<span class="' . $class . ' pmm-label-only"' . $styleAttr . '>' . $labelHtml($i) . '</span>';
+    }
+    return '<a class="' . $class . '"' . $linkAttrs($i) . $styleAttr . $extra . '>' . $labelHtml($i) . '</a>';
+};
+
+$labelHtml = function (array $i, bool $withBadge = true) use ($escaper, $renderer, $showIcons, $showCount): string {
+    $html = '';
+    if ($showIcons && $i['icon'] !== '' && $renderer) {
+        $html .= '<span class="pmm-icon" aria-hidden="true">' . $renderer->renderIcon($i['icon'], $i['icon_library']) . '</span>';
+    }
+    $html .= '<span class="pmm-text">' . $escaper->escapeHtml($i['title']) . '</span>';
+    if ($showCount && $i['product_count'] !== '' && $i['product_count'] !== null) {
+        $html .= '<span class="pmm-count">(' . $escaper->escapeHtml((string) $i['product_count']) . ')</span>';
+    }
+    if ($withBadge && $i['badge_text'] !== '') {
+        $html .= '<span class="pmm-badge">' . $escaper->escapeHtml($i['badge_text']) . '</span>';
+    }
+    return $html;
+};
+
+$contentHtml = function (array $i, string $class = 'pmm-content') use ($renderer, $enableBlocks): string {
+    $html = '';
+    if ($i['custom_content'] !== '') {
+        $html .= '<div class="' . $class . '">' . $i['custom_content'] . '</div>';
+    }
+    if ($enableBlocks && !empty($i['cms_block']) && $renderer) {
+        $cms = (string) $renderer->renderCmsBlock($i['cms_block']);
+        if (trim($cms) !== '') {
+            $html .= '<div class="' . $class . '">' . $cms . '</div>';
+        }
+    }
+    return $html;
+};
+
+$imageHtml = function (array $i, string $class) use ($escaper, $showImages, $safeCss): string {
+    if (!$showImages || $i['image'] === '') {
+        return '';
+    }
+    $style = [];
+    foreach (['width' => $i['image_width'], 'height' => $i['image_height']] as $prop => $value) {
+        $value = $safeCss($value);
+        if ($value !== '') {
+            $style[] = $prop . ':' . (is_numeric($value) ? $value . 'px' : $value);
+        }
+    }
+    return '<img class="' . $class . '" src="' . $escaper->escapeUrl($i['image']) . '" alt="'
+        . $escaper->escapeHtmlAttr($i['title']) . '" loading="lazy"'
+        . ($style ? ' style="' . $escaper->escapeHtmlAttr(implode(';', $style)) . '"' : '') . '>';
+};
+
+$chevron = '<svg class="pmm-chev" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><path d="M5.5 7.75 10 12.25l4.5-4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+$renderSubList = function (array $list, int $level) use (&$renderSubList, $filter, $escaper, $anchor, $isHash, $styleVars, $contentHtml, $maxDepth): string {
+    $list = $filter($list, 'desktop');
+    if (!$list || $level >= $maxDepth) {
+        return '';
+    }
+    $html = '<ul class="' . ($level > 2 ? 'pmm-sub' : 'pmm-links') . '">';
+    foreach ($list as $i) {
+        $style = $styleVars($i);
+        $html .= '<li' . ($i['css_class'] !== '' ? ' class="' . $escaper->escapeHtmlAttr($i['css_class']) . '"' : '') . '>';
+        $html .= $anchor($i, 'pmm-link', $style, $isHash($i['url']) && !$i['children']);
+        $html .= $contentHtml($i);
+        if ($i['children']) {
+            $html .= $renderSubList($i['children'], $level + 1);
+        }
+        $html .= '</li>';
+    }
+    return $html . '</ul>';
+};
+
+$colTrack = function (array $col, bool $promo, bool $fit) use ($safeCss): string {
+    if ($promo) {
+        return 'minmax(240px, 300px)';
+    }
+    $width = $safeCss($col['column_width']);
+    $span = 1;
+    if ($width !== '' && $width !== 'auto') {
+        if (ctype_digit($width)) {
+            $span = max(1, min(6, (int) $width));
+        } elseif (preg_match('/^\d+(\.\d+)?(px|rem|em|%)$/', $width)) {
+            return $width;
+        }
+    }
+    if ($fit) {
+        return 'minmax(' . ($span * 200 + ($span - 1) * 40) . 'px, ' . ($span * 240 + ($span - 1) * 40) . 'px)';
+    }
+    return 'minmax(0, ' . $span . 'fr)';
+};
+
+$renderMega = function (array $top, bool &$fit = false) use ($filter, $escaper, $linkAttrs, $labelHtml, $styleVars, $contentHtml, $imageHtml, $renderSubList, $colTrack, $isHash): string {
+    $foot = $imageHtml($top, 'pmm-col-img') . $contentHtml($top);
+    $lists = [];
+    $promos = [];
+    $span = 0;
+    $media = $foot !== '';
+    foreach ($filter($top['children'], 'desktop') as $col) {
+        $kids = $filter($col['children'], 'desktop');
+        $promo = !$kids && ($col['custom_content'] !== '' || !empty($col['cms_block']) || $col['image'] !== '');
+        if ($promo || $col['image'] !== '') {
+            $media = true;
+        }
+        if ($promo) {
+            $promos[] = [$col, $kids, true];
+        } else {
+            $lists[] = [$col, $kids, false];
+            $width = trim((string) $col['column_width']);
+            $span += ctype_digit($width) ? max(1, min(6, (int) $width)) : 1;
+        }
+    }
+    $fit = !$media && $span <= 3;
+    $cols = array_merge($lists, $promos);
+    $tracks = [];
+    foreach ($cols as $entry) {
+        $tracks[] = $colTrack($entry[0], $entry[2], $fit);
+    }
+    if (count($lists) > 6) {
+        $tracks = ['repeat(auto-fill, minmax(180px, 1fr))'];
+    }
+    $html = '<div class="pmm-mega-grid" style="' . $escaper->escapeHtmlAttr('--pmm-tracks:' . implode(' ', $tracks)) . '">';
+    foreach ($cols as $entry) {
+        [$col, $kids, $promo] = $entry;
+        $classes = 'pmm-col' . ($promo ? ' pmm-col--promo' : '') . ($col['css_class'] !== '' ? ' ' . $col['css_class'] : '');
+        $html .= '<div class="' . $escaper->escapeHtmlAttr($classes) . '">';
+        $style = $styleVars($col);
+        $styleAttr = $style ? ' style="' . $escaper->escapeHtmlAttr($style) . '"' : '';
+        if ($isHash($col['url'])) {
+            $html .= '<span class="pmm-col-title"' . $styleAttr . '>' . $labelHtml($col) . '</span>';
+        } else {
+            $html .= '<a class="pmm-col-title"' . $linkAttrs($col) . $styleAttr . '>' . $labelHtml($col) . '</a>';
+        }
+        $html .= $imageHtml($col, 'pmm-col-img');
+        $html .= $contentHtml($col);
+        if ($kids) {
+            $html .= $renderSubList($kids, 2);
+        }
+        $html .= '</div>';
+    }
+    $html .= '</div>';
+    if ($foot !== '') {
+        $html .= '<div class="pmm-mega-foot">' . $foot . '</div>';
+    }
+    return $html;
+};
+
+$renderSimple = function (array $top) use ($filter, $escaper, $anchor, $isHash, $styleVars, $contentHtml): string {
+    $html = '<ul class="pmm-links">';
+    foreach ($filter($top['children'], 'desktop') as $i) {
+        $style = $styleVars($i);
+        $html .= '<li' . ($i['css_class'] !== '' ? ' class="' . $escaper->escapeHtmlAttr($i['css_class']) . '"' : '') . '>';
+        $html .= $anchor($i, 'pmm-link', $style, $isHash($i['url']));
+        $html .= $contentHtml($i);
+        $html .= '</li>';
+    }
+    return $html . '</ul>' . $contentHtml($top);
+};
+
+$mobileCounter = 0;
+$renderMobile = function (array $list, int $level) use (&$renderMobile, &$mobileCounter, $filter, $escaper, $anchor, $isHash, $styleVars, $contentHtml, $chevron, $uid, $maxDepth): string {
+    $list = $filter($list, 'mobile');
+    if (!$list || $level >= $maxDepth) {
+        return '';
+    }
+    $indent = 20 + $level * 16;
+    $html = '<ul class="pmm-m-list">';
+    foreach ($list as $i) {
+        $kids = $filter($i['children'], 'mobile');
+        $subId = $uid . '-m' . (++$mobileCounter);
+        $style = $styleVars($i);
+        $html .= '<li class="pmm-m-item' . ($i['css_class'] !== '' ? ' ' . $escaper->escapeHtmlAttr($i['css_class']) : '') . '" style="--pmm-indent:' . $indent . 'px">';
+        $html .= '<div class="pmm-m-row">' . $anchor($i, 'pmm-m-link', $style, $isHash($i['url']) && !$kids, $i['current'] ? ' aria-current="page"' : '');
+        if ($kids) {
+            $html .= '<button type="button" class="pmm-btn pmm-m-toggle" aria-expanded="false" aria-controls="' . $escaper->escapeHtmlAttr($subId) . '" aria-label="'
+                . $escaper->escapeHtmlAttr(__('Show %1 submenu', $i['title'])) . '">' . $chevron . '</button>';
+        }
+        $html .= '</div>';
+        $html .= $contentHtml($i, 'pmm-m-content');
+        if ($kids) {
+            $html .= '<div class="pmm-m-sub" id="' . $escaper->escapeHtmlAttr($subId) . '">' . $renderMobile($kids, $level + 1) . '</div>';
+        }
+        $html .= '</li>';
+    }
+    return $html . '</ul>';
+};
+
+$desktopItems = $filter($items, 'desktop');
+$mobileItems = $filter($items, 'mobile');
+if (!$desktopItems && !$mobileItems) {
+    return;
+}
+
+$containerStyle = [];
+$gapStyle = '';
+if ($menu) {
+    $containerMap = [
+        'background-color' => $menu->getData('container_bg_color'),
+        'padding' => $menu->getData('container_padding'),
+        'margin' => $menu->getData('container_margin'),
+        'max-width' => $menu->getData('container_max_width'),
+        'border' => $menu->getData('container_border'),
+        'border-radius' => $menu->getData('container_border_radius'),
+        'box-shadow' => $menu->getData('container_box_shadow'),
+    ];
+    foreach ($containerMap as $prop => $value) {
+        $value = $safeCss($value);
+        if ($value !== '') {
+            $containerStyle[] = $prop . ':' . $value;
+        }
+    }
+    $gap = $safeCss($menu->getData('item_gap'));
+    if ($gap !== '') {
+        $gapStyle = 'gap:' . $gap;
+    }
+    if ($safeCss($menu->getData('container_bg_color')) !== '') {
+        $containerStyle[] = '--pmm-scroll-bg:' . $safeCss($menu->getData('container_bg_color'));
+    }
+}
+
+$fxMap = ['underline' => 'underline', 'slide' => 'slide', 'highlight' => 'highlight', 'fade' => 'fade', 'glow' => 'none', 'grow' => 'none'];
+$fx = $fxMap[$hoverEffect] ?? 'underline';
+$anim = in_array($animation, ['fade', 'slide', 'grow', 'none'], true) ? $animation : 'slide';
+$rootClass = trim('pmm pmm-fx-' . $fx . ' pmm-anim-' . $anim . ' ' . (string) ($cfg['css_class'] ?? ''));
+$menuIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+$closeIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+$prevIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M15 18 9 12l6-6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+$nextIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+?>
+<?php if ($customCss !== '' || $breakpoint !== 1023): ?>
+<style>
+<?php if ($breakpoint !== 1023 && $breakpoint > 0): ?>
+@media (min-width: <?= (int) ($breakpoint + 1) ?>px) { #<?= $escaper->escapeHtmlAttr($uid) ?> .pmm-desktop { display: block; } #<?= $escaper->escapeHtmlAttr($uid) ?> .pmm-mobile { display: none; } }
+@media (max-width: <?= (int) $breakpoint ?>px) { #<?= $escaper->escapeHtmlAttr($uid) ?> .pmm-desktop { display: none; } #<?= $escaper->escapeHtmlAttr($uid) ?> .pmm-mobile { display: block; } }
+<?php endif; ?>
+<?= /* @noEscape */ str_ireplace('</style', '<\/style', $customCss) ?>
+
+</style>
+<?php endif; ?>
+<div class="<?= $escaper->escapeHtmlAttr($rootClass) ?>" id="<?= $escaper->escapeHtmlAttr($uid) ?>" data-pmm>
+    <?php if ($desktopItems): ?>
+    <div class="pmm-desktop" data-pmm-delay="<?= (int) $hoverDelay ?>">
+        <div class="pmm-scroll pmm-scroll--prev"><button type="button" class="pmm-btn pmm-scroll-btn" tabindex="-1" aria-label="<?= $escaper->escapeHtmlAttr(__('Scroll menu left')) ?>"><?= /* @noEscape */ $prevIcon ?></button></div>
+        <nav class="pmm-bar" aria-label="<?= $escaper->escapeHtmlAttr($navLabel) ?>"<?= $containerStyle ? ' style="' . $escaper->escapeHtmlAttr(implode(';', $containerStyle)) . '"' : '' ?>>
+            <ul class="pmm-list"<?= $gapStyle ? ' style="' . $escaper->escapeHtmlAttr($gapStyle) . '"' : '' ?>>
+                <?php foreach ($desktopItems as $index => $item):
+                    $kids = $filter($item['children'], 'desktop');
+                    $hasPanel = (bool) $kids;
+                    $isMega = false;
+                    foreach ($kids as $kid) {
+                        if ($filter($kid['children'], 'desktop')) {
+                            $isMega = true;
+                            break;
+                        }
+                    }
+                    $panelId = $uid . '-p' . $index;
+                    $style = $styleVars($item);
+                    $liClass = 'pmm-top' . ($isMega ? ' is-mega' : '') . ($item['css_class'] !== '' ? ' ' . $item['css_class'] : '');
+                    $itemFx = $item['hover_effect'] !== '' && isset($fxMap[$item['hover_effect']]) ? ' pmm-fx-' . $fxMap[$item['hover_effect']] : '';
+                ?>
+                <li class="<?= $escaper->escapeHtmlAttr($liClass . $itemFx) ?>">
+                    <a class="pmm-trigger"<?= /* @noEscape */ $linkAttrs($item) ?><?= $style ? ' style="' . $escaper->escapeHtmlAttr($style) . '"' : '' ?><?= $item['current'] ? ' aria-current="page"' : '' ?><?php if ($hasPanel): ?> aria-haspopup="true" aria-expanded="false" aria-controls="<?= $escaper->escapeHtmlAttr($panelId) ?>"<?php endif; ?>>
+                        <?= /* @noEscape */ $labelHtml($item) ?>
+                        <?php if ($hasPanel): ?><?= /* @noEscape */ $chevron ?><?php endif; ?>
+                    </a>
+                    <?php if ($hasPanel):
+                        $megaFit = false;
+                        $megaHtml = $isMega ? $renderMega($item, $megaFit) : '';
+                        $panelClass = $isMega ? 'pmm-panel--mega ' . ($megaFit ? 'pmm-panel--fit' : 'pmm-panel--full') : 'pmm-panel--simple';
+                    ?>
+                    <div class="pmm-panel <?= /* @noEscape */ $panelClass ?>" id="<?= $escaper->escapeHtmlAttr($panelId) ?>">
+                        <?php if ($isMega): ?>
+                            <?= /* @noEscape */ $megaHtml ?>
+                        <?php else: ?>
+                            <?= /* @noEscape */ $renderSimple($item) ?>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </nav>
+        <div class="pmm-scroll pmm-scroll--next"><button type="button" class="pmm-btn pmm-scroll-btn" tabindex="-1" aria-label="<?= $escaper->escapeHtmlAttr(__('Scroll menu right')) ?>"><?= /* @noEscape */ $nextIcon ?></button></div>
+    </div>
+    <?php endif; ?>
+    <?php if ($mobileItems): ?>
+    <div class="pmm-mobile">
+        <button type="button" class="pmm-btn pmm-burger" aria-expanded="false" aria-controls="<?= $escaper->escapeHtmlAttr($uid) ?>-drawer" aria-label="<?= $escaper->escapeHtmlAttr($toggleLabel !== '' ? __('Open %1', $toggleLabel) : __('Open menu')) ?>">
+            <?= /* @noEscape */ $menuIcon ?>
+            <?php if ($toggleLabel !== ''): ?><span class="pmm-burger-label"><?= $escaper->escapeHtml($toggleLabel) ?></span><?php endif; ?>
+        </button>
+        <div class="pmm-layer <?= $escaper->escapeHtmlAttr((string) ($cfg['css_class'] ?? '')) ?>">
+            <div class="pmm-backdrop" data-pmm-close></div>
+            <div class="pmm-drawer pmm-drawer--<?= /* @noEscape */ $mobilePosition ?>" id="<?= $escaper->escapeHtmlAttr($uid) ?>-drawer" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1" aria-label="<?= $escaper->escapeHtmlAttr($toggleLabel !== '' ? $toggleLabel : __('Menu')) ?>">
+                <div class="pmm-drawer-head">
+                    <span class="pmm-drawer-title"><?= $escaper->escapeHtml($toggleLabel !== '' ? $toggleLabel : __('Menu')) ?></span>
+                    <button type="button" class="pmm-btn pmm-drawer-close" data-pmm-close aria-label="<?= $escaper->escapeHtmlAttr(__('Close menu')) ?>"><?= /* @noEscape */ $closeIcon ?></button>
+                </div>
+                <div class="pmm-drawer-body">
+                    <?= /* @noEscape */ $renderMobile($mobileItems, 0) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+<script>
+(function () {
+    if (window.PanthMegaMenu) {
+        window.PanthMegaMenu.scan();
+        return;
+    }
+    if (document.querySelector('script[data-pmm-js]')) {
+        return;
+    }
+    var s = document.createElement('script');
+    s.src = <?= /* @noEscape */ json_encode((string) ($cfg['js_url'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES) ?>;
+    s.setAttribute('data-pmm-js', '1');
+    document.head.appendChild(s);
+})();
+</script>

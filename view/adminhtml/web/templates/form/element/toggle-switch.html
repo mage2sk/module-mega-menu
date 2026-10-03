@@ -1,0 +1,53 @@
+<!--
+/**
+ * Toggle Switch Template
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<div class="admin__field" data-bind="css: additionalClasses, attr: {name: inputName}">
+    <label class="admin__field-label" data-bind="attr: {for: uid}">
+        <span data-bind="i18n: label"></span>
+    </label>
+
+    <div class="admin__field-control toggle-switch-container">
+        <div class="toggle-switch"
+             data-bind="
+                css: getSwitchClasses(),
+                click: toggleSwitch,
+                attr: {'aria-checked': checked()}
+             "
+             role="switch">
+            <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+            </div>
+        </div>
+
+        <!-- ko if: showLabels -->
+        <span class="toggle-switch-label" data-bind="text: getCurrentLabel()"></span>
+        <!-- /ko -->
+
+        <!-- ko if: $data.tooltip -->
+        <div class="field-tooltip" data-bind="afterRender: $parent.initTooltip">
+            <span class="field-tooltip-icon">?</span>
+            <div class="field-tooltip-content" data-bind="html: $data.tooltip.description"></div>
+        </div>
+        <!-- /ko -->
+    </div>
+
+    <!-- ko if: notice -->
+    <div class="admin__field-note" data-bind="html: notice"></div>
+    <!-- /ko -->
+
+    <!-- Hidden input for form submission -->
+    <input type="hidden"
+           data-bind="
+               attr: {
+                   name: inputName,
+                   id: uid,
+                   disabled: disabled
+               },
+               value: value
+           "/>
+</div>

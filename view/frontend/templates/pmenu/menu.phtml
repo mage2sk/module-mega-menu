@@ -1,0 +1,478 @@
+<?php
+/**
+ * Panth MegaMenu - Default Navigation Template
+ * Renders MegaMenu with pmenu navigation structure
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel
+ */
+
+// Get menu data
+$menuTree = $block->getCurrentMenuTree();
+$menu = $block->getCurrentMenu();
+$menuViewModel = $block->getData('view_model') ?: $block->getViewModel();
+
+// Get theme helper for dual-theme compatibility (Hyva Alpine.js vs Luma RequireJS)
+/** @var \Panth\MegaMenu\Helper\Theme $themeHelper */
+$themeHelper = $block->getData('theme_helper');
+if (!$themeHelper) {
+    return;
+}
+$isHyva = $themeHelper->isHyva();
+
+// Return early if no menu items
+if (empty($menuTree)) {
+    return;
+}
+
+// Get custom CSS from menu settings
+$customCss = $menu ? $menu->getCustomCss() : '';
+$menuCssClass = $menu ? $menu->getCssClass() : '';
+
+// Get all Menu Container Styling settings from admin
+$containerBgColor = $menu ? $menu->getContainerBgColor() : '';
+$containerPadding = $menu ? $menu->getContainerPadding() : '';
+$containerMargin = $menu ? $menu->getContainerMargin() : '';
+$itemGap = $menu ? $menu->getItemGap() : '';
+$containerMaxWidth = $menu ? $menu->getContainerMaxWidth() : '';
+$containerBorder = $menu ? $menu->getContainerBorder() : '';
+$containerBorderRadius = $menu ? $menu->getContainerBorderRadius() : '';
+$containerBoxShadow = $menu ? $menu->getContainerBoxShadow() : '';
+$menuAlignment = $menu ? $menu->getMenuAlignment() : '';
+
+// Build inline styles for navigation container
+$navStyles = [];
+if ($containerBgColor) {
+    $navStyles[] = 'background-color: ' . $containerBgColor;
+}
+if ($containerPadding) {
+    $navStyles[] = 'padding: ' . $containerPadding;
+}
+if ($containerMargin) {
+    $navStyles[] = 'margin: ' . $containerMargin;
+}
+if ($containerMaxWidth) {
+    $navStyles[] = 'max-width: ' . $containerMaxWidth;
+}
+if ($containerBorder) {
+    $navStyles[] = 'border: ' . $containerBorder;
+}
+if ($containerBorderRadius) {
+    $navStyles[] = 'border-radius: ' . $containerBorderRadius;
+}
+if ($containerBoxShadow) {
+    $navStyles[] = 'box-shadow: ' . $containerBoxShadow;
+}
+
+$navStyleAttr = !empty($navStyles) ? 'style="' . $escaper->escapeHtmlAttr(implode('; ', $navStyles)) . '"' : '';
+
+// Build inline styles for menu items container (pmenu-main)
+$mainStyles = [];
+if ($itemGap) {
+    $mainStyles[] = 'gap: ' . $itemGap;
+}
+if ($menuAlignment) {
+    $mainStyles[] = 'justify-content: ' . $menuAlignment;
+}
+
+$mainStyleAttr = !empty($mainStyles) ? 'style="' . $escaper->escapeHtmlAttr(implode('; ', $mainStyles)) . '"' : '';
+
+// Generate unique ID for this menu instance (for CSS scoping)
+$menuUniqueId = 'panth-megamenu-' . ($menu ? $menu->getId() : 'preview');
+?>
+
+<!-- Panth MegaMenu - Navigation Structure -->
+<nav class="navigation pmenu-wrapper <?= $escaper->escapeHtmlAttr($menuCssClass) ?>"
+     id="<?= $escaper->escapeHtmlAttr($menuUniqueId) ?>"
+     role="navigation"
+     <?php if ($isHyva): ?>x-data="megaMenuData()"<?php endif; ?>
+     <?= /* @noEscape */ $navStyleAttr ?>>
+    <ul class="pmenu-main"
+        <?php if (!$isHyva): ?>
+        data-role="navigation"
+        data-mage-init='{"menu":{"responsive":true, "expanded":true, "position":{"my":"left top","at":"left bottom"}}}'
+        <?php endif; ?>
+        <?= /* @noEscape */ $mainStyleAttr ?>>
+        <?php foreach ($menuTree as $index => $item): ?>
+            <?php
+            $itemIsActive = is_array($item) ? ($item['is_active'] ?? true) : $item->getIsActive();
+            if (!$itemIsActive): continue; endif;
+            ?>
+            <?= /* @noEscape */ $block->getLayout()
+                ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                ->setTemplate('Panth_MegaMenu::pmenu/item.phtml')
+                ->setData('item', $item)
+                ->setData('level', 0)
+                ->setData('index', $index)
+                ->setData('menu_view_model', $menuViewModel)
+                ->setData('theme_helper', $themeHelper)
+                ->toHtml() ?>
+        <?php endforeach; ?>
+    </ul>
+</nav>
+
+<!-- Custom CSS from admin menu settings -->
+<?php if ($customCss): ?>
+<style type="text/css">
+<?= /* @noEscape */ $customCss ?>
+</style>
+<?php endif; ?>
+
+<!-- Dynamic Menu System: Alpine.js (Hyva) or RequireJS/jQuery (Luma) -->
+<script>
+// ============================================
+// HYVA/Alpine.js Components (Global Scope)
+// ============================================
+// Alpine.js Component for Desktop Menu - Must be globally accessible
+function megaMenuData() {
+    return {
+        openMenus: [],
+        hoverTimers: {},
+        isMobile: window.innerWidth < 1024,
+
+        init() {
+            // Listen to window resize
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+                if (!this.isMobile) {
+                    this.openMenus = [];
+                }
+            });
+
+            // Close menus when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.pmenu-wrapper')) {
+                    this.openMenus = [];
+                }
+            });
+
+            // Initialize smart positioning on load
+            this.$nextTick(() => {
+                this.initSmartPositioning();
+            });
+        },
+
+        isMenuOpen(itemId) {
+            return this.openMenus.includes(itemId);
+        },
+
+        toggleMenu(itemId) {
+            const index = this.openMenus.indexOf(itemId);
+            if (index > -1) {
+                this.openMenus.splice(index, 1);
+            } else {
+                this.openMenus.push(itemId);
+            }
+        },
+
+        openMenuWithDelay(itemId) {
+            if (this.hoverTimers[itemId]) {
+                clearTimeout(this.hoverTimers[itemId]);
+            }
+
+            this.hoverTimers[itemId] = setTimeout(() => {
+                if (!this.openMenus.includes(itemId)) {
+                    this.openMenus.push(itemId);
+                }
+                // Apply smart positioning when dropdown opens
+                this.applySmartPositioning(itemId);
+            }, 200);
+        },
+
+        closeMenuWithDelay(itemId) {
+            if (this.hoverTimers[itemId]) {
+                clearTimeout(this.hoverTimers[itemId]);
+            }
+
+            this.hoverTimers[itemId] = setTimeout(() => {
+                const index = this.openMenus.indexOf(itemId);
+                if (index > -1) {
+                    this.openMenus.splice(index, 1);
+                }
+            }, 300);
+        },
+
+        cancelHoverTimer() {
+            Object.keys(this.hoverTimers).forEach(key => {
+                if (this.hoverTimers[key]) {
+                    clearTimeout(this.hoverTimers[key]);
+                }
+            });
+        },
+
+        /**
+         * Initialize smart positioning for all menu items
+         */
+        initSmartPositioning() {
+            const items = this.$el.querySelectorAll('.pmenu-item');
+            items.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    const itemId = parseInt(item.getAttribute('data-item-id'));
+                    if (itemId) {
+                        setTimeout(() => this.applySmartPositioning(itemId), 10);
+                    }
+                });
+            });
+        },
+
+        /**
+         * Apply smart positioning to prevent dropdown overflow
+         */
+        applySmartPositioning(itemId) {
+            const item = this.$el.querySelector(`[data-item-id="${itemId}"]`);
+            if (!item) return;
+
+            const dropdown = item.querySelector('.pmenu-dropdown');
+            if (!dropdown) return;
+
+            // Get viewport width
+            const viewportWidth = window.innerWidth;
+
+            // Get dropdown dimensions and position
+            const itemRect = item.getBoundingClientRect();
+            const dropdownRect = dropdown.getBoundingClientRect();
+
+            // Calculate if dropdown would overflow right edge
+            const wouldOverflowRight = (dropdownRect.left + dropdownRect.width) > viewportWidth;
+
+            // Calculate if dropdown would overflow left edge
+            const wouldOverflowLeft = dropdownRect.left < 0;
+
+            // Apply or remove hover-right class based on overflow
+            if (wouldOverflowRight && !wouldOverflowLeft) {
+                item.classList.add('hover-right');
+            } else if (!wouldOverflowRight || wouldOverflowLeft) {
+                item.classList.remove('hover-right');
+            }
+
+            // Recursively check child dropdowns
+            const childItems = dropdown.querySelectorAll('.pmenu-item');
+            childItems.forEach(childItem => {
+                const childId = parseInt(childItem.getAttribute('data-item-id'));
+                if (childId && this.isMenuOpen(childId)) {
+                    setTimeout(() => this.applySmartPositioning(childId), 10);
+                }
+            });
+        }
+    };
+}
+
+// Alpine.js Component for Menu Items - Must be globally accessible
+function menuItemInit(itemId, level, hasChildren) {
+    return {
+        itemId: itemId,
+        level: level,
+        hasChildren: hasChildren,
+
+        /**
+         * Get parent menu component by traversing up the DOM
+         * Alpine.js v3 requires explicit parent access via DOM traversal
+         */
+        getParentMenu() {
+            // Find the closest nav element with x-data (the megaMenuData component)
+            let el = this.$el.closest('nav[x-data]');
+            if (el && el._x_dataStack && el._x_dataStack.length > 0) {
+                return el._x_dataStack[0];
+            }
+            return null;
+        },
+
+        /**
+         * Check if this menu item is currently open
+         */
+        isOpen() {
+            const parent = this.getParentMenu();
+            return parent ? parent.isMenuOpen(this.itemId) : false;
+        },
+
+        handleMouseEnter() {
+            const parent = this.getParentMenu();
+            if (parent && !parent.isMobile) {
+                parent.openMenuWithDelay(this.itemId);
+            }
+        },
+
+        handleMouseLeave() {
+            const parent = this.getParentMenu();
+            if (parent && !parent.isMobile) {
+                parent.closeMenuWithDelay(this.itemId);
+            }
+        },
+
+        handleClick(event) {
+            if (this.hasChildren) {
+                event.preventDefault();
+                const parent = this.getParentMenu();
+                if (parent) {
+                    parent.toggleMenu(this.itemId);
+                }
+            }
+        }
+    };
+}
+
+// ============================================
+// LUMA/RequireJS Implementation (Conditional)
+// ============================================
+// Only initialize RequireJS menu if jQuery is available (Luma theme)
+if (typeof require !== 'undefined' && typeof jQuery !== 'undefined') {
+    require(['jquery', 'jquery/ui'], function($) {
+        'use strict';
+
+        $(document).ready(function() {
+            var menu = $('#<?= $escaper->escapeJs($menuUniqueId) ?>');
+            var openMenus = [];
+            var hoverTimers = {};
+            var isMobile = window.innerWidth < 1024;
+
+            // Update isMobile on resize
+            $(window).on('resize', function() {
+                isMobile = window.innerWidth < 1024;
+                if (!isMobile) {
+                    closeAllMenus();
+                }
+            });
+
+            function isMenuOpen(itemId) {
+                return openMenus.indexOf(itemId) > -1;
+            }
+
+            function openMenu(itemId) {
+                if (openMenus.indexOf(itemId) === -1) {
+                    openMenus.push(itemId);
+                    $('[data-item-id="' + itemId + '"]').addClass('pmenu-item-open');
+                    $('[data-item-id="' + itemId + '"] > .pmenu-dropdown').show().addClass('is-open');
+                    // Apply smart positioning after dropdown is shown
+                    setTimeout(function() {
+                        applySmartPositioning(itemId);
+                    }, 10);
+                }
+            }
+
+            function closeMenu(itemId) {
+                var index = openMenus.indexOf(itemId);
+                if (index > -1) {
+                    openMenus.splice(index, 1);
+                    $('[data-item-id="' + itemId + '"]').removeClass('pmenu-item-open');
+                    $('[data-item-id="' + itemId + '"] > .pmenu-dropdown').hide().removeClass('is-open');
+                }
+            }
+
+            function toggleMenu(itemId) {
+                if (isMenuOpen(itemId)) {
+                    closeMenu(itemId);
+                } else {
+                    openMenu(itemId);
+                }
+            }
+
+            function closeAllMenus() {
+                openMenus.slice().forEach(function(id) {
+                    closeMenu(id);
+                });
+            }
+
+            function openMenuWithDelay(itemId) {
+                if (hoverTimers[itemId]) {
+                    clearTimeout(hoverTimers[itemId]);
+                }
+                hoverTimers[itemId] = setTimeout(function() {
+                    openMenu(itemId);
+                }, 200);
+            }
+
+            function closeMenuWithDelay(itemId) {
+                if (hoverTimers[itemId]) {
+                    clearTimeout(hoverTimers[itemId]);
+                }
+                hoverTimers[itemId] = setTimeout(function() {
+                    closeMenu(itemId);
+                }, 300);
+            }
+
+            /**
+             * Apply smart positioning to prevent dropdown overflow
+             */
+            function applySmartPositioning(itemId) {
+                var $item = $('[data-item-id="' + itemId + '"]');
+                if (!$item.length) return;
+
+                var $dropdown = $item.children('.pmenu-dropdown');
+                if (!$dropdown.length) return;
+
+                // Get viewport width
+                var viewportWidth = $(window).width();
+
+                // Get dropdown dimensions and position
+                var dropdownOffset = $dropdown.offset();
+                var dropdownWidth = $dropdown.outerWidth();
+
+                // Calculate if dropdown would overflow right edge
+                var wouldOverflowRight = (dropdownOffset.left + dropdownWidth) > viewportWidth;
+
+                // Calculate if dropdown would overflow left edge
+                var wouldOverflowLeft = dropdownOffset.left < 0;
+
+                // Apply or remove hover-right class based on overflow
+                if (wouldOverflowRight && !wouldOverflowLeft) {
+                    $item.addClass('hover-right');
+                } else if (!wouldOverflowRight || wouldOverflowLeft) {
+                    $item.removeClass('hover-right');
+                }
+
+                // Recursively check child dropdowns
+                $dropdown.find('.pmenu-item').each(function() {
+                    var childId = $(this).data('item-id');
+                    if (childId && isMenuOpen(childId)) {
+                        setTimeout(function() {
+                            applySmartPositioning(childId);
+                        }, 10);
+                    }
+                });
+            }
+
+            // Desktop hover interactions
+            menu.find('.pmenu-item').each(function() {
+                var $item = $(this);
+                var itemId = $item.data('item-id');
+
+                if (!itemId) return;
+
+                $item.on('mouseenter', function() {
+                    if (!isMobile) {
+                        openMenuWithDelay(itemId);
+                    }
+                });
+
+                $item.on('mouseleave', function() {
+                    if (!isMobile) {
+                        closeMenuWithDelay(itemId);
+                    }
+                });
+
+                $item.find('> a, > .pmenu-link').on('click', function(e) {
+                    if ($item.find('.pmenu-dropdown').length > 0) {
+                        e.preventDefault();
+                        toggleMenu(itemId);
+                    }
+                });
+            });
+
+            // Close menus when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.pmenu-wrapper').length) {
+                    closeAllMenus();
+                }
+            });
+
+            // Escape key closes menus
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeAllMenus();
+                }
+            });
+        });
+    });
+}
+</script>

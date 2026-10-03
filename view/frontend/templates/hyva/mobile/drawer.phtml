@@ -1,0 +1,18 @@
+<?php
+/**
+ * Mobile Menu Drawer Template for Hyva Theme
+ *
+ * This is a wrapper template that includes the mobile menu
+ * in a drawer format for Hyva theme compatibility.
+ *
+ * @var \Panth\MegaMenu\Block\MobileMenu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Include the main mobile menu template
+echo $block->getLayout()
+    ->createBlock(\Panth\MegaMenu\Block\Menu::class)
+    ->setTemplate('Panth_MegaMenu::hyva/mobile/menu.phtml')
+    ->setData('menu_view_model', $block->getViewModel('menu'))
+    ->setData('use_alpine', true)
+    ->toHtml();
