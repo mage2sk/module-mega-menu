@@ -1,0 +1,53 @@
+<?php
+/**
+ * Luma CSS Styles for MegaMenu
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+$cssUrl = $block->getViewFileUrl('Panth_MegaMenu::css/panth-megamenu.css');
+?>
+<link rel="stylesheet" type="text/css" href="<?= $escaper->escapeUrl($cssUrl) ?>" media="all" />
+
+<style>
+/* Luma specific overrides */
+.panth-mega-menu-desktop {
+    width: 100%;
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.panth-mega-menu-list {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Hide dropdown by default */
+.panth-mega-menu__dropdown {
+    display: none;
+}
+
+/* Show dropdown when open */
+.panth-mega-menu__dropdown.is-open {
+    display: block;
+}
+
+/* Accessibility & Focus States */
+.panth-mega-menu__link:focus,
+.panth-mega-menu__link:focus-visible,
+.panth-mega-menu__image-card:focus,
+.panth-mega-menu__image-card:focus-visible,
+.panth-mega-menu__brand-logo:focus,
+.panth-mega-menu__brand-logo:focus-visible,
+.panth-mega-menu__icon-card:focus,
+.panth-mega-menu__icon-card:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+}
+</style>

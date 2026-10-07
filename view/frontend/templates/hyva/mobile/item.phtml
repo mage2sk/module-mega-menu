@@ -1,0 +1,431 @@
+<?php
+/**
+ * Panth MegaMenu - Mobile Menu Item (Hyva Theme)
+ *
+ * This template renders a single menu item for mobile view with accordion-style
+ * expansion for items with children. Optimized for touch interaction.
+ *
+ * Features:
+ * - Touch-friendly sizing (minimum 44px tap targets)
+ * - Accordion expansion for children
+ * - Smooth animations
+ * - Icon display
+ * - Badge/label support
+ * - Recursive rendering (unlimited depth)
+ * - Visual depth indicators (indentation)
+ * - ARIA accessibility
+ * - Swipe gesture support
+ *
+ * @var \Panth\MegaMenu\Block\MenuItem $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Panth\MegaMenu\ViewModel\Menu $menuViewModel
+ * @var \Panth\MegaMenu\Api\Data\ItemInterface $item
+ */
+
+// Get item data
+$item = $block->getData('item');
+$level = (int)$block->getData('level');
+$index = (int)$block->getData('index');
+$menuViewModel = $block->getData('menu_view_model');
+
+// Helper function to get item value (handles both array and object)
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method ? $item->$method() : $default;
+};
+
+// Check if item is active
+$isActive = is_array($item) ? ($item['is_active'] ?? true) : $item->getIsActive();
+if (!$item || !$isActive) {
+    return;
+}
+
+// Get item properties (handle both array and object)
+$itemId = $getValue($item, 'item_id', 'getItemId');
+$title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+$children = $getValue($item, 'children', 'getChildren', []);
+$hasChildren = !empty($children) || (is_object($item) && $item->hasChildren());
+$cssClass = $getValue($item, 'css_class', 'getCssClass');
+$iconClass = $getValue($item, 'icon_class', 'getIconClass');
+
+// Get item_type and cms_block_id - check both array key and method
+if (is_array($item)) {
+    $itemType = $item['item_type'] ?? 'link';
+    $cmsBlockId = $item['cms_block_id'] ?? null;
+} else {
+    $itemType = method_exists($item, 'getItemType') ? $item->getItemType() : 'link';
+    $cmsBlockId = method_exists($item, 'getCmsBlockId') ? $item->getCmsBlockId() : null;
+}
+
+// Check for CMS block
+$hasCmsBlock = ($itemType === 'cms_block' && !empty($cmsBlockId));
+
+// Get MenuRenderer helper for CMS block rendering via ViewModel or block data
+/** @var \Panth\MegaMenu\Helper\MenuRenderer $menuRenderer */
+$menuRenderer = $menuViewModel ? $menuViewModel->getMenuRenderer() : null;
+
+// Get URL and link properties
+$url = $menuViewModel->getItemUrl($item);
+$target = $menuViewModel->getLinkTarget($item);
+$rel = $menuViewModel->getLinkRel($item);
+
+// Build CSS classes
+$itemClasses = [
+    'menu-item',
+    'mobile-menu-item',
+    'menu-item-level-' . $level,
+    'menu-item-type-' . $itemType,
+];
+
+// Treat items with CMS blocks or children as expandable
+$isExpandable = $hasChildren || $hasCmsBlock;
+
+if ($isExpandable) {
+    $itemClasses[] = 'has-children';
+}
+
+if ($cssClass) {
+    $itemClasses[] = $cssClass;
+}
+
+// Calculate indentation based on level
+$indentClass = '';
+switch ($level) {
+    case 0:
+        $indentClass = '';
+        break;
+    case 1:
+        $indentClass = 'pl-4';
+        break;
+    case 2:
+        $indentClass = 'pl-8';
+        break;
+    case 3:
+        $indentClass = 'pl-12';
+        break;
+    default:
+        $indentClass = 'pl-16';
+        break;
+}
+
+// Check if should show content instead of link
+$showContent = $menuViewModel->shouldShowContent($item);
+
+// Generate unique ID for ARIA
+$itemUniqueId = 'mobile-menu-item-' . $itemId . '-' . $level . '-' . $index;
+$submenuId = $itemUniqueId . '-submenu';
+?>
+
+<!--
+Mobile Menu Item Structure
+===========================
+- Link or button (for items with children)
+- Expand/collapse indicator
+- Submenu container (accordion)
+- Recursive child rendering with indentation
+-->
+
+<li class="<?= $escaper->escapeHtmlAttr(implode(' ', $itemClasses)) ?>"
+    role="menuitem"
+    data-item-id="<?= (int)$itemId ?>"
+    x-data="mobileMenuItemInit(<?= (int)$itemId ?>, <?= (int) $level ?>)"
+    :class="{ 'is-open': isMenuOpen(<?= (int)$itemId ?>) }">
+
+    <?php if ($showContent): ?>
+        <!--
+        Content Item
+        ============
+        Renders HTML content directly (no link)
+        Useful for promotional content, images, etc.
+        -->
+        <div class="menu-content py-3 px-4 <?= $escaper->escapeHtmlAttr($indentClass) ?>">
+            <?= /* @noEscape */ $menuViewModel->processItemContent($item) ?>
+        </div>
+
+    <?php else: ?>
+        <!--
+        Link/Button Item
+        ================
+        Touch-friendly link with optional expand button for children
+        -->
+        <div class="menu-item-wrapper flex items-stretch">
+
+            <?php if ($isExpandable): ?>
+                <!--
+                Item with Children - Split into link + expand button
+                ====================================================
+                Left side: Link to item (if has URL)
+                Right side: Expand/collapse button
+                -->
+
+                <!-- Link portion (if item has a URL) -->
+                <?php if ($url !== '#'): ?>
+                <a href="<?= $escaper->escapeUrl($url) ?>"
+                   class="menu-item-link flex-1 flex items-center gap-3 py-3 px-4 <?= $escaper->escapeHtmlAttr($indentClass) ?> text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                   target="<?= $escaper->escapeHtmlAttr($target) ?>"
+                   <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>
+                   role="menuitem"
+                   @click="handleLinkClick($event)">
+
+                    <?php if ($iconClass): ?>
+                        <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?> text-xl flex-shrink-0"
+                           aria-hidden="true"></i>
+                    <?php endif; ?>
+
+                    <span class="flex-1 text-sm font-medium">
+                        <?= $escaper->escapeHtml($title) ?>
+                    </span>
+                </a>
+                <?php else: ?>
+                <!-- No link, just label -->
+                <span class="menu-item-label flex-1 flex items-center gap-3 py-3 px-4 <?= $escaper->escapeHtmlAttr($indentClass) ?> text-gray-800">
+                    <?php if ($iconClass): ?>
+                        <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?> text-xl flex-shrink-0"
+                           aria-hidden="true"></i>
+                    <?php endif; ?>
+
+                    <span class="flex-1 text-sm font-medium">
+                        <?= $escaper->escapeHtml($title) ?>
+                    </span>
+                </span>
+                <?php endif; ?>
+
+                <!-- Expand/Collapse Button -->
+                <button type="button"
+                        id="<?= $escaper->escapeHtmlAttr($itemUniqueId) ?>-toggle"
+                        class="menu-item-toggle flex items-center justify-center w-12 border-l border-gray-200 text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                        @click="toggleSubmenu()"
+                        :aria-expanded="isMenuOpen(<?= (int)$itemId ?>) ? 'true' : 'false'"
+                        aria-controls="<?= $escaper->escapeHtmlAttr($submenuId) ?>"
+                        aria-label="<?= $escaper->escapeHtmlAttr(__('Expand %1 submenu', $title)) ?>">
+
+                    <!-- Chevron Icon (rotates when open) -->
+                    <svg class="w-5 h-5 transition-transform duration-300"
+                         :class="{ 'rotate-180': isMenuOpen(<?= (int)$itemId ?>) }"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg"
+                         aria-hidden="true">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+            <?php else: ?>
+                <!--
+                Simple Link (no children)
+                ==========================
+                Full-width touchable link
+                -->
+                <a href="<?= $escaper->escapeUrl($url) ?>"
+                   id="<?= $escaper->escapeHtmlAttr($itemUniqueId) ?>"
+                   class="menu-item-link flex items-center gap-3 py-3 px-4 w-full <?= $escaper->escapeHtmlAttr($indentClass) ?> text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                   target="<?= $escaper->escapeHtmlAttr($target) ?>"
+                   <?php if ($rel): ?>rel="<?= $escaper->escapeHtmlAttr($rel) ?>"<?php endif; ?>
+                   role="menuitem"
+                   @click="handleLinkClick($event)">
+
+                    <?php if ($iconClass): ?>
+                        <i class="<?= $escaper->escapeHtmlAttr($iconClass) ?> text-xl flex-shrink-0"
+                           aria-hidden="true"></i>
+                    <?php endif; ?>
+
+                    <span class="flex-1 text-sm font-medium">
+                        <?= $escaper->escapeHtml($title) ?>
+                    </span>
+
+                    <!-- External link indicator -->
+                    <?php if ($target === '_blank'): ?>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24"
+                             xmlns="http://www.w3.org/2000/svg"
+                             aria-hidden="true">
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    <?php endif; ?>
+                </a>
+            <?php endif; ?>
+
+        </div>
+    <?php endif; ?>
+
+    <?php if ($isExpandable): ?>
+        <!--
+        Submenu (Accordion)
+        ===================
+        Collapsible container for CMS block and/or child menu items
+        Animates height on expand/collapse
+        -->
+        <div id="<?= $escaper->escapeHtmlAttr($submenuId) ?>"
+             class="mobile-submenu overflow-hidden"
+             x-show="isMenuOpen(<?= (int)$itemId ?>)"
+             x-transition:enter="transition-all ease-out duration-300"
+             x-transition:enter-start="max-h-0 opacity-0"
+             x-transition:enter-end="max-h-screen opacity-100"
+             x-transition:leave="transition-all ease-in duration-200"
+             x-transition:leave-start="max-h-screen opacity-100"
+             x-transition:leave-end="max-h-0 opacity-0"
+             x-cloak
+             role="menu"
+             aria-label="<?= $escaper->escapeHtmlAttr($title . ' ' . __('submenu')) ?>">
+
+            <?php if ($hasCmsBlock): ?>
+                <!--
+                CMS Block Content Section
+                =========================
+                Displays CMS block content before children
+                -->
+                <div class="mobile-cms-block-content bg-gray-50 p-4 border-b border-gray-200">
+                    <?= /* @noEscape */ $menuRenderer->renderCmsBlock($cmsBlockId, false) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($hasChildren): ?>
+            <ul class="submenu-list"
+                role="menu">
+
+                <?php foreach ($children as $childIndex => $child): ?>
+                    <?php
+                    $childIsActive = is_array($child) ? ($child['is_active'] ?? true) : $child->getIsActive();
+                    if (!$childIsActive): continue; endif;
+                    ?>
+
+                    <?php
+                    /**
+                     * Recursive Item Rendering
+                     *
+                     * Each child item is rendered using the same template,
+                     * creating unlimited menu depth with increasing indentation.
+                     */
+                    ?>
+                    <?= /* @noEscape */ $block->getLayout()
+                        ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                        ->setTemplate('Panth_MegaMenu::hyva/mobile/item.phtml')
+                        ->setData('item', $child)
+                        ->setData('level', $level + 1)
+                        ->setData('index', $childIndex)
+                        ->setData('menu_view_model', $menuViewModel)
+                        ->toHtml() ?>
+
+                <?php endforeach; ?>
+
+            </ul>
+            <?php endif; ?>
+
+        </div>
+    <?php endif; ?>
+
+    <?php
+    /**
+     * Alpine.js Component for Mobile Menu Item
+     *
+     * Handles accordion expansion and touch interactions
+     */
+    ?>
+    <script>
+        function mobileMenuItemInit(itemId, level) {
+            return {
+                itemId: itemId,
+                level: level,
+                touchStartX: 0,
+                touchStartY: 0,
+
+                /**
+                 * Get parent mobile menu component
+                 * Uses Alpine.js traversal to find parent component safely
+                 */
+                getParentMenu() {
+                    let el = this.$el.parentElement;
+                    while (el) {
+                        if (el._x_dataStack && el._x_dataStack.length > 0) {
+                            const data = el._x_dataStack[0];
+                            // Check if this is the mobile menu parent (has openMenus array)
+                            if (data.openMenus !== undefined && Array.isArray(data.openMenus)) {
+                                return data;
+                            }
+                        }
+                        el = el.parentElement;
+                    }
+                    return null;
+                },
+
+                /**
+                 * Check if this menu item is open
+                 */
+                isMenuOpen(checkItemId) {
+                    const parent = this.getParentMenu();
+                    if (!parent) return false;
+                    return parent.openMenus.includes(checkItemId);
+                },
+
+                /**
+                 * Toggle submenu open/closed
+                 */
+                toggleSubmenu() {
+                    const parent = this.getParentMenu();
+                    if (parent && parent.toggleMenu) {
+                        parent.toggleMenu(this.itemId);
+                    }
+                },
+
+                /**
+                 * Handle link click
+                 * Close mobile menu if navigating away
+                 */
+                handleLinkClick(event) {
+                    // Check if link is not a hash/anchor
+                    const href = event.target.closest('a').getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('#')) {
+                        // Close mobile menu after short delay to allow navigation
+                        setTimeout(() => {
+                            const parent = this.getParentMenu();
+                            if (parent && parent.close) {
+                                parent.close();
+                            }
+                        }, 100);
+                    }
+                },
+
+                /**
+                 * Handle touch start (for swipe detection)
+                 */
+                handleTouchStart(event) {
+                    this.touchStartX = event.touches[0].clientX;
+                    this.touchStartY = event.touches[0].clientY;
+                },
+
+                /**
+                 * Handle touch end (detect swipe)
+                 */
+                handleTouchEnd(event) {
+                    const touchEndX = event.changedTouches[0].clientX;
+                    const touchEndY = event.changedTouches[0].clientY;
+
+                    const deltaX = touchEndX - this.touchStartX;
+                    const deltaY = touchEndY - this.touchStartY;
+
+                    // Horizontal swipe threshold (50px)
+                    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                        if (deltaX > 0 && this.level > 0) {
+                            // Swipe right - collapse submenu
+                            if (this.isMenuOpen(this.itemId)) {
+                                this.toggleSubmenu();
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+</li>

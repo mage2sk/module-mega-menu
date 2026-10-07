@@ -1,0 +1,121 @@
+<!--
+/**
+ * Icon Picker Template
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<div class="admin__field" data-bind="css: additionalClasses, attr: {name: inputName}">
+    <label class="admin__field-label" data-bind="attr: {for: uid}">
+        <span data-bind="i18n: label"></span>
+    </label>
+
+    <div class="admin__field-control icon-picker-container">
+        <div class="icon-picker-trigger" data-bind="click: openIconPicker">
+            <div class="icon-preview">
+                <!-- ko if: selectedIcon() -->
+                <i data-bind="attr: {class: getIconPreviewClass()}"></i>
+                <!-- /ko -->
+                <!-- ko ifnot: selectedIcon() -->
+                <span data-bind="i18n: 'Select Icon'"></span>
+                <!-- /ko -->
+            </div>
+            <span data-bind="text: selectedIcon() || 'No icon selected'"></span>
+        </div>
+
+        <!-- ko if: selectedIcon() -->
+        <button type="button"
+                class="action-secondary"
+                data-bind="click: clearIcon"
+                style="margin-left: 8px;">
+            <span data-bind="i18n: 'Clear'"></span>
+        </button>
+        <!-- /ko -->
+
+        <!-- ko if: $data.tooltip -->
+        <div class="field-tooltip">
+            <span class="field-tooltip-icon">?</span>
+            <div class="field-tooltip-content" data-bind="html: $data.tooltip.description"></div>
+        </div>
+        <!-- /ko -->
+    </div>
+
+    <!-- ko if: notice -->
+    <div class="admin__field-note" data-bind="html: notice"></div>
+    <!-- /ko -->
+
+    <!-- Modal -->
+    <!-- ko if: modalVisible -->
+    <div class="icon-picker-modal" data-bind="click: closeIconPicker">
+        <div class="icon-picker-content" data-bind="click: function(data, event) { event.stopPropagation(); }">
+            <div class="icon-picker-header">
+                <h2 data-bind="i18n: 'Select Icon'"></h2>
+                <button type="button" class="icon-picker-close" data-bind="click: closeIconPicker">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- ko if: searchEnabled -->
+            <div class="icon-picker-search">
+                <input type="text"
+                       data-bind="
+                           textInput: searchQuery,
+                           attr: {placeholder: 'Search icons...'}
+                       "/>
+            </div>
+            <!-- /ko -->
+
+            <div class="icon-picker-libraries">
+                <button type="button"
+                        class="icon-library-tab"
+                        data-bind="
+                            css: {active: currentLibrary === 'fontawesome'},
+                            click: switchLibrary.bind($data, 'fontawesome')
+                        ">
+                    Font Awesome
+                </button>
+                <button type="button"
+                        class="icon-library-tab"
+                        data-bind="
+                            css: {active: currentLibrary === 'material'},
+                            click: switchLibrary.bind($data, 'material')
+                        ">
+                    Material Icons
+                </button>
+                <button type="button"
+                        class="icon-library-tab"
+                        data-bind="
+                            css: {active: currentLibrary === 'bootstrap'},
+                            click: switchLibrary.bind($data, 'bootstrap')
+                        ">
+                    Bootstrap Icons
+                </button>
+            </div>
+
+            <div class="icon-picker-grid">
+                <div class="icon-grid" data-bind="foreach: getFilteredIcons()">
+                    <div class="icon-grid-item"
+                         data-bind="
+                            click: $parent.selectIcon.bind($parent, $data),
+                            css: {selected: $parent.selectedIcon() === $data}
+                         ">
+                        <i data-bind="attr: {class: $parent.getLibraryPrefix() + ' ' + $data}"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- Hidden input -->
+    <input type="hidden"
+           data-bind="
+               attr: {
+                   name: inputName,
+                   id: uid,
+                   disabled: disabled
+               },
+               value: value
+           "/>
+</div>

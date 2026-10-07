@@ -1,0 +1,31 @@
+<?php
+/**
+ * Hyva-Specific CSS Styles for MegaMenu
+ *
+ * Note: Hyva uses Tailwind CSS, not LESS compilation
+ * All styles are defined inline below to avoid LESS compilation errors
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ */
+?>
+
+<style>
+/* Additional Hyva-specific overrides */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Accessibility & Focus States */
+.panth-mega-menu__link:focus,
+.panth-mega-menu__link:focus-visible,
+.panth-mega-menu__image-card:focus,
+.panth-mega-menu__image-card:focus-visible,
+.panth-mega-menu__brand-logo:focus,
+.panth-mega-menu__brand-logo:focus-visible,
+.panth-mega-menu__icon-card:focus,
+.panth-mega-menu__icon-card:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+}
+</style>

@@ -1,0 +1,202 @@
+<?php
+/**
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+$baseUrl = rtrim($block->getBaseUrl(), '/') . '/';
+$flushUrl = $block->getUrl('panth_menu/menu/flushCache');
+$previewAccess = $block->getData('preview_access');
+$previewToken = $previewAccess instanceof \Panth\MegaMenu\Model\PreviewAccess ? $previewAccess->createToken() : '';
+?>
+<script type="text/javascript">
+    window.panthMenuPreviewToken = '<?= $escaper->escapeJs($previewToken) ?>';
+
+    (function () {
+        'use strict';
+
+        var previewUrl = '<?= $escaper->escapeJs($baseUrl) ?>panth_menu/preview/index';
+        var frameName = 'panth_megamenu_preview_frame';
+        var fieldNames = ['css_class', 'custom_css', 'container_bg_color', 'container_padding', 'container_margin',
+            'item_gap', 'container_max_width', 'container_border', 'container_border_radius',
+            'container_box_shadow', 'menu_alignment'];
+        var devices = {desktop: 1280, tablet: 768, mobile: 375};
+        var labels = {
+            title: '<?= $escaper->escapeJs(__('Menu Preview')) ?>',
+            desktop: '<?= $escaper->escapeJs(__('Desktop')) ?>',
+            tablet: '<?= $escaper->escapeJs(__('Tablet')) ?>',
+            mobile: '<?= $escaper->escapeJs(__('Mobile')) ?>',
+            refresh: '<?= $escaper->escapeJs(__('Refresh')) ?>',
+            loading: '<?= $escaper->escapeJs(__('Loading preview...')) ?>',
+            hint: '<?= $escaper->escapeJs(__('Unsaved changes are shown. Hover or tap a menu item to open its dropdown.')) ?>',
+            empty: '<?= $escaper->escapeJs(__('No menu items to preview.')) ?>',
+            frame: '<?= $escaper->escapeJs(__('Storefront menu preview')) ?>'
+        };
+        var state = {root: null, device: 'desktop', itemsJson: '[]'};
+
+        function readItems(done) {
+            var itemsJson = '[]';
+            var hiddenInput = document.querySelector('input[name="items_json"], textarea[name="items_json"]');
+            if (hiddenInput && hiddenInput.value && hiddenInput.value.length > 2) {
+                itemsJson = hiddenInput.value;
+            }
+            if (itemsJson === '[]' && Array.isArray(window.items)) {
+                itemsJson = JSON.stringify(window.items);
+            }
+            if (itemsJson === '[]' && window.menuBuilderData && window.menuBuilderData.items) {
+                itemsJson = JSON.stringify(window.menuBuilderData.items);
+            }
+            if (itemsJson !== '[]' && itemsJson.length > 2) {
+                done(itemsJson);
+                return;
+            }
+            require(['uiRegistry'], function (registry) {
+                var field = registry.get('panth_menu_form.panth_menu_form.menu_items.items_json');
+                var value = field && typeof field.value === 'function' ? field.value() : '';
+                if (value && value.length > 2) {
+                    done(value);
+                } else {
+                    window.alert(labels.empty);
+                }
+            });
+        }
+
+        function submitToFrame() {
+            var form = document.createElement('form');
+            var add = function (name, value) {
+                var input = document.createElement('textarea');
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            };
+            form.method = 'POST';
+            form.action = previewUrl + '?_t=' + Date.now();
+            form.target = frameName;
+            form.style.display = 'none';
+            add('items_json', state.itemsJson);
+            add('preview_token', window.panthMenuPreviewToken || '');
+            fieldNames.forEach(function (name) {
+                var el = document.querySelector('[name="' + name + '"]');
+                if (el && el.value) {
+                    add(name, el.value);
+                }
+            });
+            state.root.querySelector('.panth-mm-preview__loading').hidden = false;
+            document.body.appendChild(form);
+            form.submit();
+            window.setTimeout(function () { form.remove(); }, 1000);
+        }
+
+        function fit() {
+            if (!state.root) {
+                return;
+            }
+            var stage = state.root.querySelector('.panth-mm-preview__stage');
+            var viewport = state.root.querySelector('.panth-mm-preview__viewport');
+            var frame = state.root.querySelector('.panth-mm-preview__frame');
+            var width = devices[state.device];
+            var available = Math.max(stage.clientWidth - 32, 200);
+            var height = Math.max(stage.clientHeight - 32, 200);
+            var scale = Math.min(1, available / width);
+            frame.style.width = width + 'px';
+            frame.style.height = Math.round(height / scale) + 'px';
+            frame.style.transform = scale < 1 ? 'scale(' + scale.toFixed(4) + ')' : 'none';
+            viewport.style.width = Math.round(width * scale) + 'px';
+            viewport.style.height = height + 'px';
+            state.root.querySelector('.panth-mm-preview__scale').textContent =
+                width + 'px' + (scale < 1 ? ' (' + Math.round(scale * 100) + '%)' : '');
+        }
+
+        function setDevice(device) {
+            state.device = device;
+            state.root.querySelectorAll('[data-device]').forEach(function (button) {
+                var active = button.getAttribute('data-device') === device;
+                button.classList.toggle('action-secondary', active);
+                button.classList.toggle('action-default', !active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            fit();
+        }
+
+        function build($) {
+            var root = document.createElement('div');
+            root.className = 'panth-mm-preview';
+            root.innerHTML =
+                '<div class="panth-mm-preview__toolbar">' +
+                    '<div class="panth-mm-preview__devices" role="group"></div>' +
+                    '<span class="panth-mm-preview__scale"></span>' +
+                    '<button type="button" class="action-default panth-mm-preview__refresh"></button>' +
+                '</div>' +
+                '<p class="panth-mm-preview__hint"></p>' +
+                '<div class="panth-mm-preview__stage">' +
+                    '<div class="panth-mm-preview__viewport">' +
+                        '<iframe class="panth-mm-preview__frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>' +
+                    '</div>' +
+                    '<div class="panth-mm-preview__loading" role="status"><span class="spinner"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span class="panth-mm-preview__loading-text"></span></div>' +
+                '</div>';
+            var group = root.querySelector('.panth-mm-preview__devices');
+            Object.keys(devices).forEach(function (device) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'action-default';
+                button.setAttribute('data-device', device);
+                button.textContent = labels[device];
+                button.addEventListener('click', function () { setDevice(device); });
+                group.appendChild(button);
+            });
+            group.setAttribute('aria-label', labels.title);
+            root.querySelector('.panth-mm-preview__hint').textContent = labels.hint;
+            root.querySelector('.panth-mm-preview__loading-text').textContent = labels.loading;
+            var refresh = root.querySelector('.panth-mm-preview__refresh');
+            refresh.textContent = labels.refresh;
+            refresh.addEventListener('click', function () {
+                readItems(function (itemsJson) {
+                    state.itemsJson = itemsJson;
+                    submitToFrame();
+                });
+            });
+            var frame = root.querySelector('.panth-mm-preview__frame');
+            frame.name = frameName;
+            frame.title = labels.frame;
+            frame.addEventListener('load', function () {
+                root.querySelector('.panth-mm-preview__loading').hidden = true;
+            });
+            document.body.appendChild(root);
+            state.root = root;
+            $(root).modal({
+                type: 'popup',
+                title: labels.title,
+                modalClass: 'panth-mm-preview-modal',
+                buttons: [],
+                opened: fit
+            });
+            $(window).on('resize', fit);
+            setDevice(state.device);
+        }
+
+        function open(itemsJson) {
+            state.itemsJson = itemsJson;
+            require(['jquery', 'Magento_Ui/js/modal/modal'], function ($) {
+                if (!state.root) {
+                    build($);
+                }
+                $(state.root).modal('openModal');
+                fit();
+                submitToFrame();
+            });
+        }
+
+        window.panthPreviewMenu = function () {
+            readItems(open);
+        };
+
+        window.panthFlushAndPreview = function () {
+            var xhr = new XMLHttpRequest();
+            var formKey = document.querySelector('input[name="form_key"]');
+            xhr.open('POST', '<?= $escaper->escapeJs($flushUrl) ?>', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onloadend = function () { window.panthPreviewMenu(); };
+            xhr.send('form_key=' + encodeURIComponent(formKey ? formKey.value : (window.FORM_KEY || '')));
+        };
+    }());
+</script>

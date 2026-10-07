@@ -1,0 +1,552 @@
+<?php
+/**
+ * Panth MegaMenu - Mobile Menu Template (Luma)
+ *
+ * Mobile menu with Magento-style accordion pattern for all nesting levels
+ * Replaces slide navigation with standard accordion collapse/expand
+ *
+ * @category    Panth
+ * @package     Panth_MegaMenu
+ * @copyright   Copyright (c) 2025 Panth InfoTech
+ * @license     Proprietary
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+/** @var \Panth\MegaMenu\Block\Menu $block */
+$menuTree = $block->getCurrentMenuTree();
+$uniqueId = uniqid('mobile-menu-');
+
+// Return early if no menu items
+if (empty($menuTree)) {
+    return;
+}
+
+// Helper function to get item value (for consistency with array/object access)
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method && method_exists($item, $method) ? $item->$method() : $default;
+};
+
+// Animation speed from config (default 300ms)
+$animationSpeed = 300;
+?>
+
+<?php if ($menuTree && count($menuTree) > 0): ?>
+<div class="panth-megamenu-mobile-container" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>">
+    <!-- Mobile Menu Panel -->
+    <nav class="navigation mobile-navigation"
+         id="<?= $escaper->escapeHtmlAttr($uniqueId . '-nav') ?>"
+         role="navigation"
+         aria-label="<?= $escaper->escapeHtmlAttr(__('Mobile Menu')) ?>">
+
+        <!-- Menu Header -->
+        <div class="mobile-menu-header">
+            <button type="button"
+                    class="action close"
+                    data-action="close-nav"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Close Menu')) ?>">
+                <span class="close-icon" aria-hidden="true">&times;</span>
+            </button>
+            <h2 class="mobile-menu-title">
+                <?= $escaper->escapeHtml(__('Menu')) ?>
+            </h2>
+        </div>
+
+        <!-- Menu Items - Recursive accordion for all levels -->
+        <div class="mobile-menu-content">
+            <ul class="mobile-nav-list level0" role="menu">
+                <?php foreach ($menuTree as $index => $item): ?>
+                    <?php
+                    $isActive = $getValue($item, 'is_active', 'getIsActive', true);
+                    if (!$isActive) {
+                        continue;
+                    }
+
+                    $title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+                    $url = $escaper->escapeUrl($getValue($item, 'url', 'getUrl', '#'));
+                    $children = $getValue($item, 'children', 'getChildren', []);
+                    $hasChildren = !empty($children);
+                    $icon = $getValue($item, 'icon', 'getIcon', '');
+                    $itemId = $getValue($item, 'item_id', 'getItemId');
+                    ?>
+
+                    <li class="mobile-nav-item level0 <?= $hasChildren ? 'parent has-children' : '' /* @noEscape */ ?>"
+                        data-item-id="<?= (int) $itemId ?>"
+                        data-level="0">
+                        <a href="<?= /* @noEscape */ $url ?>" class="mobile-nav-link level0">
+                            <span class="link-content">
+                                <?php if ($icon): ?>
+                                    <span class="menu-icon <?= $escaper->escapeHtmlAttr($icon) ?>" aria-hidden="true"></span>
+                                <?php endif; ?>
+                                <span class="menu-label"><?= /* @noEscape */ $title ?></span>
+                            </span>
+                            <?php if ($hasChildren): ?>
+                                <button type="button"
+                                        class="submenu-toggle"
+                                        aria-expanded="false"
+                                        aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle %1 submenu', $title)) ?>">
+                                    <span class="toggle-icon" aria-hidden="true">+</span>
+                                </button>
+                            <?php endif; ?>
+                        </a>
+
+                        <?php if ($hasChildren): ?>
+                            <ul class="submenu level1" role="menu" style="display: none;">
+                                <?php foreach ($children as $childIndex => $child): ?>
+                                    <?php
+                                    $childIsActive = $getValue($child, 'is_active', 'getIsActive', true);
+                                    if (!$childIsActive) {
+                                        continue;
+                                    }
+                                    ?>
+                                    <?= /* @noEscape */ $block->getLayout()
+                                        ->createBlock(\Panth\MegaMenu\Block\MenuItem::class)
+                                        ->setTemplate('Panth_MegaMenu::luma/mobile/item.phtml')
+                                        ->setData('item', $child)
+                                        ->setData('level', 1)
+                                        ->setData('index', $childIndex)
+                                        ->toHtml() ?>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Overlay -->
+    <div class="mobile-menu-overlay"
+         data-action="close-nav"
+         aria-hidden="true"></div>
+</div>
+
+<script type="text/javascript">
+require([
+    'jquery'
+], function($) {
+    'use strict';
+
+    $(document).ready(function() {
+        var $container = $('#<?= $escaper->escapeJs($uniqueId) ?>');
+        var $nav = $container.find('.mobile-navigation');
+        var $overlay = $container.find('.mobile-menu-overlay');
+        var $closeBtn = $container.find('[data-action="close-nav"]');
+        var animationSpeed = <?= (int) $animationSpeed ?>;
+
+        /**
+         * Open mobile menu
+         */
+        function openMenu() {
+            $nav.addClass('active').attr('aria-hidden', 'false');
+            $overlay.addClass('active');
+            $('body').addClass('mobile-menu-open');
+
+            // Trap focus within menu
+            $nav.find('a, button').first().focus();
+
+            // Prevent body scroll
+            $('body').css('overflow', 'hidden');
+        }
+
+        /**
+         * Close mobile menu
+         */
+        function closeMenu() {
+            $nav.removeClass('active').attr('aria-hidden', 'true');
+            $overlay.removeClass('active');
+            $('body').removeClass('mobile-menu-open');
+
+            // Collapse all open submenus
+            $nav.find('.mobile-nav-item.active').removeClass('active');
+            $nav.find('.submenu:visible').slideUp(animationSpeed);
+            $nav.find('.submenu-toggle').attr('aria-expanded', 'false');
+
+            // Restore body scroll
+            $('body').css('overflow', '');
+        }
+
+        // Bind to Magento's default navigation toggle
+        $(document).on('click', '.action.nav-toggle, [data-action="toggle-nav"]', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if ($nav.hasClass('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        // Close button click
+        $closeBtn.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeMenu();
+        });
+
+        // Overlay click
+        $overlay.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeMenu();
+        });
+
+        // ESC key to close
+        $(document).on('keydown', function(e) {
+            if (e.keyCode === 27 && $nav.hasClass('active')) {
+                closeMenu();
+            }
+        });
+
+        /**
+         * Handle accordion submenu toggles for ALL nested levels
+         * This works recursively for unlimited menu depth
+         */
+        $nav.on('click', '.submenu-toggle', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $toggle = $(this);
+            var $item = $toggle.closest('.mobile-nav-item');
+            var $submenu = $item.find('> .submenu');
+            var isOpen = $item.hasClass('active');
+
+            if (isOpen) {
+                // Close this submenu and all nested submenus
+                $submenu.slideUp(animationSpeed, function() {
+                    $item.removeClass('active');
+                    $toggle.attr('aria-expanded', 'false');
+                    $toggle.find('.toggle-icon').text('+');
+
+                    // Close all nested submenus
+                    $submenu.find('.mobile-nav-item.active').removeClass('active');
+                    $submenu.find('.submenu').hide();
+                    $submenu.find('.submenu-toggle').attr('aria-expanded', 'false');
+                    $submenu.find('.toggle-icon').text('+');
+                });
+            } else {
+                // Close sibling submenus at the same level
+                $item.siblings('.active').each(function() {
+                    var $sibling = $(this);
+                    var $siblingSubmenu = $sibling.find('> .submenu');
+                    $siblingSubmenu.slideUp(animationSpeed, function() {
+                        $sibling.removeClass('active');
+                        $sibling.find('> .mobile-nav-link .submenu-toggle').attr('aria-expanded', 'false');
+                        $sibling.find('> .mobile-nav-link .toggle-icon').text('+');
+                    });
+                });
+
+                // Open this submenu
+                $submenu.slideDown(animationSpeed, function() {
+                    $item.addClass('active');
+                    $toggle.attr('aria-expanded', 'true');
+                    $toggle.find('.toggle-icon').text('−');
+                });
+            }
+
+            return false;
+        });
+
+        /**
+         * Prevent navigation on parent items (items with children)
+         * Allow normal navigation on leaf items (items without children)
+         */
+        $nav.on('click', '.mobile-nav-link', function(e) {
+            var $link = $(this);
+            var $item = $link.closest('.mobile-nav-item');
+            var $toggle = $link.find('.submenu-toggle');
+
+            // If item has children, prevent default and toggle submenu
+            if ($item.hasClass('has-children') || $item.hasClass('parent')) {
+                // If clicking on the toggle button, let it handle the event
+                if ($(e.target).closest('.submenu-toggle').length > 0) {
+                    return;
+                }
+
+                // Otherwise, trigger the toggle button
+                e.preventDefault();
+                $toggle.trigger('click');
+                return false;
+            }
+
+            // For leaf items without children, allow normal navigation
+            // Menu will close after navigation
+        });
+
+        /**
+         * Keyboard navigation support
+         */
+        $nav.on('keydown', '.mobile-nav-link', function(e) {
+            var $link = $(this);
+            var $item = $link.closest('.mobile-nav-item');
+
+            // Space or Enter on parent items toggles submenu
+            if ((e.keyCode === 32 || e.keyCode === 13) && ($item.hasClass('has-children') || $item.hasClass('parent'))) {
+                e.preventDefault();
+                $link.find('.submenu-toggle').trigger('click');
+                return false;
+            }
+        });
+    });
+});
+</script>
+
+<style type="text/css">
+/* Mobile Menu Container */
+.panth-megamenu-mobile-container {
+    display: block;
+}
+
+/* Mobile Navigation Panel */
+.mobile-navigation {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 300px;
+    max-width: 85%;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-navigation.active {
+    left: 0;
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile Menu Header */
+.mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: #1979c3;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-menu-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.mobile-menu-header .action.close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    transition: opacity 0.2s ease;
+}
+
+.mobile-menu-header .action.close:hover {
+    opacity: 0.8;
+}
+
+/* Mobile Menu Content */
+.mobile-menu-content {
+    padding: 0;
+}
+
+.mobile-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Mobile Nav Item */
+.mobile-nav-item {
+    position: relative;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mobile-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+    cursor: pointer;
+    gap: 8px;
+    min-width: 0; /* Allow flex item to shrink */
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:focus {
+    background: #fff;
+    color: #1979c3;
+    outline: none;
+}
+
+.mobile-nav-item.active > .mobile-nav-link {
+    background: #fff;
+    color: #1979c3;
+}
+
+/* Link Content */
+.link-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 10px;
+    min-width: 0; /* Allow flex item to shrink below content size */
+}
+
+.menu-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.menu-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    min-width: 0; /* Allow text to wrap or truncate */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Submenu Toggle Button */
+.submenu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.submenu-toggle:hover,
+.submenu-toggle:focus {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.toggle-icon {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    color: #666;
+    transition: transform 0.3s ease;
+}
+
+.mobile-nav-item.active > .mobile-nav-link .toggle-icon {
+    transform: rotate(45deg);
+}
+
+/* Submenu - Accordion Style */
+.submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: #f9f9f9;
+    display: none;
+}
+
+/* Nested submenu indentation */
+.submenu .mobile-nav-link {
+    padding-left: 40px;
+}
+
+.submenu .submenu .mobile-nav-link {
+    padding-left: 60px;
+}
+
+.submenu .submenu .submenu .mobile-nav-link {
+    padding-left: 80px;
+}
+
+.submenu .submenu .submenu .submenu .mobile-nav-link {
+    padding-left: 100px;
+}
+
+/* Level-specific font sizes */
+.mobile-nav-link.level0 {
+    font-size: 15px;
+}
+
+.mobile-nav-link.level1 {
+    font-size: 14px;
+}
+
+.mobile-nav-link.level2 {
+    font-size: 13px;
+}
+
+.mobile-nav-link.level3,
+.mobile-nav-link.level4,
+.mobile-nav-link.level5 {
+    font-size: 12px;
+}
+
+/* Touch Optimizations */
+@media (pointer: coarse) {
+    .mobile-nav-link {
+        min-height: 48px;
+        padding: 12px 20px;
+    }
+
+    .submenu-toggle {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* Body scroll lock when menu is open */
+body.mobile-menu-open {
+    overflow: hidden;
+}
+
+/* Hide on desktop */
+@media (min-width: 992px) {
+    .panth-megamenu-mobile-container {
+        display: none;
+    }
+}
+</style>
+<?php endif; ?>

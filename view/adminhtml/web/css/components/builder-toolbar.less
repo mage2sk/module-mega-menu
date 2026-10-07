@@ -1,0 +1,392 @@
+/**
+ * Builder Toolbar Component
+ * BEM Methodology: menu-builder-toolbar
+ */
+
+/* ============================================
+   Block: menu-builder-toolbar
+   ============================================ */
+.menu-builder-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mm-toolbar-gap);
+    align-items: center;
+    margin-top: var(--mm-space-4);
+    padding-top: var(--mm-space-4);
+    border-top: 1px solid var(--mm-neutral-300);
+    position: relative;
+    z-index: var(--mm-z-base);
+}
+
+/* ============================================
+   Element: toolbar-section
+   ============================================ */
+.menu-builder-toolbar .toolbar-section {
+    display: flex;
+    gap: var(--mm-space-2);
+    align-items: center;
+}
+
+/* ============================================
+   Element: toolbar-search
+   ============================================ */
+.menu-builder-toolbar .toolbar-search {
+    position: relative;
+    flex: 0 0 auto;
+    min-width: 200px;
+}
+
+.menu-builder-toolbar .toolbar-search .search-input {
+    width: 100%;
+    max-width: 300px;
+    height: var(--mm-toolbar-input-height);
+    padding: var(--mm-space-2) var(--mm-space-3) var(--mm-space-2) var(--mm-space-10);
+    border: 1px solid var(--mm-neutral-400);
+    border-radius: var(--mm-radius-md);
+    font-size: var(--mm-font-size-base);
+    color: var(--mm-neutral-800);
+    background: var(--mm-neutral-0);
+    transition: all var(--mm-transition-base);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.menu-builder-toolbar .toolbar-search .search-input::placeholder {
+    color: var(--mm-neutral-500);
+    font-style: italic;
+}
+
+.menu-builder-toolbar .toolbar-search .search-input:focus {
+    border-color: var(--mm-primary-500);
+    box-shadow: var(--mm-shadow-focus), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    outline: none;
+    background: var(--mm-neutral-0);
+}
+
+.menu-builder-toolbar .toolbar-search .search-input:focus + .search-icon {
+    color: var(--mm-primary-500);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Search Icon */
+.menu-builder-toolbar .toolbar-search .search-icon {
+    position: absolute;
+    left: var(--mm-space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--mm-neutral-500);
+    font-size: var(--mm-font-size-lg);
+    pointer-events: none;
+    transition: all var(--mm-transition-base);
+}
+
+/* Loading state for search */
+.menu-builder-toolbar .toolbar-search.is-loading .search-icon {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: translateY(-50%) rotate(0deg); }
+    to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ============================================
+   Element: toolbar-bulk-actions
+   ============================================ */
+.menu-builder-toolbar .toolbar-bulk-actions {
+    display: flex;
+    gap: var(--mm-space-2);
+    flex-wrap: wrap;
+}
+
+/* ============================================
+   Element: toolbar-btn (Modifier for all toolbar buttons)
+   ============================================ */
+.menu-builder-toolbar .toolbar-btn {
+    height: var(--mm-toolbar-btn-height);
+    padding: var(--mm-space-2) var(--mm-space-4);
+    font-size: var(--mm-font-size-base);
+    font-weight: var(--mm-font-weight-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mm-space-2);
+    border: 1px solid var(--mm-neutral-400);
+    border-radius: var(--mm-radius-md);
+    background: var(--mm-neutral-0);
+    color: var(--mm-neutral-800);
+    cursor: pointer;
+    transition: all var(--mm-transition-base);
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--mm-shadow-xs);
+}
+
+/* Hover state with lift effect */
+.menu-builder-toolbar .toolbar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mm-shadow-sm);
+    border-color: var(--mm-primary-500);
+    color: var(--mm-primary-500);
+    background: var(--mm-primary-50);
+}
+
+/* Active/pressed state */
+.menu-builder-toolbar .toolbar-btn:active {
+    transform: translateY(0);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus state for accessibility */
+.menu-builder-toolbar .toolbar-btn:focus-visible {
+    outline: 2px solid var(--mm-primary-500);
+    outline-offset: 2px;
+    box-shadow: var(--mm-shadow-focus);
+}
+
+/* Disabled state */
+.menu-builder-toolbar .toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: none;
+}
+
+/* ============================================
+   Button Variants (Modifiers)
+   ============================================ */
+
+/* Success variant (e.g., Load Demo) */
+.menu-builder-toolbar .toolbar-btn.toolbar-btn--success {
+    background: linear-gradient(135deg, var(--mm-success-500) 0%, #4cae4c 100%);
+    color: var(--mm-neutral-0);
+    border-color: #4cae4c;
+    font-weight: var(--mm-font-weight-semibold);
+}
+
+.menu-builder-toolbar .toolbar-btn.toolbar-btn--success:hover {
+    background: linear-gradient(135deg, #4cae4c 0%, var(--mm-success-700) 100%);
+    border-color: var(--mm-success-700);
+    color: var(--mm-neutral-0);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+/* Danger variant (e.g., Clear All) */
+.menu-builder-toolbar .toolbar-btn.action-delete {
+    background: var(--mm-neutral-0);
+    border-color: var(--mm-error-500);
+    color: var(--mm-error-500);
+}
+
+.menu-builder-toolbar .toolbar-btn.action-delete:hover {
+    background: var(--mm-error-500);
+    border-color: var(--mm-error-700);
+    color: var(--mm-neutral-0);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+/* ============================================
+   Loading State for Buttons
+   ============================================ */
+.menu-builder-toolbar .toolbar-btn.is-loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.menu-builder-toolbar .toolbar-btn.is-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.menu-builder-toolbar .toolbar-btn.is-loading span {
+    opacity: 0;
+}
+
+/* ============================================
+   Icon Enhancement in Buttons
+   ============================================ */
+.menu-builder-toolbar .toolbar-btn > span:first-child {
+    font-size: var(--mm-font-size-lg);
+    line-height: 1;
+    transition: transform var(--mm-transition-base);
+}
+
+.menu-builder-toolbar .toolbar-btn:hover > span:first-child {
+    transform: scale(1.15);
+}
+
+/* Specific icon animations */
+.menu-builder-toolbar .toolbar-btn:hover > span:first-child:is([data-icon="expand"]) {
+    animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2) translateY(-2px); }
+}
+
+/* ============================================
+   Separator Between Toolbar Sections
+   ============================================ */
+.menu-builder-toolbar .toolbar-section + .toolbar-section::before {
+    content: '';
+    width: 1px;
+    height: 24px;
+    background: var(--mm-neutral-300);
+    margin: 0 var(--mm-space-2);
+    align-self: center;
+}
+
+/* ============================================
+   Badge/Counter for Buttons
+   ============================================ */
+.menu-builder-toolbar .toolbar-btn[data-count]::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--mm-error-500);
+    color: var(--mm-neutral-0);
+    font-size: 11px;
+    font-weight: var(--mm-font-weight-bold);
+    border-radius: var(--mm-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: pop 0.3s var(--mm-ease-bounce);
+}
+
+@keyframes pop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* ============================================
+   Responsive Design - Tablet
+   ============================================ */
+@media (max-width: 1024px) {
+    .menu-builder-toolbar {
+        gap: var(--mm-space-3);
+    }
+
+    .menu-builder-toolbar .toolbar-search {
+        flex: 1 1 auto;
+        min-width: 150px;
+    }
+
+    .menu-builder-toolbar .toolbar-search .search-input {
+        max-width: 100%;
+    }
+
+    .menu-builder-toolbar .toolbar-bulk-actions {
+        flex: 1 1 100%;
+    }
+}
+
+/* ============================================
+   Responsive Design - Mobile
+   ============================================ */
+@media (max-width: 768px) {
+    .menu-builder-toolbar {
+        gap: var(--mm-space-2);
+        padding-top: var(--mm-space-3);
+        margin-top: var(--mm-space-3);
+    }
+
+    .menu-builder-toolbar .toolbar-section {
+        width: 100%;
+    }
+
+    .menu-builder-toolbar .toolbar-search {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .menu-builder-toolbar .toolbar-search .search-input {
+        max-width: 100%;
+        height: 40px;
+        font-size: var(--mm-font-size-md);
+    }
+
+    .menu-builder-toolbar .toolbar-bulk-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .menu-builder-toolbar .toolbar-btn {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+        padding: var(--mm-space-2) var(--mm-space-3);
+        font-size: var(--mm-font-size-sm);
+    }
+
+    /* Hide text on small buttons, keep icons only */
+    .menu-builder-toolbar .toolbar-btn > span:last-child {
+        display: none;
+    }
+
+    .menu-builder-toolbar .toolbar-btn > span:first-child {
+        margin: 0;
+    }
+
+    /* Remove separator on mobile */
+    .menu-builder-toolbar .toolbar-section + .toolbar-section::before {
+        display: none;
+    }
+}
+
+/* ============================================
+   Touch-Friendly Enhancements
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+    .menu-builder-toolbar .toolbar-btn {
+        min-height: 44px; /* iOS minimum touch target */
+        padding: var(--mm-space-3) var(--mm-space-4);
+    }
+
+    .menu-builder-toolbar .toolbar-search .search-input {
+        min-height: 44px;
+        font-size: 16px; /* Prevent iOS zoom on focus */
+    }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+    .menu-builder-toolbar {
+        display: none;
+    }
+}
+
+/* ============================================
+   High Contrast Mode
+   ============================================ */
+@media (prefers-contrast: high) {
+    .menu-builder-toolbar .toolbar-btn {
+        border-width: 2px;
+        font-weight: var(--mm-font-weight-semibold);
+    }
+
+    .menu-builder-toolbar .toolbar-search .search-input {
+        border-width: 2px;
+    }
+}

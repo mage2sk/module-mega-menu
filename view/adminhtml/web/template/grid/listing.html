@@ -1,0 +1,41 @@
+<!--
+/**
+ * Grid Listing Template
+ * Enhanced template for drag and drop functionality
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<div class="admin__data-grid-wrap" data-role="grid-wrapper" css="$._wrapCss">
+    <table class="data-grid" data-role="grid">
+        <caption class="admin__data-grid-caption" text="caption"/>
+        <thead if="!headerTmpl" class="data-grid-thead">
+            <tr class="data-grid-tr">
+                <th each="$elems: function($row) { return $row._elems; }"
+                    repeat="foreach: $elems, item: '$col'"
+                    class="data-grid-th"
+                    attr="'data-column': $col.index"
+                    css="$col._headerCss">
+                    <render args="$col.headerTmpl"/>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="data-grid-tbody" afterRender="attachDragDropHandlers">
+            <render args="rowsTmpl"/>
+        </tbody>
+    </table>
+
+    <div class="admin__data-grid-loading-mask" visible="loading">
+        <div class="spinner">
+            <span/>
+            <span/>
+            <span/>
+            <span/>
+            <span/>
+            <span/>
+            <span/>
+            <span/>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,69 @@
+<?php
+/**
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->isEnabled()) {
+    return;
+}
+
+$menuTree = $block->getCurrentMenuTree();
+if (empty($menuTree)) {
+    return;
+}
+
+$menu = $block->getCurrentMenu();
+$helper = $block->getMenuHelper();
+$breakpoint = (int) $block->getMobileBreakpoint();
+$menuCss = $menu ? trim((string) $menu->getCustomCss()) : '';
+$globalCss = trim((string) $helper->getCustomCss());
+
+$block->setData('pmm_items', $menuTree);
+$block->setData('pmm_config', [
+    'source' => 'menu',
+    'renderer' => $block->getMenuRenderer(),
+    'menu' => $menu,
+    'max_depth' => (int) ($helper->getMaxDepth() ?: 5),
+    'show_icons' => (bool) $helper->showIcons(),
+    'show_images' => (bool) $helper->showImages(),
+    'show_count' => (bool) $helper->showCategoryCount(),
+    'enable_blocks' => (bool) $helper->isCustomBlocksEnabled(),
+    'hover_delay' => (int) $helper->getHoverIntentDelay(),
+    'hover_effect' => (string) ($helper->getHoverEffect() ?: 'underline'),
+    'animation' => (string) ($helper->getAnimationType() ?: 'slide'),
+    'speed' => (int) $helper->getAnimationDuration(),
+    'mobile_position' => (string) ($helper->getMobilePosition() ?: 'left'),
+    'breakpoint' => $breakpoint > 0 ? $breakpoint : 1023,
+    'toggle_label' => ($block->getData('menu_identifier') && $menu) ? (string) $menu->getTitle() : '',
+    'nav_label' => $menu && $block->getData('menu_identifier') ? (string) $menu->getTitle() : (string) __('Main menu'),
+    'css_class' => $menu ? (string) $menu->getCssClass() : '',
+    'custom_css' => trim($globalCss . "\n" . $menuCss),
+    'js_url' => $block->getViewFileUrl('Panth_MegaMenu::js/pmm.js'),
+    'icon_css' => $block->getViewFileUrl('Panth_MegaMenu::css/fontawesome/all.min.css'),
+    'timezone' => (string) ($helper->getConfigValue('general/locale/timezone') ?: 'UTC'),
+]);
+?>
+<?php if ($breakpoint > 0): ?>
+<style>
+@media (min-width: 768px) {
+    .header.content:has(> .pmm) { display: flex !important; align-items: center; flex-wrap: nowrap; gap: 8px; }
+    .header.content:has(> .pmm) > .logo { order: 1; flex-shrink: 0; float: none !important; margin: 0 !important; padding: 8px 0; }
+    .header.content > .pmm { order: 2; flex: 1 1 0%; min-width: 0; margin: 0 12px; }
+    .header.content:has(> .pmm) > .panth-header-icons { order: 3; flex-shrink: 0; }
+    .header.content:has(> .pmm) > .panth-search-bar { order: 4; }
+    .header.content:has(> .pmm) > .block-search { order: 3; flex: 0 0 auto; float: none; width: 220px; margin: 0; padding: 0; }
+    .header.content:has(> .pmm) > .minicart-wrapper { order: 4; flex-shrink: 0; float: none; margin: 0 0 0 8px; }
+    .header.content:has(> .pmm) > .action.nav-toggle,
+    .header.content:has(> .pmm) > .compare.wrapper,
+    .header.content:has(> .panth-header-icons) > .block-search,
+    .header.content:has(> .panth-header-icons) > .minicart-wrapper { display: none !important; }
+}
+@media (max-width: 767px) {
+    .header.content:has(> .pmm) { position: relative; }
+    .header.content:has(> .pmm) > .action.nav-toggle { display: none !important; }
+    .header.content > .pmm { position: absolute; top: 16px; left: 8px; z-index: 5; }
+}
+</style>
+<?php endif; ?>
+<?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Panth_MegaMenu::pmm/render.phtml')) ?>

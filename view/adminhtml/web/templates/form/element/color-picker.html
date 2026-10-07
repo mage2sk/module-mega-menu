@@ -1,0 +1,73 @@
+<!--
+/**
+ * Color Picker Template
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<div class="admin__field" data-bind="css: additionalClasses, attr: {name: inputName}">
+    <label class="admin__field-label" data-bind="attr: {for: uid}">
+        <span data-bind="i18n: label"></span>
+    </label>
+
+    <div class="admin__field-control color-picker-container">
+        <div class="color-picker-trigger" data-bind="click: togglePicker">
+            <div class="color-preview" data-bind="attr: {style: getColorStyle()}"></div>
+            <span class="color-picker-value" data-bind="text: value() || 'No color selected'"></span>
+        </div>
+
+        <!-- ko if: pickerVisible -->
+        <div class="color-picker-dropdown">
+            <!-- ko if: showPalette -->
+            <div class="color-palette" data-bind="foreach: palette">
+                <div class="color-palette-item"
+                     data-bind="
+                        style: {backgroundColor: $data},
+                        click: $parent.selectPaletteColor.bind($parent, $data)
+                     "></div>
+            </div>
+            <!-- /ko -->
+
+            <!-- ko if: showInput -->
+            <div class="color-input-group">
+                <input type="text"
+                       data-bind="
+                           value: value,
+                           attr: {placeholder: 'Enter color code'}
+                       "/>
+                <!-- ko if: allowEmpty -->
+                <button type="button"
+                        class="action-secondary"
+                        data-bind="click: clearColor">
+                    <span data-bind="i18n: 'Clear'"></span>
+                </button>
+                <!-- /ko -->
+            </div>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+
+        <!-- ko if: $data.tooltip -->
+        <div class="field-tooltip">
+            <span class="field-tooltip-icon">?</span>
+            <div class="field-tooltip-content" data-bind="html: $data.tooltip.description"></div>
+        </div>
+        <!-- /ko -->
+    </div>
+
+    <!-- ko if: notice -->
+    <div class="admin__field-note" data-bind="html: notice"></div>
+    <!-- /ko -->
+
+    <!-- Hidden input -->
+    <input type="hidden"
+           data-bind="
+               attr: {
+                   name: inputName,
+                   id: uid,
+                   disabled: disabled
+               },
+               value: value
+           "/>
+</div>

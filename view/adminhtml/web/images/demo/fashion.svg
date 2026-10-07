@@ -1,0 +1,14 @@
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="200" fill="#f8f9fa"/>
+  <!-- T-Shirt Icon -->
+  <g transform="translate(150, 70)">
+    <!-- Shirt body -->
+    <rect x="-30" y="0" width="60" height="40" rx="2" fill="none" stroke="#495057" stroke-width="3"/>
+    <!-- Sleeves -->
+    <path d="M -30 5 L -45 15 L -45 25 L -30 20" fill="none" stroke="#495057" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M 30 5 L 45 15 L 45 25 L 30 20" fill="none" stroke="#495057" stroke-width="3" stroke-linejoin="round"/>
+    <!-- Collar/Neckline -->
+    <path d="M -15 0 Q -10 -8 0 -8 Q 10 -8 15 0" fill="none" stroke="#495057" stroke-width="3"/>
+  </g>
+  <text x="150" y="130" font-family="Arial, sans-serif" font-size="18" fill="#6c757d" text-anchor="middle" font-weight="600">Fashion</text>
+</svg>

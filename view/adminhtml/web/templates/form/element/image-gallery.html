@@ -1,0 +1,91 @@
+<!--
+/**
+ * Image Gallery Template
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ */
+-->
+<div class="admin__field" data-bind="css: additionalClasses, attr: {name: inputName}">
+    <label class="admin__field-label" data-bind="attr: {for: uid}">
+        <span data-bind="i18n: label"></span>
+    </label>
+
+    <div class="admin__field-control">
+        <div class="image-gallery-container">
+            <!-- ko if: images.length > 0 -->
+            <div class="image-gallery-grid" data-bind="foreach: images">
+                <div class="image-gallery-item">
+                    <img data-bind="attr: {src: url, alt: file}"/>
+                    <div class="image-gallery-actions">
+                        <!-- ko if: $index() > 0 && $parent.enableSorting -->
+                        <button type="button"
+                                data-bind="click: $parent.moveImageUp.bind($parent, $index())"
+                                title="Move Up">
+                            <span>&uarr;</span>
+                        </button>
+                        <!-- /ko -->
+
+                        <!-- ko if: $index() < $parent.images.length - 1 && $parent.enableSorting -->
+                        <button type="button"
+                                data-bind="click: $parent.moveImageDown.bind($parent, $index())"
+                                title="Move Down">
+                            <span>&darr;</span>
+                        </button>
+                        <!-- /ko -->
+
+                        <button type="button"
+                                data-bind="click: $parent.removeImage.bind($parent, $index())"
+                                title="Remove">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /ko -->
+
+            <div class="image-gallery-uploader">
+                <input type="file"
+                       data-bind="
+                           attr: {
+                               id: uid + '_uploader',
+                               accept: 'image/*',
+                               multiple: true
+                           },
+                           event: {change: addImage}
+                       "/>
+                <label data-bind="attr: {for: uid + '_uploader'}">
+                    <button type="button"
+                            class="image-upload-button"
+                            data-bind="disable: !canAddMore()">
+                        <span>+</span>
+                        <span data-bind="i18n: 'Add Images'"></span>
+                        <span data-bind="text: '(' + images.length + '/' + maxImages + ')'"></span>
+                    </button>
+                </label>
+            </div>
+        </div>
+
+        <!-- ko if: $data.tooltip -->
+        <div class="field-tooltip">
+            <span class="field-tooltip-icon">?</span>
+            <div class="field-tooltip-content" data-bind="html: $data.tooltip.description"></div>
+        </div>
+        <!-- /ko -->
+    </div>
+
+    <!-- ko if: notice -->
+    <div class="admin__field-note" data-bind="html: notice"></div>
+    <!-- /ko -->
+
+    <!-- Hidden input -->
+    <input type="hidden"
+           data-bind="
+               attr: {
+                   name: inputName,
+                   id: uid,
+                   disabled: disabled
+               },
+               value: value
+           "/>
+</div>

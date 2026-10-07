@@ -1,0 +1,40 @@
+<?php
+/**
+ * @var \Panth\MegaMenu\Block\Preview $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$menuTree = $block->getCurrentMenuTree();
+if (empty($menuTree)) {
+    echo '<p class="pmm-preview-empty">' . $escaper->escapeHtml(__('No menu items to preview.')) . '</p>';
+    return;
+}
+
+$menu = $block->getCurrentMenu();
+$helper = $block->getMenuHelper();
+$breakpoint = (int) $block->getMobileBreakpoint();
+
+$block->setData('pmm_items', $menuTree);
+$block->setData('pmm_config', [
+    'source' => 'menu',
+    'preview' => true,
+    'renderer' => $block->getMenuRenderer(),
+    'menu' => $menu,
+    'max_depth' => (int) ($helper->getMaxDepth() ?: 5),
+    'show_icons' => (bool) $helper->showIcons(),
+    'show_images' => (bool) $helper->showImages(),
+    'show_count' => (bool) $helper->showCategoryCount(),
+    'enable_blocks' => (bool) $helper->isCustomBlocksEnabled(),
+    'hover_delay' => (int) $helper->getHoverIntentDelay(),
+    'hover_effect' => (string) ($helper->getHoverEffect() ?: 'underline'),
+    'animation' => (string) ($helper->getAnimationType() ?: 'slide'),
+    'mobile_position' => (string) ($helper->getMobilePosition() ?: 'left'),
+    'breakpoint' => $breakpoint > 0 ? $breakpoint : 1023,
+    'nav_label' => (string) __('Menu preview'),
+    'css_class' => $menu ? (string) $menu->getCssClass() : '',
+    'custom_css' => $menu ? (string) $menu->getCustomCss() : '',
+    'js_url' => $block->getViewFileUrl('Panth_MegaMenu::js/pmm.js'),
+    'timezone' => (string) ($helper->getConfigValue('general/locale/timezone') ?: 'UTC'),
+]);
+?>
+<?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Panth_MegaMenu::pmm/render.phtml')) ?>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Panth_MegaMenu::css/pmm.css"/>
+    </head>
+    <body>
+        <referenceContainer name="header-wrapper">
+            <block class="Panth\MegaMenu\Block\Menu"
+                   name="megamenu.main"
+                   template="Panth_MegaMenu::luma/menu.phtml"
+                   after="logo"
+                   ifconfig="panth_megamenu/general/enabled">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Panth\MegaMenu\ViewModel\Menu</argument>
+                    <argument name="css_classes" xsi:type="string">megamenu-responsive</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

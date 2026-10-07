@@ -1,0 +1,349 @@
+<?php
+/**
+ * Panth MegaMenu - Simplified Mobile Menu (Luma)
+ *
+ * Works with Magento's existing mobile toggle button
+ * No need to render our own toggle - just the menu panel
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+/** @var \Panth\MegaMenu\Block\Menu $block */
+$menuTree = $block->getCurrentMenuTree();
+$uniqueId = uniqid('panth-mobile-');
+
+// Helper function
+$getValue = function($item, $key, $method = null, $default = null) {
+    if (is_array($item)) {
+        return $item[$key] ?? $default;
+    }
+    return $method && method_exists($item, $method) ? $item->$method() : $default;
+};
+?>
+
+<!-- PANTH MOBILE MENU LOADED -->
+<div class="panth-mobile-menu-wrapper">
+    <nav class="panth-mobile-navigation"
+         id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>"
+         role="navigation"
+         aria-label="<?= $escaper->escapeHtmlAttr(__('Mobile Menu')) ?>"
+         aria-hidden="true">
+
+        <!-- Menu Header -->
+        <div class="panth-mobile-header">
+            <h2 class="panth-mobile-title"><?= $escaper->escapeHtml(__('Menu')) ?></h2>
+            <button type="button"
+                    class="panth-mobile-close"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Close Menu')) ?>">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <!-- Menu Content -->
+        <div class="panth-mobile-content">
+            <?php if (!empty($menuTree)): ?>
+            <ul class="panth-mobile-list">
+                <?php foreach ($menuTree as $item): ?>
+                    <?php
+                    $isActive = $getValue($item, 'is_active', 'getIsActive', true);
+                    if (!$isActive) continue;
+
+                    $title = $escaper->escapeHtml($getValue($item, 'title', 'getTitle', ''));
+                    $url = $escaper->escapeUrl($getValue($item, 'url', 'getUrl', '#'));
+                    $children = $getValue($item, 'children', 'getChildren', []);
+                    $hasChildren = !empty($children);
+                    $icon = $getValue($item, 'icon', 'getIconClass', '');
+                    ?>
+                    <li class="panth-mobile-item <?= $hasChildren ? 'has-children' : '' /* @noEscape */ ?>">
+                        <a href="<?= /* @noEscape */ $url ?>" class="panth-mobile-link">
+                            <?php if ($icon): ?>
+                                <span class="menu-icon <?= $escaper->escapeHtmlAttr($icon) ?>"></span>
+                            <?php endif; ?>
+                            <span class="menu-text"><?= /* @noEscape */ $title ?></span>
+                            <?php if ($hasChildren): ?>
+                                <button type="button" class="submenu-toggle" aria-expanded="false">
+                                    <span>+</span>
+                                </button>
+                            <?php endif; ?>
+                        </a>
+
+                        <?php if ($hasChildren): ?>
+                            <ul class="panth-mobile-submenu" style="display: none;">
+                                <?php foreach ($children as $child): ?>
+                                    <?php
+                                    $childActive = $getValue($child, 'is_active', 'getIsActive', true);
+                                    if (!$childActive) continue;
+
+                                    $childTitle = $escaper->escapeHtml($getValue($child, 'title', 'getTitle', ''));
+                                    $childUrl = $escaper->escapeUrl($getValue($child, 'url', 'getUrl', '#'));
+                                    $childIcon = $getValue($child, 'icon', 'getIconClass', '');
+                                    ?>
+                                    <li class="panth-mobile-item">
+                                        <a href="<?= /* @noEscape */ $childUrl ?>" class="panth-mobile-link">
+                                            <?php if ($childIcon): ?>
+                                                <span class="menu-icon <?= $escaper->escapeHtmlAttr($childIcon) ?>"></span>
+                                            <?php endif; ?>
+                                            <span class="menu-text"><?= /* @noEscape */ $childTitle ?></span>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <?php else: ?>
+            <p class="panth-mobile-empty"><?= $escaper->escapeHtml(__('No menu items available.')) ?></p>
+            <?php endif; ?>
+        </div>
+    </nav>
+
+    <!-- Overlay -->
+    <div class="panth-mobile-overlay" aria-hidden="true"></div>
+</div>
+
+<script type="text/javascript">
+
+require(['jquery'], function($) {
+    'use strict';
+
+
+    $(document).ready(function() {
+
+        var $nav = $('.panth-mobile-navigation');
+        var $overlay = $('.panth-mobile-overlay');
+        var $body = $('body');
+
+            nav: $nav.length,
+            overlay: $overlay.length,
+            toggleButtons: $('[data-action="toggle-nav"]').length
+        });
+
+        // Open menu function
+        function openMenu() {
+            $nav.addClass('active').attr('aria-hidden', 'false');
+            $overlay.addClass('active');
+            $body.addClass('panth-menu-open').css('overflow', 'hidden');
+        }
+
+        // Close menu function
+        function closeMenu() {
+            $nav.removeClass('active').attr('aria-hidden', 'true');
+            $overlay.removeClass('active');
+            $body.removeClass('panth-menu-open').css('overflow', '');
+        }
+
+        // Bind to ANY element with data-action="toggle-nav" (Magento's default)
+        $(document).on('click', '[data-action="toggle-nav"]', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if ($nav.hasClass('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+
+            return false;
+        });
+
+        // Close button
+        $('.panth-mobile-close').on('click', function(e) {
+            e.preventDefault();
+            closeMenu();
+        });
+
+        // Overlay click
+        $overlay.on('click', function(e) {
+            e.preventDefault();
+            closeMenu();
+        });
+
+        // ESC key
+        $(document).on('keydown', function(e) {
+            if (e.keyCode === 27 && $nav.hasClass('active')) {
+                closeMenu();
+            }
+        });
+
+        // Submenu toggles
+        $(document).on('click', '.panth-mobile-navigation .submenu-toggle', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $toggle = $(this);
+            var $item = $toggle.closest('.panth-mobile-item');
+            var $submenu = $item.find('> .panth-mobile-submenu');
+
+            if ($item.hasClass('active')) {
+                $submenu.slideUp(200);
+                $item.removeClass('active');
+                $toggle.attr('aria-expanded', 'false');
+                $toggle.find('span').text('+');
+            } else {
+                $submenu.slideDown(200);
+                $item.addClass('active');
+                $toggle.attr('aria-expanded', 'true');
+                $toggle.find('span').text('-');
+            }
+        });
+    });
+});
+</script>
+
+<style type="text/css">
+/* Mobile Navigation Panel */
+.panth-mobile-navigation {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 85%;
+    max-width: 360px;
+    height: 100%;
+    background: #fff;
+    z-index: 9999;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+}
+
+.panth-mobile-navigation.active {
+    left: 0;
+}
+
+/* Header */
+.panth-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.panth-mobile-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.panth-mobile-close {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+}
+
+.panth-mobile-close:hover {
+    color: #000;
+}
+
+/* Content */
+.panth-mobile-content {
+    padding: 10px 0;
+}
+
+.panth-mobile-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.panth-mobile-item {
+    border-bottom: 1px solid #eee;
+}
+
+.panth-mobile-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    position: relative;
+}
+
+.panth-mobile-link:hover {
+    background: #f5f5f5;
+    color: #1979c3;
+}
+
+.menu-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Submenu Toggle */
+.submenu-toggle {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+}
+
+.submenu-toggle:hover {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+/* Submenu */
+.panth-mobile-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: #f9f9f9;
+}
+
+.panth-mobile-submenu .panth-mobile-link {
+    padding-left: 50px;
+    font-size: 14px;
+}
+
+/* Overlay */
+.panth-mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.panth-mobile-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Body class */
+body.panth-menu-open {
+    overflow: hidden !important;
+}
+
+/* Hide on desktop */
+@media (min-width: 768px) {
+    .panth-mobile-menu-wrapper {
+        display: none !important;
+    }
+}
+</style>

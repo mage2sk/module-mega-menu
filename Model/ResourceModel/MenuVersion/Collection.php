@@ -1,0 +1,46 @@
+<?php
+declare(strict_types=1);
+
+namespace Panth\MegaMenu\Model\ResourceModel\MenuVersion;
+
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Panth\MegaMenu\Model\MenuVersion as MenuVersionModel;
+use Panth\MegaMenu\Model\ResourceModel\MenuVersion as MenuVersionResource;
+
+class Collection extends AbstractCollection
+{
+    protected $_idFieldName = 'version_id';
+
+    protected $_eventPrefix = 'panth_megamenu_menu_version_collection';
+
+    protected $_eventObject = 'menu_version_collection';
+
+    protected function _construct()
+    {
+        $this->_init(MenuVersionModel::class, MenuVersionResource::class);
+    }
+
+    public function addMenuFilter(int $menuId)
+    {
+        $this->addFieldToFilter('menu_id', $menuId);
+        return $this;
+    }
+
+    public function addVersionNumberFilter(int $versionNumber)
+    {
+        $this->addFieldToFilter('version_number', $versionNumber);
+        return $this;
+    }
+
+    public function orderByVersionDesc()
+    {
+        $this->setOrder('version_number', 'DESC');
+        return $this;
+    }
+
+    public function orderByCreatedAtDesc()
+    {
+        $this->setOrder('created_at', 'DESC');
+        return $this;
+    }
+}

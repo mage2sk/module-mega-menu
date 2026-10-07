@@ -1,0 +1,38 @@
+<?php
+/**
+ * Theme Configuration Template
+ *
+ * Outputs theme configuration data to JavaScript for frontend consumption.
+ * This makes theme information available to JavaScript components.
+ *
+ * @category  Panth
+ * @package   Panth_MegaMenu
+ * @author    Panth
+ * @copyright Copyright (c) Panth
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Panth\MegaMenu\Helper\Theme $themeHelper
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+/** @var \Panth\MegaMenu\Helper\Theme $themeHelper */
+$themeHelper = $block->getData('theme_helper');
+
+if (!$themeHelper) {
+    return;
+}
+
+$themeConfig = $themeHelper->getThemeConfig();
+
+// Add configuration to window object for JavaScript access
+?>
+<script type="text/javascript">
+    window.panthMegaMenuTheme = <?= /* @noEscape */ json_encode($themeConfig, JSON_PRETTY_PRINT) ?>;
+
+    // Convenience methods for JavaScript
+    window.panthMegaMenu = window.panthMegaMenu || {};
+    window.panthMegaMenu.isHyva = <?= $themeHelper->isHyva() ? 'true' : 'false' /* @noEscape */ ?>;
+    window.panthMegaMenu.isLuma = <?= $themeHelper->isLuma() ? 'true' : 'false' /* @noEscape */ ?>;
+    window.panthMegaMenu.useAlpine = <?= $themeHelper->useAlpineJs() ? 'true' : 'false' /* @noEscape */ ?>;
+    window.panthMegaMenu.useKnockout = <?= $themeHelper->useKnockoutJs() ? 'true' : 'false' /* @noEscape */ ?>;
+</script>

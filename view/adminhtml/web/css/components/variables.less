@@ -1,0 +1,215 @@
+/**
+ * CSS Custom Properties (Variables) for MegaMenu Builder
+ * Modern theming system with semantic naming
+ */
+
+:root {
+    /* ============================================
+       Color Palette - Primary & Brand
+       ============================================ */
+    --mm-primary-50: #e3f2fd;
+    --mm-primary-100: #bbdefb;
+    --mm-primary-200: #90caf9;
+    --mm-primary-300: #64b5f6;
+    --mm-primary-400: #42a5f5;
+    --mm-primary-500: #1979c3;
+    --mm-primary-600: #1565c0;
+    --mm-primary-700: #1976d2;
+    --mm-primary-800: #1565c0;
+    --mm-primary-900: #0d47a1;
+
+    /* ============================================
+       Color Palette - Neutrals
+       ============================================ */
+    --mm-neutral-0: #ffffff;
+    --mm-neutral-50: #fafafa;
+    --mm-neutral-100: #f5f5f5;
+    --mm-neutral-200: #eeeeee;
+    --mm-neutral-300: #e3e3e3;
+    --mm-neutral-400: #ddd;
+    --mm-neutral-500: #999;
+    --mm-neutral-600: #888;
+    --mm-neutral-700: #666;
+    --mm-neutral-800: #333;
+    --mm-neutral-900: #1a1a1a;
+
+    /* ============================================
+       Color Palette - Semantic Colors
+       ============================================ */
+    --mm-success-50: #e8f5e9;
+    --mm-success-500: #4caf50;
+    --mm-success-700: #2e7d32;
+
+    --mm-error-50: #ffebee;
+    --mm-error-500: #f44336;
+    --mm-error-700: #c62828;
+
+    --mm-warning-50: #fff3e0;
+    --mm-warning-500: #ff9800;
+    --mm-warning-700: #e65100;
+
+    --mm-info-50: #e3f2fd;
+    --mm-info-500: #2196f3;
+    --mm-info-700: #1565c0;
+
+    /* ============================================
+       Spacing Scale (8px base)
+       ============================================ */
+    --mm-space-0: 0;
+    --mm-space-1: 0.25rem;  /* 4px */
+    --mm-space-2: 0.5rem;   /* 8px */
+    --mm-space-3: 0.75rem;  /* 12px */
+    --mm-space-4: 1rem;     /* 16px */
+    --mm-space-5: 1.25rem;  /* 20px */
+    --mm-space-6: 1.5rem;   /* 24px */
+    --mm-space-8: 2rem;     /* 32px */
+    --mm-space-10: 2.5rem;  /* 40px */
+    --mm-space-12: 3rem;    /* 48px */
+    --mm-space-16: 4rem;    /* 64px */
+
+    /* ============================================
+       Typography Scale
+       ============================================ */
+    --mm-font-size-xs: 0.6875rem;  /* 11px */
+    --mm-font-size-sm: 0.75rem;    /* 12px */
+    --mm-font-size-base: 0.8125rem; /* 13px */
+    --mm-font-size-md: 0.875rem;   /* 14px */
+    --mm-font-size-lg: 0.9375rem;  /* 15px */
+    --mm-font-size-xl: 1.125rem;   /* 18px */
+    --mm-font-size-2xl: 1.25rem;   /* 20px */
+
+    --mm-font-weight-normal: 400;
+    --mm-font-weight-medium: 500;
+    --mm-font-weight-semibold: 600;
+    --mm-font-weight-bold: 700;
+
+    --mm-line-height-tight: 1.25;
+    --mm-line-height-normal: 1.5;
+    --mm-line-height-relaxed: 1.75;
+
+    /* ============================================
+       Border Radius
+       ============================================ */
+    --mm-radius-sm: 0.1875rem;  /* 3px */
+    --mm-radius-md: 0.25rem;    /* 4px */
+    --mm-radius-lg: 0.375rem;   /* 6px */
+    --mm-radius-xl: 0.5rem;     /* 8px */
+    --mm-radius-full: 9999px;
+
+    /* ============================================
+       Shadows
+       ============================================ */
+    --mm-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --mm-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --mm-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --mm-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+    --mm-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.2);
+    --mm-shadow-focus: 0 0 0 3px rgba(25, 121, 195, 0.1);
+    --mm-shadow-drag: 0 8px 20px rgba(0, 0, 0, 0.25);
+
+    /* ============================================
+       Transitions & Animations
+       ============================================ */
+    --mm-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --mm-transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --mm-transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --mm-transition-bounce: 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Easing curves */
+    --mm-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --mm-ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --mm-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --mm-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* ============================================
+       Z-Index Scale
+       ============================================ */
+    --mm-z-base: 1;
+    --mm-z-dropdown: 1000;
+    --mm-z-sticky: 1020;
+    --mm-z-fixed: 1030;
+    --mm-z-modal-backdrop: 1040;
+    --mm-z-modal: 1050;
+    --mm-z-popover: 1060;
+    --mm-z-tooltip: 1070;
+    --mm-z-drag: 9999;
+
+    /* ============================================
+       Component-Specific Variables
+       ============================================ */
+
+    /* Builder Container */
+    --mm-builder-bg: var(--mm-neutral-0);
+    --mm-builder-border: var(--mm-neutral-300);
+    --mm-builder-border-radius: var(--mm-radius-md);
+
+    /* Header */
+    --mm-header-bg: linear-gradient(to bottom, var(--mm-neutral-50) 0%, var(--mm-neutral-100) 100%);
+    --mm-header-border: var(--mm-neutral-300);
+    --mm-header-padding: var(--mm-space-5);
+
+    /* Toolbar */
+    --mm-toolbar-gap: var(--mm-space-4);
+    --mm-toolbar-btn-height: 36px;
+    --mm-toolbar-input-height: 36px;
+
+    /* Menu Items */
+    --mm-item-padding: var(--mm-space-3);
+    --mm-item-gap: var(--mm-space-3);
+    --mm-item-border-width: 3px;
+    --mm-item-hover-bg: #f8fafe;
+    --mm-item-inactive-opacity: 0.7;
+
+    /* Drag & Drop */
+    --mm-drag-opacity: 0.5;
+    --mm-ghost-opacity: 0.4;
+    --mm-ghost-border: 2px dashed var(--mm-primary-500);
+    --mm-dropzone-bg: linear-gradient(90deg, var(--mm-primary-50) 0%, #f0f7ff 100%);
+
+    /* Action Buttons */
+    --mm-action-size: 32px;
+    --mm-action-icon-size: 14px;
+    --mm-action-gap: var(--mm-space-1);
+
+    /* Nested List Indentation */
+    --mm-indent-size: 40px;
+    --mm-indent-line-color: var(--mm-neutral-400);
+    --mm-indent-line-width: 1px;
+
+    /* Level Colors */
+    --mm-level-0-bg: linear-gradient(to right, #f8f9fa 0%, var(--mm-neutral-0) 15%);
+    --mm-level-1-bg: linear-gradient(to right, #f0f7ff 0%, var(--mm-neutral-0) 10%);
+    --mm-level-2-bg: linear-gradient(to right, #f3e5f5 0%, var(--mm-neutral-0) 10%);
+    --mm-level-3-bg: linear-gradient(to right, #fff3e0 0%, var(--mm-neutral-0) 10%);
+
+    /* Status Badges */
+    --mm-badge-padding: 2px 8px;
+    --mm-badge-radius: var(--mm-radius-full);
+    --mm-badge-font-size: var(--mm-font-size-xs);
+}
+
+/* ============================================
+   Reduced Motion Support
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --mm-transition-fast: 0ms;
+        --mm-transition-base: 0ms;
+        --mm-transition-slow: 0ms;
+        --mm-transition-bounce: 0ms;
+    }
+
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   Dark Mode Support (Future Enhancement)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    /* Dark mode variables can be added here in the future */
+    /* Currently keeping light mode as default for Magento admin */
+}
