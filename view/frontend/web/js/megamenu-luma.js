@@ -7,7 +7,7 @@
  * @category    Panth
  * @package     Panth_MegaMenu
  * @copyright   Copyright (c) 2025 Panth InfoTech
- * @license     Proprietary
+ * @license     MIT
  *
  * Usage:
  * $('#menu-element').panthMegaMenu({
